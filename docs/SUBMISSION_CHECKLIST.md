@@ -9,7 +9,7 @@
 ## Pre-Submission Verification
 
 ### Code & Deployment
-- [x] All 261 automated tests pass (257 pass, 4 skipped) (`python -m pytest`)
+- [x] All 266 automated tests pass (262 pass, 4 skipped) (`python -m pytest`)
 - [x] Application starts locally (`streamlit run app.py`)
 - [x] GitHub Actions CI workflow configured (`.github/workflows/ci.yml`)
 - [x] No hardcoded secrets, API keys, or credentials in source code
