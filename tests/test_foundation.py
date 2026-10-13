@@ -11,7 +11,9 @@ def test_source_statuses_are_explicit_about_readiness() -> None:
     assert len(statuses) == 3
     assert all(status.message for status in statuses)
     assert statuses[0].available is True
-    assert statuses[1].available is False
+    # Soil: farmer/lab entry plus an optional, clearly labelled SoilGrids estimate.
+    assert statuses[1].available is True
+    assert "SoilGrids" in statuses[1].message and "never replace a soil test" in statuses[1].message
     assert statuses[2].available is True
 
 

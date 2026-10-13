@@ -273,7 +273,7 @@ class TestRotationClimateAggregation:
     def test_rotation_with_all_valid_crops_aggregates_mean(self) -> None:
         catalog = _crops_catalog()
         crops = [next(c for c in catalog["crops"] if c["id"] == cid) for cid in ["maize", "wheat", "moong"]]
-        climate = _make_climate_series(days=300, t_mean=22.0, t_min=15.0, t_max=28.0)
+        climate = _make_climate_series(start_date="2024-01-01", days=731, t_mean=22.0, t_min=15.0, t_max=28.0)
 
         res = assess_rotation_climate(crops, climate, ["kharif", "rabi", "summer"])
         assert res.status == "available"
@@ -323,10 +323,10 @@ class TestClimateRankingInversion:
         }
 
         # ── Regime 1: Mild / Favorable Climate ──
-        # 300 days total (100 days Kharif, 100 days Rabi, 100 days Summer)
+        # Two full years so each crop is assessed on its own season window
         # Moderate temperatures: 20°C mean, Tmax 25°C
         mild_climate = _make_climate_series(
-            days=300, t_mean=20.0, t_min=14.0, t_max=26.0, precip=3.0, rs=18.0
+            start_date="2024-01-01", days=731, t_mean=20.0, t_min=14.0, t_max=26.0, precip=3.0, rs=18.0
         )
 
         profile_mild = FarmProfile(
@@ -335,7 +335,7 @@ class TestClimateRankingInversion:
             soil=SoilInformation(waterlogged=False, highly_deteriorated_alkaline=False),
             climate=ClimateContext(
                 source_url="https://power.example/mild",
-                date_range="2024-06-01 to 2025-03-27",
+                date_range="2024-01-01 to 2025-12-31",
                 available_parameters=("T2M", "T2M_MIN", "T2M_MAX", "PRECTOTCORR", "ALLSKY_SFC_SW_DWN"),
             ),
             total_crop_water_budget_mm=700,
@@ -359,7 +359,7 @@ class TestClimateRankingInversion:
         # Wheat Tmax_abs is 27°C, heat threshold is 32°C -> wheat will be completely unsuitable (score 0.0)
         # Pearl millet optimal is 25-35°C, heat threshold 42°C -> pearl millet thrives
         hot_climate = _make_climate_series(
-            days=300, t_mean=30.0, t_min=24.0, t_max=38.0, precip=3.0, rs=25.0
+            start_date="2024-01-01", days=731, t_mean=30.0, t_min=24.0, t_max=38.0, precip=3.0, rs=25.0
         )
 
         profile_hot = FarmProfile(
@@ -368,7 +368,7 @@ class TestClimateRankingInversion:
             soil=SoilInformation(waterlogged=False, highly_deteriorated_alkaline=False),
             climate=ClimateContext(
                 source_url="https://power.example/hot",
-                date_range="2024-06-01 to 2025-03-27",
+                date_range="2024-01-01 to 2025-12-31",
                 available_parameters=("T2M", "T2M_MIN", "T2M_MAX", "PRECTOTCORR", "ALLSKY_SFC_SW_DWN"),
             ),
             total_crop_water_budget_mm=700,

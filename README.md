@@ -16,8 +16,11 @@ It combines **farmer-provided information**, historical **NASA POWER climate con
 - 📈 **Historical Climate Trends** — Multi-decadal OLS trend regression, decadal change rates, statistical significance ($p$-values), baseline comparisons, and consecutive dry-spell runs across regional growing seasons
 - ⚖️ **Farmer Priorities** — Set and adjust weights for water, climate, soil, diversity objectives
 - 🔄 **Rotation Engine** — Source-linked, deterministic crop-rotation alternatives powered by FAO-56 and EcoCrop
-- 🧪 **Scenario Stress Tests** — Compare rotations under dry, hot, and reduced-water scenarios
+- 🧪 **Hypothetical Stress Tests** — User-chosen what-if changes (drier, hotter, less irrigation water); not climate projections
 - 📊 **Pareto Comparison** — Multi-objective comparison with trade-off transparency
+- 🌍 **Future Climate (NASA NEX-GDDP-CMIP6)** — Compares the same rotation's water and climate suitability under each of 5 models' 2041–2060 SSP2-4.5 and SSP5-8.5 projections against the same model's 1995–2014 simulation, with the spread across models; kept separate from hypothetical stress tests ([method](docs/FUTURE_CLIMATE.md))
+- 🛰️ **Observed Land Use (NASA MODIS MCD12Q2)** — Shows which seasons were actually green at the farm's 500 m pixel over the last 10 years and flags plans that add a cropping season, with that season's extra crop water demand ([method](docs/OBSERVED_LAND_USE.md))
+- 🛰️ **Optional SoilGrids Soil Estimates** — One click retrieves ISRIC SoilGrids 250 m estimates (texture, organic carbon, pH, total N; quantiles and uncertainty), clearly labelled; farmer/laboratory values always override them ([details](docs/SOIL_DATA.md))
 - 🌱 **Soil-State Estimates** — Simplified N-balance and SOC direction using FAO/IPCC equations
 - 📖 **Full Transparency** — Every score, check, and uncertainty is explained with source links
 
@@ -28,7 +31,7 @@ It combines **farmer-provided information**, historical **NASA POWER climate con
 FieldShift features a **Live Judging Quick-Start** preset right on the home page:
 - One click loads the Ludhiana demonstration farm and its verified 2024 NASA POWER daily observations.
 - Generates 4 diverse, feasible crop rotations scored via FAO-56 and EcoCrop in < 1 second.
-- Seamlessly toggles between Live NASA POWER API calls and the verified offline snapshot.
+- Toggles between live NASA POWER API calls and a saved, unmodified 2024 POWER response for the demo farm.
 - If live NASA POWER calls timeout or fail during judging, an automatic one-click fallback restores the offline snapshot without interruption.
 
 ## Architecture
@@ -75,6 +78,10 @@ src/fieldshift/                 Application modules
   climate_features.py           Historical climate indicators
   rotation_engine.py            Deterministic crop-rotation search
   scenarios.py                  Scenario stress tests and robustness
+  soil_data.py                  SoilGrids adapter and soil source precedence
+  land_use_phenology.py         MODIS MCD12Q2 adapter and observed season use
+  growing_season.py             Per-crop season windows shared by water and climate metrics
+  future_climate.py             NEX-GDDP-CMIP6 scenario extract, model-paired changes, plan comparison
   soil_nutrient_model.py        Simplified N-balance and SOC model
   agronomy.py                   Agronomic rule contracts
   recommendations.py            Rotation comparison contracts
@@ -82,10 +89,10 @@ src/fieldshift/                 Application modules
 data/                           Crop, rotation-rule and priority-weight config
   crops.json                    Source-linked Punjab crop catalogue (10 crops)
   rotation_rules.json           PAU-documented crop-to-crop relationships (19)
-  demo_snapshot_ludhiana_2024.json Verified offline NASA POWER daily snapshot (366 days)
+  demo_snapshot_ludhiana_2024.json Unmodified NASA POWER daily response for the demo farm, 2024 (366 days; saved 2026-10-13)
   priority_weights.json         Editable farmer priority profiles
 docs/                           Sources, assumptions, architecture, testing
-tests/                          156 automated checks (155 pass, 1 live API skip)
+tests/                          227 automated checks (224 pass offline; 3 live-API tests skipped unless enabled)
   test_audit.py                 Comprehensive audit tests (32)
   test_climate_suitability.py   FAO EcoCrop thermal suitability & heat stress (17)
   test_climate_trends.py        Historical climate trends and OLS regression (12)
@@ -98,6 +105,11 @@ tests/                          156 automated checks (155 pass, 1 live API skip)
   test_phase6.py                Scenarios, constraints, Pareto, soil-state (34)
   test_rotation_engine.py       Engine rules and determinism (6)
   test_rotation_graph.py        Rotation reachability & constraint tests (9)
+  test_soil_data.py             SoilGrids parsing, units, depths, precedence, failures (39)
+  test_soilgrids_integration.py Live SoilGrids query (skipped unless RUN_SOILGRIDS_INTEGRATION=1)
+  test_land_use_phenology.py    MODIS phenology parsing, season use, plan role (17)
+  test_growing_season.py        Per-crop season windows regression tests (12)
+  test_modis_integration.py     Live MODIS query (skipped unless RUN_MODIS_INTEGRATION=1)
   test_scenarios.py             Scenario transforms and robustness (5)
 ```
 

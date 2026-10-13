@@ -4,7 +4,8 @@ Verifies:
 1. Date coverage and parameter completeness auditing.
 2. Annual growing-season summaries across single-year (Kharif) and cross-year (Rabi) cycles.
 3. Missing days and incomplete season warning handling.
-4. Deterministic linear trend calculation on a known trend fixture (+0.30 °C/decade, p < 0.05).
+4. Deterministic linear trend calculation on the genuine 2000–2024 NASA POWER record, checked against an
+   independent least-squares fit (the fixture is an unmodified API response saved 2026-10-13).
 5. Baseline period vs. recent period comparison and delta calculation.
 6. Units, slope scaling, and statistical boundary warnings.
 """
@@ -38,9 +39,9 @@ FIXTURE_PATH = (
 
 @pytest.fixture(scope="module")
 def historical_dataset():
-    """Load the deterministic 25-year historical NASA POWER Daily fixture for Ludhiana."""
+    """Load the unmodified 2000–2024 NASA POWER daily response for the demo farm (30.85 N, 75.70 E)."""
     payload = json.loads(FIXTURE_PATH.read_text(encoding="utf-8"))
-    req = PowerRequest(30.901, 75.857, date(2000, 1, 1), date(2024, 12, 31))
+    req = PowerRequest(30.85, 75.70, date(2000, 1, 1), date(2024, 12, 31), parameters=tuple(payload["properties"]["parameter"]))
     return parse_power_daily_response(payload, req, "https://power.example/historical_2000_2024")
 
 
@@ -62,9 +63,9 @@ class TestVariableCoverageAudit:
         assert t2m_cov.first_date == "2000-01-01"
         assert t2m_cov.last_date == "2024-12-31"
         assert t2m_cov.total_calendar_days == 9132
-        # 16 missing days were injected into 2012
-        assert t2m_cov.missing_observations == 16
-        assert t2m_cov.completeness_percent >= 99.0
+        # The genuine response contains no fill values for this point and period.
+        assert t2m_cov.missing_observations == 0
+        assert t2m_cov.completeness_percent == 100.0
         assert t2m_cov.is_sufficient_for_trends is True
         assert t2m_cov.unit == "°C"
 
@@ -127,10 +128,12 @@ class TestAnnualSeasonSummaries:
 
     def test_incomplete_season_detects_missing_days_and_warns(self, historical_dataset) -> None:
         kharif = REGIONAL_SEASONS["kharif"]
-        summaries = compute_annual_season_summaries(historical_dataset.data, season=kharif)
+        # The test creates its own gap in a copy; the fixture itself is never altered.
+        frame = historical_dataset.data.copy()
+        frame.loc["2012-06-01":"2012-06-16", :] = float("nan")
+        summaries = compute_annual_season_summaries(frame, season=kharif)
 
         s_2012 = next(s for s in summaries if s.year == 2012)
-        # 16 missing days in June 2012
         assert s_2012.missing_days == 16
         assert s_2012.valid_days == 153 - 16
         assert s_2012.completeness_pct == round((137 / 153) * 100, 1)
@@ -166,8 +169,13 @@ class TestLinearTrendCalculation:
         temp_trend = trends["mean_temperature"]
         assert temp_trend.valid_years == 25
         assert temp_trend.unit == "°C"
-        # The fixture has an embedded trend of +0.030 °C/year (+0.300 °C/decade)
-        assert pytest.approx(temp_trend.change_per_decade, abs=0.03) == 0.300
+        # Independent check: ordinary least squares on the seasonal means.
+        summaries = [s for s in compute_annual_season_summaries(historical_dataset.data, season=kharif) if s.is_valid]
+        slope = np.polyfit([s.year for s in summaries], [s.mean_temp_c for s in summaries], 1)[0]
+        assert temp_trend.change_per_decade == pytest.approx(slope * 10, abs=1e-3)  # module rounds to 3 dp
+        # Recorded result for this genuine record (saved 2026-10-13): kharif mean T2M
+        # declined by about 0.78 °C/decade at this POWER grid cell (p ≈ 0.0025).
+        assert temp_trend.change_per_decade == pytest.approx(-0.782, abs=0.005)
         assert temp_trend.p_value is not None and temp_trend.p_value < 0.01
         assert temp_trend.is_significant is True
 
@@ -175,7 +183,7 @@ class TestLinearTrendCalculation:
         assert temp_trend.baseline_mean is not None
         assert temp_trend.recent_mean is not None
         assert temp_trend.delta_vs_baseline is not None
-        assert temp_trend.delta_vs_baseline > 0.0  # Recent period is warmer
+        assert temp_trend.delta_vs_baseline < 0.0  # recent kharif seasons were cooler in this record
 
     def test_insufficient_data_returns_honest_warning(self) -> None:
         # Only 2 data points

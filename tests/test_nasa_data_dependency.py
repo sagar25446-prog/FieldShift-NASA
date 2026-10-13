@@ -35,29 +35,34 @@ def _make_engine() -> RotationEngine:
 
 
 def _make_climate_datasets() -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Generate two distinct 120-day climate regimes for Ludhiana (30.9° N)."""
-    dates = pd.date_range("2024-06-01", periods=120, freq="D")
+    """Generate two distinct two-year daily climate regimes for Ludhiana (30.9° N).
+
+    Two full calendar years are needed so every crop is assessed on its own
+    kharif, rabi or summer window (rabi crosses the year boundary).
+    """
+    days = 731
+    dates = pd.date_range("2024-01-01", periods=days, freq="D")
 
     # Dataset A: Arid / High water stress (high heat, high solar radiation, drought)
     arid_data = pd.DataFrame({
-        "T2M": [34.0] * 120,
-        "T2M_MAX": [41.0] * 120,
-        "T2M_MIN": [27.0] * 120,
-        "ALLSKY_SFC_SW_DWN": [24.0] * 120,
-        "PRECTOTCORR": [0.5] * 120,  # 60 mm total seasonal precipitation
-        "RH2M": [40.0] * 120,
-        "WS2M": [3.0] * 120,
+        "T2M": [34.0] * days,
+        "T2M_MAX": [41.0] * days,
+        "T2M_MIN": [27.0] * days,
+        "ALLSKY_SFC_SW_DWN": [24.0] * days,
+        "PRECTOTCORR": [0.5] * days,  # 0.5 mm/day, e.g. 60 mm over a 120-day crop period
+        "RH2M": [40.0] * days,
+        "WS2M": [3.0] * days,
     }, index=dates)
 
     # Dataset B: Wet / Abundant monsoon rainfall (moderate heat, low deficit)
     wet_data = pd.DataFrame({
-        "T2M": [26.0] * 120,
-        "T2M_MAX": [30.0] * 120,
-        "T2M_MIN": [22.0] * 120,
-        "ALLSKY_SFC_SW_DWN": [14.0] * 120,
-        "PRECTOTCORR": [7.5] * 120,  # 900 mm total seasonal precipitation
-        "RH2M": [80.0] * 120,
-        "WS2M": [1.5] * 120,
+        "T2M": [26.0] * days,
+        "T2M_MAX": [30.0] * days,
+        "T2M_MIN": [22.0] * days,
+        "ALLSKY_SFC_SW_DWN": [14.0] * days,
+        "PRECTOTCORR": [7.5] * days,  # 7.5 mm/day, e.g. 900 mm over a 120-day crop period
+        "RH2M": [80.0] * days,
+        "WS2M": [1.5] * days,
     }, index=dates)
 
     return arid_data, wet_data

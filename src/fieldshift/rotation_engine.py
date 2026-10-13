@@ -21,7 +21,12 @@ class RotationInputError(ValueError):
 
 @dataclass(frozen=True)
 class SoilInformation:
-    """Farmer/lab-provided soil information. ``None`` means not measured or unknown."""
+    """Soil information used by the planner. ``None`` means not measured or unknown.
+
+    ``texture_source`` and ``organic_carbon_source`` record where the value came
+    from (see ``soil_data.SOURCE_LABELS``); ``"soilgrids_estimate"`` marks a
+    250 m SoilGrids estimate rather than a farmer or laboratory value.
+    """
 
     ph: float | None = None
     electrical_conductivity_ds_m: float | None = None
@@ -31,6 +36,14 @@ class SoilInformation:
     well_drained: bool | None = None
     texture: str | None = None
     source_description: str | None = None
+    texture_source: str | None = None
+    organic_carbon_source: str | None = None
+    organic_carbon_depth: str | None = None
+    organic_carbon_range_percent: tuple[float, float] | None = None
+
+    @property
+    def texture_is_estimated(self) -> bool:
+        return self.texture is not None and self.texture_source == "soilgrids_estimate"
 
 
 @dataclass(frozen=True)
@@ -59,6 +72,8 @@ class FarmProfile:
     start_season: str = "kharif"
     climate_scenario: str = "historical NASA POWER context"
     climate_data: object = None  # pd.DataFrame | None — kept as object to avoid import
+    # Mapping season_id -> land_use_phenology.SeasonUse from MODIS MCD12Q2, or None.
+    observed_season_use: Mapping[str, object] | None = None
 
 
 @dataclass(frozen=True)
@@ -98,6 +113,19 @@ class RotationPlan:
     source_urls: tuple[str, ...]
     water_balance: object = None
     climate_assessment: object = None
+    land_use_comparison: object = None  # LandUseComparison when MODIS phenology is available
+
+
+@dataclass(frozen=True)
+class LandUseComparison:
+    """How a plan's seasons compare with recently observed (MODIS) land use."""
+
+    added_seasons: tuple[str, ...]  # planned seasons with no vegetation cycle in recent years
+    added_crops: tuple[str, ...]
+    added_crop_water_demand_mm: float | None  # FAO-56 ETc of those crops; None if not computable
+    continued_seasons: tuple[str, ...]
+    uncertain_seasons: tuple[str, ...]
+    evidence: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -244,9 +272,46 @@ class RotationEngine:
             checks.append(FeasibilityCheck("climate_suitability", "unknown", "Climate data may be retrieved, but this catalogue has no documented crop-specific thermal threshold for this crop.", ()))
         if relationship_sources:
             checks.append(FeasibilityCheck("documented_rotation_relationship", "pass", "Crop-to-crop transition is in the supported relationship graph.", self._urls(relationship_sources)))
+        observed = self._observed_season_check(crop, season, profile)
+        if observed is not None:
+            checks.append(observed)
         return tuple(checks)
 
+    def _observed_season_check(self, crop: Mapping[str, object], season: str, profile: FarmProfile) -> FeasibilityCheck | None:
+        """Compare the planned season with MODIS-observed recent land use (never a rejection)."""
+        if not profile.observed_season_use or season not in profile.observed_season_use:
+            return None
+        from .land_use_phenology import MCD12Q2_USER_GUIDE_URL, ORNL_SERVICE_DOCS_URL
+
+        use = profile.observed_season_use[season]
+        urls = (MCD12Q2_USER_GUIDE_URL, ORNL_SERVICE_DOCS_URL)
+        evidence = f"MODIS MCD12Q2 (500 m): {use.sentence()}"  # type: ignore[attr-defined]
+        caveat = " Greenness shows that something grew, not which crop, its yield or soil condition."
+        if use.summary == "regularly_green":  # type: ignore[attr-defined]
+            return FeasibilityCheck("observed_seasonal_land_use", "pass", f"{evidence} Growing {crop['name']} here continues recent land use.{caveat}", urls)
+        if use.summary == "not_green":  # type: ignore[attr-defined]
+            return FeasibilityCheck(
+                "observed_seasonal_land_use", "unknown",
+                f"{evidence} Growing {crop['name']} here adds a cropping season compared with recent land use: "
+                "confirm irrigation water, labour and sowing time before relying on this plan.",
+                urls,
+            )
+        return FeasibilityCheck("observed_seasonal_land_use", "unknown", f"{evidence} Recent use of this season is irregular or unclear.{caveat}", urls)
+
     def _soil_checks(self, crop: Mapping[str, object], soil: SoilInformation) -> tuple[FeasibilityCheck, ...]:
+        checks = self._soil_checks_raw(crop, soil)
+        if not soil.texture_is_estimated:
+            return checks
+        # Texture can only *support* a soft soil-context pass; hard constraints
+        # (waterlogging, alkalinity) never rely on an estimate.
+        note = " Texture is estimated from SoilGrids (0–30 cm, 250 m grid), not measured on this field."
+        return tuple(
+            FeasibilityCheck(check.rule, check.status, check.message + note, check.source_urls)
+            if "context" in check.rule else check
+            for check in checks
+        )
+
+    def _soil_checks_raw(self, crop: Mapping[str, object], soil: SoilInformation) -> tuple[FeasibilityCheck, ...]:
         crop_id = str(crop["id"])
         urls = self._urls(crop["soil_constraints"]["source_ids"])  # type: ignore[index]
         if crop_id == "wheat":
@@ -318,6 +383,18 @@ class RotationEngine:
                         f"Thermal stress noted: {hc.crop_name} experienced {hc.heat_stress_days} day(s) "
                         f"exceeding {hc.extreme_heat_threshold:.1f}°C threshold."
                     )
+        land_use = self._land_use_comparison(path, seasons, profile, water_balance)
+        if land_use is not None and land_use.added_seasons:
+            names = ", ".join(f"{crop} ({season})" for crop, season in zip(land_use.added_crops, land_use.added_seasons))
+            if land_use.added_crop_water_demand_mm is not None:
+                tradeoffs.append(
+                    f"Adds {names} in a season with no vegetation cycle at this location in recent MODIS years: "
+                    f"about {land_use.added_crop_water_demand_mm:.0f} mm of extra crop water demand (FAO-56 ETc) beyond the observed cropping pattern."
+                )
+            else:
+                tradeoffs.append(f"Adds {names} in a season with no vegetation cycle at this location in recent MODIS years; its water demand could not be computed.")
+        elif land_use is not None and land_use.continued_seasons and not land_use.uncertain_seasons:
+            factors.append("Every planned season was green at this location in most recent MODIS years (no added cropping season).")
         if metrics["economic_potential"].score is None:
             tradeoffs.append("Economic potential is unavailable because no credible local cost/price data is configured.")
         source_ids = {source_id for crop_id in path for source_id in self.crops[crop_id]["source_ids"]}
@@ -340,6 +417,41 @@ class RotationEngine:
             source_urls=tuple(sorted(self.sources[source_id]["url"] for source_id in source_ids)),
             water_balance=water_balance,
             climate_assessment=climate_assessment,
+            land_use_comparison=land_use,
+        )
+
+    @staticmethod
+    def _land_use_comparison(path: tuple[str, ...], seasons: tuple[str, ...], profile: FarmProfile, water_balance: object) -> LandUseComparison | None:
+        if not profile.observed_season_use:
+            return None
+        added_seasons: list[str] = []
+        added_crops: list[str] = []
+        added_etc: list[float | None] = []
+        continued: list[str] = []
+        uncertain: list[str] = []
+        evidence: list[str] = []
+        crop_results = list(getattr(water_balance, "crop_results", ()) or ())
+        for index, (crop_id, season) in enumerate(zip(path, seasons)):
+            use = profile.observed_season_use.get(season)
+            if use is None:
+                uncertain.append(season)
+                continue
+            evidence.append(use.sentence())  # type: ignore[attr-defined]
+            if use.summary == "not_green":  # type: ignore[attr-defined]
+                added_seasons.append(season)
+                added_crops.append(crop_id)
+                etc = crop_results[index].etc_total_mm if index < len(crop_results) else None
+                added_etc.append(etc)
+            elif use.summary == "regularly_green":  # type: ignore[attr-defined]
+                continued.append(season)
+            else:
+                uncertain.append(season)
+        demand = None
+        if added_etc and all(value is not None for value in added_etc):
+            demand = float(sum(added_etc))  # type: ignore[arg-type]
+        return LandUseComparison(
+            tuple(added_seasons), tuple(added_crops), demand if added_seasons else 0.0,
+            tuple(continued), tuple(uncertain), tuple(dict.fromkeys(evidence)),
         )
 
     def _metrics(self, path: tuple[str, ...], profile: FarmProfile, seasons: tuple[str, ...] = ()) -> tuple[dict[str, MetricScore], object, object]:
@@ -358,7 +470,12 @@ class RotationEngine:
             soil_values.append(1.0)
         if "pearl_millet" in path and profile.soil.well_drained is True and profile.soil.texture in {"light", "medium"}:
             soil_values.append(1.0)
-        soil = MetricScore(sum(soil_values) / len(soil_values), "Mean of only documented favourable soil-context checks; it is not a soil-health prediction.") if soil_values else MetricScore(None, "Unavailable: no documented favourable soil-context check could be evaluated.", "Missing soil evidence reduces confidence but does not reject crops by itself.")
+        soil_method = "Mean of only documented favourable soil-context checks; it is not a soil-health prediction."
+        soil_warning = None
+        if profile.soil.texture_is_estimated:
+            soil_method += " Texture used here is estimated from SoilGrids (0–30 cm, 250 m grid), not a field measurement."
+            soil_warning = "Soil-context score relies on a SoilGrids texture estimate; enter a field or laboratory texture to replace it."
+        soil = MetricScore(sum(soil_values) / len(soil_values), soil_method, soil_warning) if soil_values else MetricScore(None, "Unavailable: no documented favourable soil-context check could be evaluated.", "Missing soil evidence reduces confidence but does not reject crops by itself.")
         diversity = MetricScore(len({crop["family"] for crop in crops}) / len(crops), "Unique crop families divided by planned seasons; a composition indicator, not a soil-benefit estimate.")
         return {
             "water_suitability": water,
@@ -409,20 +526,37 @@ class RotationEngine:
                 warning_str,
             ), assessment
 
+    def _cached_et0(self, frame: object, latitude: float, compute: object) -> object:
+        """ET0 depends only on the climate record and latitude, not on the plan; reuse it across plans."""
+        cache = self.__dict__.setdefault("_et0_cache", {})
+        key = (id(frame), round(latitude, 4))
+        hit = cache.get(key)
+        if hit is not None and hit[0] is frame:  # identity check guards against id reuse
+            return hit[1]
+        result = compute(frame, latitude)  # type: ignore[operator]
+        if len(cache) >= 64:
+            cache.pop(next(iter(cache)))
+        cache[key] = (frame, result)
+        return result
+
     def _water_metric(self, path: tuple[str, ...], crops: list, profile: FarmProfile) -> tuple[MetricScore, object]:
         """Compute water suitability using FAO-56 climate-derived ETc when possible, falling back to catalogue ranges."""
         import pandas as pd
-        from .fao56 import CropKc, compute_crop_water, compute_et0_series, compute_rotation_water_balance
+        from .fao56 import CropKc, average_crop_water, compute_crop_water, compute_et0_series, compute_rotation_water_balance
+        from .growing_season import crop_duration_days, crop_season_slices
 
         climate_frame = profile.climate_data
         has_climate = climate_frame is not None and isinstance(climate_frame, pd.DataFrame) and not climate_frame.empty
 
         # ── Try FAO-56 climate-derived water score ──
         if has_climate:
-            et0_result = compute_et0_series(climate_frame, profile.latitude)
+            et0_result = self._cached_et0(climate_frame, profile.latitude, compute_et0_series)
             if et0_result.total_et0_mm is not None and et0_result.valid_days > 0:
-                precip = climate_frame["PRECTOTCORR"] if "PRECTOTCORR" in climate_frame.columns else pd.Series(dtype=float)
+                daily = pd.DataFrame({"ET0": et0_result.daily_et0_mm})
+                daily["PRECTOTCORR"] = climate_frame["PRECTOTCORR"] if "PRECTOTCORR" in climate_frame.columns else float("nan")
+                planned_seasons = self._seasons(profile.start_season, profile.number_of_seasons)
                 crop_results = []
+                season_warnings: list[str] = []
 
                 for i, (crop_id, crop) in enumerate(zip(path, crops)):
                     kc_data = crop.get("crop_coefficient", {})
@@ -436,23 +570,38 @@ class RotationEngine:
                     else:
                         kc = None
 
-                    cr = compute_crop_water(
-                        et0_series=et0_result.daily_et0_mm,
-                        precip_series=precip,
-                        kc=kc,
-                        crop_id=crop_id,
-                        crop_name=crop["name"],
-                        season=self._seasons(profile.start_season, profile.number_of_seasons)[i],
-                    )
-                    crop_results.append(cr)
+                    # Each crop only sees the days of its own growing period.
+                    season = planned_seasons[i]
+                    slices = crop_season_slices(daily, season, crop_duration_days(crop), required_columns=("ET0", "PRECTOTCORR"))
+                    season_warnings.extend(f"{crop['name']}: {w}" for w in slices.warnings)
+                    if not slices.available:
+                        crop_results = []
+                        break
+                    per_season = [
+                        compute_crop_water(
+                            et0_series=occ.frame["ET0"],
+                            precip_series=occ.frame["PRECTOTCORR"],
+                            kc=kc,
+                            crop_id=crop_id,
+                            crop_name=crop["name"],
+                            season=season,
+                        )
+                        for occ in slices.occurrences
+                    ]
+                    crop_results.append(average_crop_water(per_season, slices.labels))
 
-                balance = compute_rotation_water_balance(crop_results, profile.total_crop_water_budget_mm)
+                balance = compute_rotation_water_balance(crop_results, profile.total_crop_water_budget_mm) if crop_results else None
+                if balance is not None and season_warnings:
+                    from dataclasses import replace
 
-                if balance.climate_water_score is not None:
+                    balance = replace(balance, warnings=tuple(dict.fromkeys((*balance.warnings, *season_warnings))))
+
+                if balance is not None and balance.climate_water_score is not None:
                     method_parts = [
                         "FAO-56 Penman–Monteith ET0 × Kc crop coefficients (Allen et al. 1998).",
                         f"ET0 computed from {et0_result.valid_days}/{et0_result.total_days} valid climate days.",
                         "Effective rainfall: USDA SCS method.",
+                        "Each crop's ET0, ETc and rainfall use only its own regional season window for its FAO-56 crop duration.",
                     ]
                     if profile.total_crop_water_budget_mm is not None:
                         method_parts.append(f"Farmer water budget ({profile.total_crop_water_budget_mm:.0f} mm) used as supplemental irrigation supply.")

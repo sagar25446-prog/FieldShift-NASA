@@ -78,9 +78,17 @@ class TestOfflineSnapshotIntegrity:
         assert p.temporal_resolution == "daily"
         assert p.start_date == "2024-01-01"
         assert p.end_date == "2024-12-31"
-        assert pytest.approx(p.latitude_requested, abs=0.01) == 30.9010
-        assert pytest.approx(p.longitude_requested, abs=0.01) == 75.8573
-        assert "https://" in p.source_url
+        assert (p.latitude_requested, p.longitude_requested) == (30.85, 75.70)
+        assert (p.latitude_returned, p.longitude_returned) == (30.85, 75.70)
+        assert p.source_url.startswith("https://power.larc.nasa.gov/api/temporal/daily/point?")
+        assert "latitude=30.85" in p.source_url and "start=20240101" in p.source_url
+        assert p.retrieved_at_utc == "2026-10-13T13:14:00Z"  # when the snapshot was saved, not loaded
+
+    def test_snapshot_is_an_unmodified_power_response(self) -> None:
+        raw = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+        assert raw["header"]["title"] == "NASA/POWER Source Native Resolution Daily Data"
+        assert raw["header"]["time_standard"] == "UTC"
+        assert "MERRA2" in raw["header"]["sources"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────

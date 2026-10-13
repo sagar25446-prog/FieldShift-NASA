@@ -1,0 +1,2255 @@
+{
+ "_fixture_metadata": {
+  "description": "Unmodified ORNL DAAC MODIS/VIIRS Land Product Subsets responses for MCD12Q2 v061 (one 500 m pixel). Not a field observation.",
+  "service": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset",
+  "latitude": 30.85,
+  "longitude": 75.7,
+  "start": "A2016001",
+  "end": "A2025001",
+  "retrieved_at_utc": "2026-10-13T12:48:18Z"
+ },
+ "bands": {
+  "NumCycles": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=NumCycles&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "NumCycles",
+    "units": "none",
+    "scale": "1",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=NumCycles&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "NumCycles",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       2
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "NumCycles",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       2
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "NumCycles",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       2
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "NumCycles",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       2
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "NumCycles",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       2
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "NumCycles",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       2
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "NumCycles",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       2
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "NumCycles",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       2
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "NumCycles",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       2
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "NumCycles",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       2
+      ]
+     }
+    ]
+   }
+  },
+  "Greenup.Num_Modes_01": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Greenup.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "Greenup.Num_Modes_01",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Greenup.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "Greenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       16788
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "Greenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17147
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "Greenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17521
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "Greenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       17886
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "Greenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18244
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "Greenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18608
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "Greenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       18980
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "Greenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19345
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "Greenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       19708
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "Greenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20075
+      ]
+     }
+    ]
+   }
+  },
+  "MidGreenup.Num_Modes_01": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=MidGreenup.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "MidGreenup.Num_Modes_01",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=MidGreenup.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "MidGreenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       16810
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "MidGreenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17169
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "MidGreenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17543
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "MidGreenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       17909
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "MidGreenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18267
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "MidGreenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18630
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "MidGreenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19001
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "MidGreenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19367
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "MidGreenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       19732
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "MidGreenup.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20096
+      ]
+     }
+    ]
+   }
+  },
+  "Maturity.Num_Modes_01": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Maturity.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "Maturity.Num_Modes_01",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Maturity.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "Maturity.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       16834
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "Maturity.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17195
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "Maturity.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17569
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "Maturity.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       17936
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "Maturity.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18294
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "Maturity.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18655
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "Maturity.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19026
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "Maturity.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19392
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "Maturity.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       19761
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "Maturity.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20121
+      ]
+     }
+    ]
+   }
+  },
+  "Senescence.Num_Modes_01": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Senescence.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "Senescence.Num_Modes_01",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Senescence.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "Senescence.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       16868
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "Senescence.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17232
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "Senescence.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17602
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "Senescence.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       17971
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "Senescence.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18333
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "Senescence.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18689
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "Senescence.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19059
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "Senescence.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19425
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "Senescence.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       19795
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "Senescence.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20155
+      ]
+     }
+    ]
+   }
+  },
+  "MidGreendown.Num_Modes_01": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=MidGreendown.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "MidGreendown.Num_Modes_01",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=MidGreendown.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "MidGreendown.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       16893
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "MidGreendown.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17257
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "MidGreendown.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17624
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "MidGreendown.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       17994
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "MidGreendown.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18359
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "MidGreendown.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18714
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "MidGreendown.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19082
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "MidGreendown.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19449
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "MidGreendown.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       19819
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "MidGreendown.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20177
+      ]
+     }
+    ]
+   }
+  },
+  "Dormancy.Num_Modes_01": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Dormancy.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "Dormancy.Num_Modes_01",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Dormancy.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "Dormancy.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       16918
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "Dormancy.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17280
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "Dormancy.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17647
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "Dormancy.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       18017
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "Dormancy.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18388
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "Dormancy.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18741
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "Dormancy.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19105
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "Dormancy.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19471
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "Dormancy.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       19843
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "Dormancy.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20200
+      ]
+     }
+    ]
+   }
+  },
+  "EVI_Minimum.Num_Modes_01": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=EVI_Minimum.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "EVI_Minimum.Num_Modes_01",
+    "units": "NBAR-EVI2",
+    "scale": "0.0001",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=EVI_Minimum.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "EVI_Minimum.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       1709
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "EVI_Minimum.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       1866
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "EVI_Minimum.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       1542
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "EVI_Minimum.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       1616
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "EVI_Minimum.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       2039
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "EVI_Minimum.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       1704
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "EVI_Minimum.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       1786
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "EVI_Minimum.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       1754
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "EVI_Minimum.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       1855
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "EVI_Minimum.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       1835
+      ]
+     }
+    ]
+   }
+  },
+  "EVI_Amplitude.Num_Modes_01": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=EVI_Amplitude.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "EVI_Amplitude.Num_Modes_01",
+    "units": "NBAR-EVI2",
+    "scale": "0.0001",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=EVI_Amplitude.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "EVI_Amplitude.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       3180
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "EVI_Amplitude.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       3216
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "EVI_Amplitude.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       3141
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "EVI_Amplitude.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       3329
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "EVI_Amplitude.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       3287
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "EVI_Amplitude.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       2577
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "EVI_Amplitude.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       3202
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "EVI_Amplitude.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       2463
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "EVI_Amplitude.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       2271
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "EVI_Amplitude.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       2476
+      ]
+     }
+    ]
+   }
+  },
+  "QA_Overall.Num_Modes_01": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=QA_Overall.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "QA_Overall.Num_Modes_01",
+    "units": "none",
+    "scale": "1",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=QA_Overall.Num_Modes_01&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "QA_Overall.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "QA_Overall.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "QA_Overall.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "QA_Overall.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "QA_Overall.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "QA_Overall.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "QA_Overall.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "QA_Overall.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "QA_Overall.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "QA_Overall.Num_Modes_01",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       0
+      ]
+     }
+    ]
+   }
+  },
+  "Greenup.Num_Modes_02": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Greenup.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "Greenup.Num_Modes_02",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Greenup.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "Greenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       16979
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "Greenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17345
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "Greenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17717
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "Greenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       18082
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "Greenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18455
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "Greenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18815
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "Greenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19167
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "Greenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19539
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "Greenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       19903
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "Greenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20264
+      ]
+     }
+    ]
+   }
+  },
+  "MidGreenup.Num_Modes_02": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=MidGreenup.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "MidGreenup.Num_Modes_02",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=MidGreenup.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "MidGreenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       17002
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "MidGreenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17370
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "MidGreenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17742
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "MidGreenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       18103
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "MidGreenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18475
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "MidGreenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18837
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "MidGreenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19190
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "MidGreenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19566
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "MidGreenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       19926
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "MidGreenup.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20289
+      ]
+     }
+    ]
+   }
+  },
+  "Maturity.Num_Modes_02": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Maturity.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "Maturity.Num_Modes_02",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Maturity.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "Maturity.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       17027
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "Maturity.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17396
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "Maturity.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17768
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "Maturity.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       18128
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "Maturity.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18498
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "Maturity.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18862
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "Maturity.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19217
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "Maturity.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19593
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "Maturity.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       19952
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "Maturity.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20317
+      ]
+     }
+    ]
+   }
+  },
+  "Senescence.Num_Modes_02": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Senescence.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "Senescence.Num_Modes_02",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Senescence.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "Senescence.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       17061
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "Senescence.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17429
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "Senescence.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17802
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "Senescence.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       18162
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "Senescence.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18529
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "Senescence.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18896
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "Senescence.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19254
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "Senescence.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19626
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "Senescence.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       19986
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "Senescence.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20351
+      ]
+     }
+    ]
+   }
+  },
+  "MidGreendown.Num_Modes_02": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=MidGreendown.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "MidGreendown.Num_Modes_02",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=MidGreendown.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "MidGreendown.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       17085
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "MidGreendown.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17454
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "MidGreendown.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17824
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "MidGreendown.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       18185
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "MidGreendown.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18551
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "MidGreendown.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18918
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "MidGreendown.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19281
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "MidGreendown.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19649
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "MidGreendown.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       20009
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "MidGreendown.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20373
+      ]
+     }
+    ]
+   }
+  },
+  "Dormancy.Num_Modes_02": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Dormancy.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "Dormancy.Num_Modes_02",
+    "units": "days since 1-1-1970",
+    "scale": "1.0",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=Dormancy.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "Dormancy.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       17106
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "Dormancy.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       17475
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "Dormancy.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       17843
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "Dormancy.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       18203
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "Dormancy.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       18569
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "Dormancy.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       18938
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "Dormancy.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       19303
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "Dormancy.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       19667
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "Dormancy.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       20030
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "Dormancy.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       20394
+      ]
+     }
+    ]
+   }
+  },
+  "EVI_Minimum.Num_Modes_02": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=EVI_Minimum.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "EVI_Minimum.Num_Modes_02",
+    "units": "NBAR-EVI2",
+    "scale": "0.0001",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=EVI_Minimum.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "EVI_Minimum.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       1309
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "EVI_Minimum.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       1273
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "EVI_Minimum.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       1312
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "EVI_Minimum.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       1564
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "EVI_Minimum.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       1754
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "EVI_Minimum.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       1680
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "EVI_Minimum.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       1435
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "EVI_Minimum.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       1584
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "EVI_Minimum.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       1432
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "EVI_Minimum.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       1670
+      ]
+     }
+    ]
+   }
+  },
+  "EVI_Amplitude.Num_Modes_02": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=EVI_Amplitude.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "EVI_Amplitude.Num_Modes_02",
+    "units": "NBAR-EVI2",
+    "scale": "0.0001",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=EVI_Amplitude.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "EVI_Amplitude.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       4241
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "EVI_Amplitude.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       3989
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "EVI_Amplitude.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       3999
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "EVI_Amplitude.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       3825
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "EVI_Amplitude.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       3374
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "EVI_Amplitude.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       3689
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "EVI_Amplitude.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       3604
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "EVI_Amplitude.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       3117
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "EVI_Amplitude.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       3621
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "EVI_Amplitude.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       3168
+      ]
+     }
+    ]
+   }
+  },
+  "QA_Overall.Num_Modes_02": {
+   "source_url": "https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=QA_Overall.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+   "response": {
+    "xllcorner": "7226288.43",
+    "yllcorner": "3429904.00",
+    "cellsize": 463.312716528,
+    "nrows": 1,
+    "ncols": 1,
+    "band": "QA_Overall.Num_Modes_02",
+    "units": "none",
+    "scale": "1",
+    "latitude": 30.85,
+    "longitude": 75.7,
+    "header": "https://modisrest.ornl.gov/rst/api/v1/MCD12Q2/subset?latitude=30.85&longitude=75.7&band=QA_Overall.Num_Modes_02&startDate=A2016001&endDate=A2025001&kmAboveBelow=0&kmLeftRight=0",
+    "subset": [
+     {
+      "modis_date": "A2016001",
+      "calendar_date": "2016-01-01",
+      "band": "QA_Overall.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022113103008",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2017001",
+      "calendar_date": "2017-01-01",
+      "band": "QA_Overall.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022115003303",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2018001",
+      "calendar_date": "2018-01-01",
+      "band": "QA_Overall.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022116005540",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2019001",
+      "calendar_date": "2019-01-01",
+      "band": "QA_Overall.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022117040211",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2020001",
+      "calendar_date": "2020-01-01",
+      "band": "QA_Overall.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022118053703",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2021001",
+      "calendar_date": "2021-01-01",
+      "band": "QA_Overall.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2022294172844",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2022001",
+      "calendar_date": "2022-01-01",
+      "band": "QA_Overall.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2023221193630",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2023001",
+      "calendar_date": "2023-01-01",
+      "band": "QA_Overall.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2024211085345",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2024001",
+      "calendar_date": "2024-01-01",
+      "band": "QA_Overall.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2025216140433",
+      "data": [
+       0
+      ]
+     },
+     {
+      "modis_date": "A2025001",
+      "calendar_date": "2025-01-01",
+      "band": "QA_Overall.Num_Modes_02",
+      "tile": "h24v05",
+      "proc_date": "2026253141833",
+      "data": [
+       0
+      ]
+     }
+    ]
+   }
+  }
+ }
+}

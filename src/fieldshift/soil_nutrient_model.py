@@ -96,6 +96,10 @@ class SOCChangeEstimate:
     estimated_annual_change_direction: str  # "likely_increase", "likely_decrease", "uncertain"
     method_description: str
     calibration_warning: str
+    soc_source_label: str | None = None
+    soc_depth_m: float = 0.20
+    soc_range_percent: tuple[float, float] | None = None
+    directions_across_range: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -156,16 +160,39 @@ def estimate_nutrient_balance(
     return tuple(estimates)
 
 
+def _direction(soc_percent: float, depth_m: float, k: float, c_low: float, c_high: float) -> str:
+    """Compare residue C input with first-order loss for one starting SOC value."""
+    # Bulk density ~1.4 Mg/m³ (assumed, not measured)
+    soc_stock_kg_ha = soc_percent / 100 * 1.4e6 * depth_m
+    annual_loss = k * soc_stock_kg_ha
+    if c_low > annual_loss:
+        return "likely_increase"
+    if c_high < annual_loss:
+        return "likely_decrease"
+    return "uncertain"
+
+
 def estimate_soc_change(
     crop_ids: Sequence[str],
     initial_soc_percent: float | None,
     climate_zone: str = "subtropical_semiarid",
+    soc_depth_m: float = 0.20,
+    soc_range_percent: tuple[float, float] | None = None,
+    soc_source_label: str | None = None,
 ) -> SOCChangeEstimate | None:
     """One-compartment first-order SOC model after Janssen (1984).
 
     SOC_change = C_input − k × SOC_stock
     where k is a climate-zone-specific decay constant.
+
+    ``soc_depth_m`` is the depth the starting SOC value describes (0.20 m is
+    the historical default for farmer-entered values; SoilGrids estimates
+    use 0.30 m). When ``soc_range_percent`` is given (for example a SoilGrids
+    uncertainty range), the direction is reported only if it is the same at
+    the value and at both ends of the range; otherwise it is "uncertain".
     """
+    if soc_depth_m <= 0:
+        raise ValueError("SOC depth must be positive.")
     k = SOC_DECAY_CONSTANTS.get(climate_zone)
     if k is None:
         return None
@@ -180,16 +207,13 @@ def estimate_soc_change(
 
     # Determine direction without computing an absolute change
     # (because we may not have initial SOC)
+    directions: tuple[str, ...] = ()
     if initial_soc_percent is not None and initial_soc_percent > 0:
-        # Assume 0-20 cm depth, bulk density ~1.4 Mg/m³
-        soc_stock_kg_ha = initial_soc_percent / 100 * 1.4e6 * 0.20
-        annual_loss = k * soc_stock_kg_ha
-        if total_c_low > annual_loss:
-            direction = "likely_increase"
-        elif total_c_high < annual_loss:
-            direction = "likely_decrease"
-        else:
-            direction = "uncertain"
+        points = [initial_soc_percent]
+        if soc_range_percent is not None:
+            points.extend(value for value in soc_range_percent if value > 0)
+        directions = tuple(_direction(value, soc_depth_m, k, total_c_low, total_c_high) for value in points)
+        direction = directions[0] if len(set(directions)) == 1 else "uncertain"
     else:
         direction = "uncertain"
 
@@ -201,7 +225,9 @@ def estimate_soc_change(
         method_description=(
             "Janssen (1984) one-compartment first-order decay model. "
             f"Climate zone: {climate_zone}, k = {k} yr⁻¹. "
-            "Assumes 0–20 cm depth, bulk density 1.4 Mg/m³, C fraction 0.42 of dry matter."
+            f"Assumes {soc_depth_m * 100:.0f} cm depth, bulk density 1.4 Mg/m³, C fraction 0.42 of dry matter."
+            + (f" Starting SOC from: {soc_source_label}." if soc_source_label else "")
+            + (" Direction was checked at both ends of the supplied SOC range." if soc_range_percent else "")
         ),
         calibration_warning=(
             "This model has NOT been validated for Indo-Gangetic Plain conditions. "
@@ -210,6 +236,10 @@ def estimate_soc_change(
             "clay content, and microbial activity — none of which are modelled here. "
             "Treat the direction indicator as a hypothesis, not a prediction."
         ),
+        soc_source_label=soc_source_label,
+        soc_depth_m=soc_depth_m,
+        soc_range_percent=soc_range_percent,
+        directions_across_range=directions,
     )
 
 
@@ -219,10 +249,17 @@ def build_soil_state_report(
     seasons: Sequence[str],
     is_legume: Mapping[str, bool],
     initial_soc_percent: float | None = None,
+    soc_source_type: str | None = None,
+    soc_source_label: str | None = None,
+    soc_depth_m: float = 0.20,
+    soc_range_percent: tuple[float, float] | None = None,
 ) -> SoilStateReport:
     """Assemble a fully-disclosed soil-state report for a rotation plan."""
     nutrient_estimates = estimate_nutrient_balance(crop_ids, crop_names, seasons, is_legume)
-    soc_estimate = estimate_soc_change(crop_ids, initial_soc_percent)
+    soc_estimate = estimate_soc_change(
+        crop_ids, initial_soc_percent, soc_depth_m=soc_depth_m,
+        soc_range_percent=soc_range_percent, soc_source_label=soc_source_label,
+    )
 
     required = (
         "Crop residue management practice (returned, burned, removed)",
@@ -234,6 +271,10 @@ def build_soil_state_report(
     missing: list[str] = []
     if initial_soc_percent is None:
         missing.append("Initial soil organic carbon (%) — SOC direction estimate is less reliable")
+    elif soc_source_type == "soilgrids_estimate":
+        missing.append("Initial soil organic carbon is a SoilGrids 250 m estimate, not a laboratory measurement of this field")
+    elif soc_source_type == "illustrative":
+        missing.append("Initial soil organic carbon is an illustrative demonstration value, not a measurement")
     missing.append("Residue management practice — a default 30% return fraction is assumed")
     missing.append("Applied fertiliser rates — not modelled")
 

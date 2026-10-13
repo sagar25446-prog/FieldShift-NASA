@@ -1,4 +1,9 @@
-# Scenario stress tests and uncertainty
+# Hypothetical stress tests and uncertainty
+
+> **Three kinds of climate information are kept separate in FieldShift:**
+> 1. **Observed history:** NASA POWER daily data (Climate Insights, Climate Trends).
+> 2. **NASA climate projections:** NEX-GDDP-CMIP6, SSP2-4.5 and SSP5-8.5, 2041–2060 compared with each model's own 1995–2014 simulation. Page *Future climate (NASA CMIP6)*; method in [`FUTURE_CLIMATE.md`](FUTURE_CLIMATE.md).
+> 3. **Hypothetical stress tests** (this document): simple what-if changes that the user chooses, applied to the observed record. They are not projections and not forecasts.
 
 ## Purpose
 
@@ -13,7 +18,7 @@ FieldShift's scenarios are deterministic sensitivity tests. They help a farmer s
 | Hotter-than-baseline stress test | Adds the selected Celsius increment to available `T2M`, `T2M_MIN`, and `T2M_MAX` daily values. Default increment is +2 °C. Missing values remain missing. | A climate projection or a crop heat-risk calculation. |
 | Reduced water-budget stress test | Only when a user chooses a reduction: multiplies the **farmer-provided total crop-water budget** by `1 - reduction / 100`. | A conversion of NASA precipitation into available irrigation water. |
 
-The first two perturbations transform only a displayed, labelled hypothetical climate frame. The current crop catalogue does not contain verified crop-specific thermal thresholds, so FieldShift deliberately does not turn those transforms into a climate-suitability score.
+The first two perturbations transform a labelled hypothetical copy of the observed climate frame, which then flows through the same FAO-56 water balance and FAO EcoCrop thermal assessment as the baseline. (Corrected 2026-10-13: an earlier version of this sentence said no thermal thresholds existed; EcoCrop thresholds were added in Task 2.)
 
 ## Robustness method
 

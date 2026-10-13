@@ -5,6 +5,25 @@
 
 ---
 
+## Data Integrity Correction (2026-10-13)
+
+During Task 7 the two NASA POWER files that earlier versions described as "verified" real observations were compared with live POWER responses and found to be **synthetic**:
+
+- `data/demo_snapshot_ludhiana_2024.json` had a non-POWER header ("Verified Offline Demonstration Snapshot", API v2.0.0) and differed from live POWER at the same coordinates on 365–366 of 366 days (2024 rainfall 372 mm vs 764 mm live).
+- `tests/fixtures/power_daily_ludhiana_historical_2000_2024.json` carried a genuine-looking POWER header but contained **exactly 372.2 mm of rainfall in every year** and a planted +0.30 °C/decade temperature trend. Its own tests described "injected" missing days and an "embedded trend".
+
+Both files were replaced with **unmodified live POWER responses** retrieved 2026-10-13 for the demonstration farm (30.85 N, 75.70 E; identical to the former city-centre point because both lie in the same POWER grid cell). Consequences:
+
+- Climate-trend results shown earlier (e.g. "+0.30" or "+0.42 °C/decade kharif warming") were artefacts of synthetic data. The genuine record shows kharif mean T2M **declining by about 0.78 °C/decade** (2000–2024, p ≈ 0.0025) at this grid cell. This is a description of a gridded reanalysis product, not proof of local cooling, and has not been checked against station data.
+- All demo rankings and water/thermal indicators changed and are now computed from real data.
+- The demonstration farm was moved from Ludhiana city centre (MODIS MCD12Q1: *Urban and Built-up*) to a MODIS-confirmed cropland pixel (MCD12Q1: *Croplands*, 2020–2024).
+
+## Engine Correction: Season Windows (2026-10-13)
+
+Before this date the FAO-56 water balance gave **every crop the whole year's ET0 and rainfall** (so annual rainfall was counted once per crop), and the EcoCrop thermal assessment split the record into chronological thirds (a "kharif" crop received January–April temperatures). Both now use each crop's own regional season window for its FAO-56 crop duration (`src/fieldshift/growing_season.py`). A cross-year rabi season that is not complete in the record is assembled as a labelled composite. Remaining limitation: the summer window (1 Apr–15 Jun) overlaps the kharif window (from 1 Jun), so a 75-day summer moong and the next kharif crop share up to 14 calendar days.
+
+---
+
 ## Scope Limitations
 
 1. **Regional focus:** Prototype supports Punjab, India crop rotations only (Ludhiana demonstration region).
@@ -18,7 +37,7 @@
 ## Data Limitations
 
 1. **Climate data:** NASA POWER is gridded (~0.5° resolution), not field-level measurement. It is historical context, not a forecast.
-2. **Soil data:** No remote soil sensing. All soil values are farmer/lab-provided. Unknown values remain unknown — they are never fabricated.
+2. **Soil data:** Farmer/lab values are primary. An optional ISRIC SoilGrids 2.0 estimate (250 m modelled grid, not a field measurement) can fill empty fields where appropriate. Its 90% prediction ranges are very wide at Punjab test points (e.g. clay 1.8–86%), the REST API is a beta service ISRIC says may be paused, and some locations (including the central-Ludhiana demo point) return no prediction. Unknown values remain unknown. See `docs/SOIL_DATA.md`.
 3. **Temperature thresholds:** No crop-specific thermal thresholds are documented in the catalogue. Climate suitability is always N/A.
 4. **Economic data:** No credible local cost/price data is configured. Economic potential is always N/A.
 5. **Water requirements:** Documented as approximation ranges from Government of India annexure. Not field-calibrated to specific Punjab districts.
@@ -30,7 +49,7 @@
 
 1. **Composite score:** A preference-weighted comparison, not a probability of success. It cannot be interpreted as yield prediction.
 2. **Pareto analysis:** Only compares on available numeric scores. Missing scores are preserved as N/A, not treated as zero. This prevents false dominance claims.
-3. **Soil-state model:** Simplified FAO/IPCC N-balance and Janssen (1984) SOC model. **NOT calibrated to Punjab conditions.** Uses assumed defaults for residue parameters. Labelled as "educational comparison only" in the UI.
+3. **Soil-state model:** Simplified FAO/IPCC N-balance and Janssen (1984) SOC model. **NOT calibrated to Punjab conditions.** Uses assumed defaults for residue parameters. Labelled as "educational comparison only" in the UI. **Known bias (found 2026-10-13):** the SOC direction compares *all* returned residue carbon with first-order loss and applies no humification coefficient, so for multi-crop rotations it reports "likely increase" for almost any starting SOC (below ~19% at 0–30 cm for rice–wheat–moong). Treat its direction as illustrative only.
 4. **Rotation graph:** Small deterministic DFS over documented relationships. Absence of a relationship means "unsupported by this prototype," not "agronomically impossible."
 5. **No machine learning:** No ML models are used. This is intentional — the goal is decision quality and transparency over complexity.
 6. **No pest/disease modelling:** Pest and disease cycles are not modelled. Farmers can provide avoidance restrictions but the system does not predict pest pressure.
@@ -40,7 +59,7 @@
 ## UI/UX Limitations
 
 1. **Mobile layout:** Not optimised. 5-column metric layouts and dynamic Pareto card columns can be cramped on screens < 480px wide. Streamlit provides basic responsiveness but no custom mobile CSS is applied.
-2. **Offline Mode Scope:** Includes a verified offline demonstration snapshot for the primary Ludhiana demonstration region (`data/demo_snapshot_ludhiana_2024.json`) enabling complete judging walkthroughs and automatic network fallback. Arbitrary coordinates outside Ludhiana require live internet access to NASA POWER or pre-caching.
+2. **Offline Mode Scope:** Includes a saved, unmodified 2024 NASA POWER response for the demonstration farm (`data/demo_snapshot_ludhiana_2024.json`, 30.85 N 75.70 E) for walkthroughs and network fallback. Other coordinates require live access to NASA POWER.
 3. **No multi-user support:** No authentication, no persistent user accounts, no database.
 4. **Session persistence:** Session state is lost on page refresh (Streamlit limitation). No server-side storage.
 5. **Charts require JavaScript:** Plotly charts will not render in environments where JavaScript is disabled.

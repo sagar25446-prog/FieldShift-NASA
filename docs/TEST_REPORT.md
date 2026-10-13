@@ -142,16 +142,16 @@
 - ✅ Controlled test confirms ranking inversion under heatwave: heat-tolerant rotation (`pearl_millet-chickpea-moong`) overtakes heat-sensitive rotation (`maize-wheat-moong`) in climate score and composite ranking
 ### 16. Observed Historical Climate Trends & Decadal Rates of Change
 - ✅ Parameter date coverage, observation counts, and completeness percentage audited for all variables
-- ✅ Missing observations correctly identified (e.g. 16 missing days in 2012 test fixture)
+- ✅ Missing observations correctly identified (a 16-day gap created by the test in a copy of the genuine record)
 - ✅ Regional growing seasons (Kharif, Rabi, Summer, Annual) accurately aggregated
 - ✅ Cross-calendar-year Rabi cycle properly pairs Nov–Dec of year $Y$ with Jan–Apr of year $Y+1$
 - ✅ Incomplete growing seasons (< 75% valid days) excluded from trend regression to prevent sampling distortion
-- ✅ OLS linear regression calculates exact decadal slope (+0.30 °C/decade), $R^2$, and $p$-value ($p < 0.01$) on 25-year benchmark
-- ✅ Baseline period vs. recent period comparison computes mean shift ($\Delta = +0.70^\circ\text{C}$) and percentage change
+- ✅ OLS decadal slope matches an independent least-squares fit on the genuine 2000–2024 POWER record (kharif mean T2M ≈ −0.78 °C/decade, p < 0.01). *Corrected 2026-10-13: earlier '+0.30 °C/decade' came from a synthetic fixture.*
+- ✅ Baseline period vs. recent period comparison computes mean shift and percentage change
 - ✅ Descriptive historical trends strictly separated from causal yield claims; no linear extrapolation into future forecasts
 
 ### 17. Live Judging Demonstration & Offline Snapshot Recovery
-- ✅ Cached offline snapshot contains 366 days of real, verified 2024 NASA POWER daily observations for Ludhiana
+- ✅ Offline snapshot is an unmodified 2024 NASA POWER response (header, coordinates and retrieval time checked). *Corrected 2026-10-13: the earlier file was synthetic.*
 - ✅ End-to-end demo workflow succeeds without network access (from profile load to rotation plan generation)
 - ✅ Mode indicator clearly distinguishes between "Live NASA POWER API Data" and "Saved Offline Snapshot"
 - ✅ Live API timeout reduced to 15 seconds, preventing indefinite hangs on slow networks

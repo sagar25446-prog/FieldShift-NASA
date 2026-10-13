@@ -114,3 +114,14 @@ To avoid counting meteorological factors twice without scientific justification:
 1. **Gridded Spatial Resolution:** NASA POWER observations have a native resolution of $\sim 0.5^\circ \times 0.5^\circ$. They reflect regional meteorological assimilation, not farm-specific canopy microclimates or topography.
 2. **Physiological Adaptation Index:** The EcoCrop suitability index is an ecological comparative indicator. It does **not** simulate biophysical carbon assimilation or yield (such as DSSAT or APSIM).
 3. **Cultivar Variations:** Individual cultivars (e.g. short-duration vs long-duration wheat) vary in heat tolerance. FieldShift reflects species-level guidelines from PAU and FAO.
+
+---
+
+## Growing-season windows (corrected 2026-10-13)
+
+Each crop is evaluated only on the days of its own growing period: the regional season window (kharif from 1 Jun, rabi from 1 Nov, summer from 1 Apr; `climate_trends.REGIONAL_SEASONS`) for the crop's FAO-56 duration (sum of the Table 11/12 stage lengths), truncated at the window end with a warning. Shared implementation: `src/fieldshift/growing_season.py`.
+
+- A record with several complete seasons gives one result per season, and the results are averaged. Heat and frost day counts are reported per season.
+- A cross-year rabi season that is not complete in the record (e.g. a single calendar year) is assembled from the same month-days of the available record and labelled **"Composite"** in the UI and plan method text.
+- Before this correction, the water balance gave every crop the whole year's ET0 and rainfall (annual rainfall counted once per crop), and the thermal assessment split the record into chronological thirds. Results produced before 2026-10-13 should not be compared with current results.
+- Known overlap: the summer window (to 15 Jun) and kharif window (from 1 Jun) share 15 days, so a 75-day summer moong and the following kharif crop can overlap by up to 14 days.

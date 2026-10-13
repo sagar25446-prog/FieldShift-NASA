@@ -6,7 +6,7 @@ crop-yield measurement, or forecast service.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, timezone
 import json
 from pathlib import Path
@@ -294,12 +294,20 @@ def parse_power_daily_response(payload: object, request: PowerRequest, source_ur
 
 DEMO_SNAPSHOT_PATH = Path(__file__).resolve().parents[2] / "data" / "demo_snapshot_ludhiana_2024.json"
 
+# The demonstration farm is a MODIS-confirmed cropland pixel in rural Ludhiana
+# district (MCD12Q1 IGBP class 12, 2020-2024), about 16 km WSW of the city.
+DEMO_LATITUDE = 30.85
+DEMO_LONGITUDE = 75.70
+DEMO_SNAPSHOT_SOURCE_URL = "https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M%2CT2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CALLSKY_SFC_SW_DWN%2CRH2M%2CWS2M&community=AG&longitude=75.7&latitude=30.85&start=20240101&end=20241231&format=JSON&time-standard=UTC"
+DEMO_SNAPSHOT_RETRIEVED_AT_UTC = "2026-10-13T13:14:00Z"
+
 
 def load_offline_demo_snapshot(path: Path | str | None = None) -> PowerDataset:
-    """Load the verified, real offline NASA POWER daily snapshot for Ludhiana, Punjab (2024).
+    """Load the saved, unmodified NASA POWER daily response for the demo farm (2024).
 
-    Contains actual daily historical observations retrieved from NASA POWER.
-    Values are never fabricated.
+    The file is the raw API response for ``DEMO_SNAPSHOT_SOURCE_URL``, saved on
+    ``DEMO_SNAPSHOT_RETRIEVED_AT_UTC``. Provenance reports that retrieval time,
+    not the time the file was loaded.
     """
     snapshot_file = Path(path) if path is not None else DEMO_SNAPSHOT_PATH
     if not snapshot_file.exists():
@@ -307,12 +315,11 @@ def load_offline_demo_snapshot(path: Path | str | None = None) -> PowerDataset:
     payload = json.loads(snapshot_file.read_text(encoding="utf-8"))
     parameters = tuple(payload["properties"]["parameter"].keys())
     req = PowerRequest(
-        latitude=30.9010,
-        longitude=75.8573,
+        latitude=DEMO_LATITUDE,
+        longitude=DEMO_LONGITUDE,
         start_date=date(2024, 1, 1),
         end_date=date(2024, 12, 31),
         parameters=parameters,
     )
-    source_url = "https://power.larc.nasa.gov/api/temporal/daily/point?start=20240101&end=20241231&latitude=30.9010&longitude=75.8573&community=AG&parameters=T2M,T2M_MAX,T2M_MIN,PRECTOTCORR,ALLSKY_SFC_SW_DWN,RH2M,WS2M&format=JSON"
-    return parse_power_daily_response(payload, req, source_url)
-
+    dataset = parse_power_daily_response(payload, req, DEMO_SNAPSHOT_SOURCE_URL)
+    return PowerDataset(dataset.data, replace(dataset.provenance, retrieved_at_utc=DEMO_SNAPSHOT_RETRIEVED_AT_UTC))

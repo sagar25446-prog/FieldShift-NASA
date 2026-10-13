@@ -114,12 +114,12 @@ To provide historical context without arbitrary assumptions:
 FieldShift enforces strict scientific boundaries on historical climate trends:
 
 1. **Descriptive, Not Causal:**
-   - Historical temperature warming or precipitation variability describes atmospheric observations over time.
+   - A historical temperature or precipitation trend describes gridded atmospheric data over time.
    - FieldShift never claims that an observed trend proves crop yields declined, farm incomes fell, or soil organic carbon changed. Agronomic yield is multifactorial (influenced by genetics, fertilizer, management, irrigation, and pest pressure).
 
 2. **No Future Extrapolation:**
    - Historical OLS linear regression fits past observations.
-   - It is strictly forbidden to extrapolate a historical slope (e.g. $+0.30^\circ\text{C/decade}$) as a forecast of future Punjab weather.
+   - It is strictly forbidden to extrapolate a historical slope (e.g. the −0.78 °C/decade kharif slope in the 2000–2024 demo record) as a forecast of future Punjab weather.
 
 3. **Gridded Context vs. In Situ Measurements:**
    - NASA POWER daily values are derived from NASA GMAO MERRA-2 and GEOS atmospheric models at approximately $0.5^\circ \times 0.625^\circ$ resolution (~50 km grid).

@@ -22,6 +22,8 @@ from .climate_trends import (
 )
 from .data_access import source_statuses
 from .nasa_power import (
+    DEMO_LATITUDE,
+    DEMO_LONGITUDE,
     PowerClient,
     PowerDataset,
     PowerError,
@@ -39,7 +41,44 @@ from .rotation_engine import (
     normalize_weights,
 )
 from .scenarios import ScenarioInputError, build_scenarios, evaluate_robustness, pareto_assess, transform_climate_frame
+from .soil_data import (
+    ESTIMATE_LABEL,
+    MANUAL_SOURCE_TYPES,
+    SOILGRIDS_ACCESS_URL,
+    SOILGRIDS_DEPTHS,
+    SOILGRIDS_FAIR_USE,
+    SOILGRIDS_PROPERTIES,
+    SOURCE_LABELS,
+    ManualSoilEntry,
+    ResolvedSoil,
+    SoilGridsClient,
+    SoilGridsError,
+    SoilGridsEstimate,
+    resolve_soil_values,
+)
 from .soil_nutrient_model import build_soil_state_report
+from .future_climate import (
+    ASSUMPTIONS as PROJECTION_ASSUMPTIONS,
+    INDICATOR_LABELS,
+    REFERENCE_EXPERIMENT,
+    SCENARIO_LABELS,
+    SHORT_LABELS,
+    ProjectionDataError,
+    ProjectionExtract,
+    climate_changes,
+    compare_plan,
+    ensemble_median,
+    load_extract,
+)
+from .land_use_phenology import (
+    MCD12Q2_USER_GUIDE_URL,
+    ORNL_SERVICE_DOCS_URL,
+    PhenologyClient,
+    PhenologyError,
+    PhenologyRecord,
+    load_demo_phenology,
+    season_use,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -51,7 +90,8 @@ PAGES = (
     "Climate Trends",
     "Farmer Priorities",
     "Rotation Recommendations",
-    "Scenario stress tests",
+    "Hypothetical stress tests",
+    "Future climate (NASA CMIP6)",
     "Comparison View",
     "Data and Methods",
 )
@@ -90,6 +130,24 @@ def _rotation_engine() -> RotationEngine:
     return RotationEngine(DATA_DIR / "crops.json", DATA_DIR / "rotation_rules.json")
 
 
+@st.cache_resource
+def _soilgrids_client() -> SoilGridsClient:
+    return SoilGridsClient()
+
+
+@st.cache_resource
+def _phenology_client() -> PhenologyClient:
+    return PhenologyClient()
+
+
+@st.cache_resource
+def _projection_extract() -> ProjectionExtract | None:
+    try:
+        return load_extract()
+    except ProjectionDataError:
+        return None
+
+
 @st.cache_data
 def _weight_profiles() -> dict[str, dict[str, float]]:
     raw = json.loads((DATA_DIR / "priority_weights.json").read_text(encoding="utf-8"))
@@ -101,8 +159,8 @@ def _load_historical_fixture_dataset() -> PowerDataset:
     fixture_path = PROJECT_ROOT / "tests" / "fixtures" / "power_daily_ludhiana_historical_2000_2024.json"
     raw = json.loads(fixture_path.read_text(encoding="utf-8"))
     req = PowerRequest(
-        latitude=30.9010,
-        longitude=75.8573,
+        latitude=DEMO_LATITUDE,
+        longitude=DEMO_LONGITUDE,
         start_date=date(2000, 1, 1),
         end_date=date(2024, 12, 31),
         parameters=tuple(raw["properties"]["parameter"].keys()),
@@ -110,7 +168,7 @@ def _load_historical_fixture_dataset() -> PowerDataset:
     return parse_power_daily_response(
         raw,
         req,
-        source_url="https://power.larc.nasa.gov/api/temporal/daily/point?start=20000101&end=20241231&latitude=30.9010&longitude=75.8573&community=AG&parameters=T2M,T2M_MAX,T2M_MIN,PRECTOTCORR,ALLSKY_SFC_SW_DWN,RH2M,WS2M&format=JSON",
+        source_url="https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M%2CT2M_MAX%2CT2M_MIN%2CPRECTOTCORR%2CALLSKY_SFC_SW_DWN%2CRH2M%2CWS2M&community=AG&longitude=75.7&latitude=30.85&start=20000101&end=20241231&format=JSON&time-standard=UTC",
     )
 
 
@@ -124,7 +182,8 @@ def _fresh_farm() -> dict[str, Any]:
         "texture": None, "ph": None, "organic_carbon_percent": None,
         "electrical_conductivity_ds_m": None, "waterlogged": None,
         "highly_deteriorated_alkaline": None, "well_drained": None,
-        "soil_source": "", "irrigation": "Unknown", "water_budget_mm": None,
+        "soil_source": "", "soil_basis": "unspecified", "soil_sample_depth": "",
+        "total_nitrogen_g_kg": None, "irrigation": "Unknown", "water_budget_mm": None,
         "field_size_ha": None, "previous_crop_id": None, "blocked_crop_ids": [],
         "start_season": "kharif",
     }
@@ -143,6 +202,10 @@ def _init_state() -> None:
     st.session_state.setdefault("power_dataset", None)
     st.session_state.setdefault("power_error", None)
     st.session_state.setdefault("power_mode", None)
+    st.session_state.setdefault("soilgrids_estimate", None)
+    st.session_state.setdefault("soilgrids_error", None)
+    st.session_state.setdefault("phenology_record", None)
+    st.session_state.setdefault("phenology_error", None)
 
 
 def _go(page: str) -> None:
@@ -155,6 +218,8 @@ def _reset() -> None:
         if key.startswith(("farm_", "priority_", "block_")) or key in {
             "farm", "weights", "planning_horizon", "scenario",
             "power_dataset", "power_error", "power_mode",
+            "soilgrids_estimate", "soilgrids_error",
+            "phenology_record", "phenology_error",
             "dry_reduction_pct", "hot_increase_c", "irrigation_reduction_pct",
         }:
             del st.session_state[key]
@@ -178,6 +243,40 @@ def _farm_is_ready() -> bool:
     return farm["latitude"] is not None and farm["longitude"] is not None
 
 
+def _manual_soil_entry() -> ManualSoilEntry:
+    farm = st.session_state["farm"]
+    return ManualSoilEntry(
+        source_type=farm.get("soil_basis", "unspecified"),
+        texture=farm["texture"], ph=farm["ph"],
+        organic_carbon_percent=farm["organic_carbon_percent"],
+        total_nitrogen_g_kg=farm.get("total_nitrogen_g_kg"),
+        electrical_conductivity_ds_m=farm["electrical_conductivity_ds_m"],
+        sample_depth=farm.get("soil_sample_depth") or None,
+        reference=farm["soil_source"] or None,
+    )
+
+
+def _resolved_soil() -> ResolvedSoil:
+    """Farmer/lab values first, then appropriate SoilGrids estimates, else unknown."""
+    return resolve_soil_values(_manual_soil_entry(), st.session_state.get("soilgrids_estimate"))
+
+
+def soil_information_from(farm: dict[str, Any], resolved: ResolvedSoil) -> SoilInformation:
+    """Build the engine's soil input from resolved values, keeping their sources."""
+    texture, soc = resolved["texture"], resolved["organic_carbon"]
+    soc_range = (soc.low, soc.high) if soc.low is not None and soc.high is not None else None
+    return SoilInformation(
+        ph=farm["ph"], electrical_conductivity_ds_m=farm["electrical_conductivity_ds_m"],
+        organic_carbon_percent=soc.value, waterlogged=farm["waterlogged"],  # type: ignore[arg-type]
+        highly_deteriorated_alkaline=farm["highly_deteriorated_alkaline"], well_drained=farm["well_drained"],
+        texture=texture.value, source_description=farm["soil_source"] or None,  # type: ignore[arg-type]
+        texture_source=texture.source_type if texture.value is not None else None,
+        organic_carbon_source=soc.source_type if soc.value is not None else None,
+        organic_carbon_depth=soc.depth if soc.value is not None else None,
+        organic_carbon_range_percent=soc_range,
+    )
+
+
 def _profile_from_state() -> FarmProfile:
     farm = st.session_state["farm"]
     dataset: PowerDataset | None = st.session_state["power_dataset"]
@@ -186,12 +285,7 @@ def _profile_from_state() -> FarmProfile:
         date_range=f"{dataset.provenance.start_date} to {dataset.provenance.end_date}" if dataset else None,
         available_parameters=tuple(dataset.data.columns) if dataset else (),
     )
-    soil = SoilInformation(
-        ph=farm["ph"], electrical_conductivity_ds_m=farm["electrical_conductivity_ds_m"],
-        organic_carbon_percent=farm["organic_carbon_percent"], waterlogged=farm["waterlogged"],
-        highly_deteriorated_alkaline=farm["highly_deteriorated_alkaline"], well_drained=farm["well_drained"],
-        texture=farm["texture"], source_description=farm["soil_source"] or None,
-    )
+    soil = soil_information_from(farm, _resolved_soil())
     return FarmProfile(
         latitude=farm["latitude"], longitude=farm["longitude"], soil=soil, climate=climate,
         total_crop_water_budget_mm=farm["water_budget_mm"], previous_crop_id=farm["previous_crop_id"],
@@ -199,7 +293,19 @@ def _profile_from_state() -> FarmProfile:
         number_of_seasons=st.session_state["planning_horizon"], start_season=farm["start_season"],
         climate_scenario=st.session_state["scenario"],
         climate_data=dataset.data if dataset else None,
+        observed_season_use=_observed_season_use(),
     )
+
+
+def _observed_season_use() -> dict[str, Any] | None:
+    """MODIS season use for the saved farm location, or None if absent or for another location."""
+    record: PhenologyRecord | None = st.session_state.get("phenology_record")
+    farm = st.session_state["farm"]
+    if record is None or farm["latitude"] is None:
+        return None
+    if abs(record.latitude - farm["latitude"]) > 1e-4 or abs(record.longitude - farm["longitude"]) > 1e-4:
+        return None
+    return season_use(record)
 
 
 def _plans() -> Any:
@@ -226,8 +332,8 @@ def _load_complete_demo_workflow(with_cached_climate: bool = True) -> None:
     """Load complete, verified demonstration workflow (Ludhiana profile + 2024 NASA snapshot)."""
     st.session_state["farm"] = {
         **_fresh_farm(),
-        "latitude": 30.9010,
-        "longitude": 75.8573,
+        "latitude": DEMO_LATITUDE,
+        "longitude": DEMO_LONGITUDE,
         "start_date": date(2024, 1, 1),
         "end_date": date(2024, 12, 31),
         "texture": "medium",
@@ -238,6 +344,7 @@ def _load_complete_demo_workflow(with_cached_climate: bool = True) -> None:
         "highly_deteriorated_alkaline": False,
         "well_drained": True,
         "soil_source": "Illustrative demonstration input (Ludhiana, Punjab) — replace with farmer/laboratory evidence.",
+        "soil_basis": "illustrative",
         "irrigation": "Irrigated",
         "water_budget_mm": 800.0,
         "field_size_ha": 2.5,
@@ -248,6 +355,10 @@ def _load_complete_demo_workflow(with_cached_climate: bool = True) -> None:
     for key in list(st.session_state):
         if key.startswith(("farm_", "block_")):
             del st.session_state[key]
+    st.session_state["soilgrids_estimate"] = None
+    st.session_state["soilgrids_error"] = None
+    st.session_state["phenology_record"] = load_demo_phenology()
+    st.session_state["phenology_error"] = None
     if with_cached_climate:
         st.session_state["power_dataset"] = load_offline_demo_snapshot()
         st.session_state["power_mode"] = "offline_snapshot"
@@ -395,7 +506,8 @@ def _sidebar() -> None:
             "Climate Trends": "📈",
             "Farmer Priorities": "⚖️",
             "Rotation Recommendations": "🔄",
-            "Scenario stress tests": "🧪",
+            "Hypothetical stress tests": "🧪",
+            "Future climate (NASA CMIP6)": "🌍",
             "Comparison View": "📊",
             "Data and Methods": "📖",
         }
@@ -463,7 +575,7 @@ def render_home() -> None:
         with st.container(border=True):
             st.markdown("##### 🌟 Live Judging Quick-Start")
             st.write("**Ludhiana demonstration preset**")
-            st.caption("Pre-configured profile with verified offline NASA POWER dataset.")
+            st.caption("Pre-configured illustrative farm with a saved, unmodified 2024 NASA POWER response.")
             if st.button("🚀 Load demo & view plans", type="primary", use_container_width=True):
                 _load_complete_demo_workflow(with_cached_climate=True)
                 _go("Rotation Recommendations")
@@ -480,7 +592,10 @@ def render_home() -> None:
                 icon = "✅" if status.available else "⏳"
                 st.markdown(f"**{icon} {status.name}**")
                 st.caption(status.message)
-    st.caption("Optional GPM, MODIS and soil-moisture sources are not required for this first version and are not silently substituted.")
+    st.caption(
+        "Also used: NASA MODIS land-cover dynamics (observed cropping seasons), NASA NEX-GDDP-CMIP6 climate projections "
+        "(demo farm grid cell) and optional ISRIC SoilGrids estimates. GPM IMERG and SMAP are not integrated (see docs/DATA_SOURCES.md)."
+    )
     _footer()
 
 
@@ -507,17 +622,31 @@ def render_farm_profile() -> None:
         st.subheader("📍 Location and climate request")
         a, b = st.columns(2)
         with a:
-            latitude = st.text_input("Latitude (degrees)", value="" if farm["latitude"] is None else str(farm["latitude"]), key="farm_latitude", placeholder="Example: 30.9010")
+            latitude = st.text_input("Latitude (degrees)", value="" if farm["latitude"] is None else str(farm["latitude"]), key="farm_latitude", placeholder="Example: 30.85")
         with b:
-            longitude = st.text_input("Longitude (degrees)", value="" if farm["longitude"] is None else str(farm["longitude"]), key="farm_longitude", placeholder="Example: 75.8573")
+            longitude = st.text_input("Longitude (degrees)", value="" if farm["longitude"] is None else str(farm["longitude"]), key="farm_longitude", placeholder="Example: 75.70")
         c, d = st.columns(2)
         with c:
             start_date = st.date_input("Historical start date", value=farm["start_date"], min_value=date(1981, 1, 1), key="farm_start")
         with d:
             end_date = st.date_input("Historical end date", value=farm["end_date"], min_value=date(1981, 1, 1), key="farm_end")
 
-        st.subheader("🧪 Soil information")
-        st.caption("Use laboratory or survey values where possible. These fields are not remotely measured by NASA POWER.")
+        st.subheader("🧪 Soil test or farmer-entered soil values")
+        st.caption(
+            "Values typed here always take precedence over SoilGrids estimates. Leave a field empty if it has not been measured. "
+            "These fields are not remotely measured by NASA POWER."
+        )
+        basis_keys = list(MANUAL_SOURCE_TYPES)
+        b1, b2 = st.columns(2)
+        with b1:
+            basis = st.selectbox(
+                "What are these soil values based on?", basis_keys,
+                index=basis_keys.index(farm.get("soil_basis", "unspecified")),
+                format_func=lambda key: SOURCE_LABELS[key], key="farm_soil_basis",
+                help="Keeps laboratory results identifiable as a separate source from observations, illustrations and estimates.",
+            )
+        with b2:
+            sample_depth = st.text_input("Sampling depth of the soil test (optional)", value=farm.get("soil_sample_depth", ""), key="farm_soil_depth", placeholder="Example: 0–15 cm")
         e, f, g = st.columns(3)
         with e:
             texture = st.selectbox("Texture", ("Unknown", "light", "medium", "heavy"), index=("Unknown", "light", "medium", "heavy").index(farm["texture"] or "Unknown"), key="farm_texture")
@@ -525,6 +654,10 @@ def render_farm_profile() -> None:
         with f:
             organic = st.text_input("Organic carbon (%; optional)", value="" if farm["organic_carbon_percent"] is None else str(farm["organic_carbon_percent"]), key="farm_organic")
             ec = st.text_input("Electrical conductivity (dS/m; optional)", value="" if farm["electrical_conductivity_ds_m"] is None else str(farm["electrical_conductivity_ds_m"]), key="farm_ec")
+            nitrogen = st.text_input(
+                "Total nitrogen (g/kg; optional)", value="" if farm.get("total_nitrogen_g_kg") is None else str(farm["total_nitrogen_g_kg"]), key="farm_nitrogen",
+                help="Total N only. Soil Health Card 'available N' (kg/ha) is a different measurement; do not enter it here.",
+            )
         with g:
             waterlogged = _tristate("Waterlogged?", "farm_waterlogged", farm["waterlogged"], "Known waterlogging can be a documented hard constraint for wheat.")
             alkaline = _tristate("Highly deteriorated alkaline?", "farm_alkaline", farm["highly_deteriorated_alkaline"], "Leave unknown unless this condition is known.")
@@ -555,16 +688,24 @@ def render_farm_profile() -> None:
                 raise ValueError("Latitude must be −90 to 90 and longitude must be −180 to 180.")
             if start_date > end_date:
                 raise ValueError("The historical start date must be on or before the end date.")
-            values = [_number(item) for item in (ph, organic, ec, budget, field_size)]
+            values = [_number(item) for item in (ph, organic, ec, budget, field_size, nitrogen)]
             if any(value is not None and value < 0 for value in values):
                 raise ValueError("Soil values, water budget, and field size cannot be negative.")
             reverse = {name: crop_id for crop_id, name in labels.items()}
+            if (farm["latitude"], farm["longitude"]) != (lat, lon):
+                # An estimate belongs to the coordinates it was retrieved for.
+                st.session_state["soilgrids_estimate"] = None
+                st.session_state["soilgrids_error"] = None
+                st.session_state["phenology_record"] = None
+                st.session_state["phenology_error"] = None
             farm.update({
                 "latitude": lat, "longitude": lon, "start_date": start_date, "end_date": end_date,
                 "texture": None if texture == "Unknown" else texture, "ph": values[0],
                 "organic_carbon_percent": values[1], "electrical_conductivity_ds_m": values[2],
                 "waterlogged": waterlogged, "highly_deteriorated_alkaline": alkaline,
                 "well_drained": drained, "soil_source": soil_source.strip(),
+                "soil_basis": basis, "soil_sample_depth": sample_depth.strip(),
+                "total_nitrogen_g_kg": values[5],
                 "irrigation": irrigation, "water_budget_mm": values[3],
                 "field_size_ha": values[4],
                 "previous_crop_id": None if previous == "Unknown" else reverse[previous],
@@ -577,9 +718,227 @@ def render_farm_profile() -> None:
         except ValueError as error:
             st.error(f"Please correct the farm profile: {error}")
 
+    _render_soil_estimate_section()
+    _render_land_use_section()
+
     if _farm_is_ready() and st.button("➡️ Continue to climate insights", type="primary"):
         _go("Climate Insights")
     _footer()
+
+
+def _request_phenology() -> None:
+    farm = st.session_state["farm"]
+    end_year = date.today().year - 1  # MCD12Q2 is released about six months after the year ends
+    bar = st.progress(0.0, text="Requesting MODIS phenology from ORNL DAAC (13 small requests)…")
+    try:
+        record = _phenology_client().fetch(
+            farm["latitude"], farm["longitude"], end_year - 9, end_year,
+            progress=lambda done, total: bar.progress(done / total, text=f"MODIS phenology: {done}/{total} layers"),
+        )
+        st.session_state["phenology_record"] = record
+        st.session_state["phenology_error"] = None
+    except PhenologyError as error:
+        st.session_state["phenology_error"] = str(error)
+    finally:
+        bar.empty()
+
+
+_LAND_USE_ICONS = {"regularly_green": "🟢", "not_green": "⚪", "irregular": "🟡", "insufficient": "❔"}
+_LAND_USE_WORDS = {
+    "regularly_green": "Usually green (cropped) in recent years",
+    "not_green": "Not green in recent years (usually fallow)",
+    "irregular": "Green only in some years",
+    "insufficient": "Not enough clear years",
+}
+
+
+def _render_land_use_section() -> None:
+    """Observed seasonal land use from MODIS MCD12Q2 for the saved farm location."""
+    st.subheader("🛰️ Recent land use at this location (NASA MODIS)")
+    st.caption(
+        "MODIS Land Cover Dynamics (MCD12Q2) records when the land at this 500 m pixel turned green and went dormant each year. "
+        "FieldShift uses it to show whether a plan keeps or adds a cropping season compared with recent years. "
+        "It does not identify crops, yields or soil quality."
+    )
+    if not _farm_is_ready():
+        st.info("Save a farm location first.")
+        return
+    if st.button("🛰️ Retrieve recent cropping seasons (MODIS, last 10 years)", use_container_width=True):
+        _request_phenology()
+    if st.session_state.get("phenology_error"):
+        st.warning(
+            f"MODIS phenology unavailable: {st.session_state['phenology_error']}\n\n"
+            "You can continue planning; plans are then not compared with recent land use."
+        )
+    use = _observed_season_use()
+    record: PhenologyRecord | None = st.session_state.get("phenology_record")
+    if use is None or record is None:
+        if record is not None:
+            st.info("The MODIS record loaded belongs to a different location. Retrieve it again for this farm.")
+        return
+    mode = "saved ORNL DAAC response" if record.mode == "saved" else "live ORNL DAAC request"
+    st.markdown(f"**Source:** {record.product} · {mode} retrieved {record.retrieved_at_utc} · product years {record.years[0]}–{record.years[-1]}")
+    cols = st.columns(len(use))
+    for col, (season_id, item) in zip(cols, use.items()):
+        with col:
+            with st.container(border=True):
+                st.markdown(f"**{_LAND_USE_ICONS[item.summary]} {item.season_name}**")
+                st.write(_LAND_USE_WORDS[item.summary])
+                st.caption(item.sentence())
+    _land_use_timeline(record)
+    with st.expander("📋 Year-by-year detail, method and limitations"):
+        st.dataframe(
+            pd.DataFrame([
+                {"Season": item.season_name, "Year": year.label, "Result": year.status.replace("_", " "), "Detail": year.detail}
+                for item in use.values() for year in item.years
+            ]),
+            hide_index=True, use_container_width=True,
+        )
+        st.markdown(
+            "- Each detected cycle is placed in the season window (kharif 1 Jun–31 Oct, rabi 1 Nov–30 Apr, summer 1 Apr–15 Jun) "
+            "that contains the midpoint of its mid-greenup and mid-greendown dates.\n"
+            "- A season is **usually green** if a cycle was found in more than half of the clear years, and **not green** if none was found. "
+            "At least 3 clear years are needed. These are FieldShift screening rules, not agronomic thresholds.\n"
+            "- Years are **unclear** when the cycle count is missing, the cycle quality is poor (QA 3), or more than two cycles exist "
+            "(the product reports only the two largest).\n"
+            "- A 500 m pixel can mix several fields with different calendars, so two cycles do not prove two crops on one field.\n"
+            f"- [MCD12Q2 C6.1 user guide]({MCD12Q2_USER_GUIDE_URL}) · [ORNL DAAC subset service]({ORNL_SERVICE_DOCS_URL})"
+        )
+
+
+def _land_use_timeline(record: PhenologyRecord) -> None:
+    """Green-up to dormancy bars per detected cycle (dates normalised to one season year)."""
+    rows = []
+    for cycle in record.cycles:
+        if cycle.greenup is None or cycle.dormancy is None:
+            continue
+        rows.append({
+            "Product year": str(cycle.product_year),
+            "Start": pd.Timestamp(cycle.greenup),
+            "End": pd.Timestamp(cycle.dormancy),
+            "Quality": cycle.quality,
+        })
+    if not rows:
+        return
+    fig = px.timeline(pd.DataFrame(rows), x_start="Start", x_end="End", y="Product year", color="Quality",
+                      color_discrete_map={"best": BRAND_GREEN, "good": "#66bb6a", "fair": ACCENT_AMBER, "poor": ACCENT_RED},
+                      title="Detected vegetation cycles (green-up to dormancy) at this 500 m pixel")
+    fig.update_yaxes(autorange="reversed")
+    fig.update_layout(template="plotly_white", height=320, legend_title_text="MODIS QA", margin=dict(l=10, r=10, t=50, b=10))
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption("Gaps between bars are periods with no detected vegetation cycle, such as fallow land or bare soil.")
+
+
+def _request_soil_estimate() -> None:
+    farm = st.session_state["farm"]
+    try:
+        with st.spinner("Requesting SoilGrids estimates… (the beta service can take ~30 s; timeout 60 s)"):
+            st.session_state["soilgrids_estimate"] = _soilgrids_client().fetch(farm["latitude"], farm["longitude"])
+        st.session_state["soilgrids_error"] = None
+    except SoilGridsError as error:
+        st.session_state["soilgrids_estimate"] = None
+        st.session_state["soilgrids_error"] = str(error)
+
+
+def _format_soil_value(value: Any, unit: str) -> str:
+    if value is None:
+        return "Unknown"
+    if isinstance(value, str):
+        return value
+    if unit == "pH units":
+        return f"{value:.1f}"
+    return f"{value:.2f} {unit}"
+
+
+def _render_soil_estimate_section() -> None:
+    """Optional SoilGrids estimate plus the table of soil values the planner uses."""
+    st.subheader("🛰️ Optional: estimate soil properties from location")
+    st.caption(
+        "ISRIC SoilGrids predicts soil properties on a 250 m global grid from soil profiles and environmental data. "
+        "It is an estimate for the grid cell, not a soil test of your field. Your own entries above always override it."
+    )
+    if not _farm_is_ready():
+        st.info("Save a farm location first to request a SoilGrids estimate.")
+        return
+    if st.button("🛰️ Estimate soil properties from location", use_container_width=True):
+        _request_soil_estimate()
+
+    error = st.session_state.get("soilgrids_error")
+    estimate: SoilGridsEstimate | None = st.session_state.get("soilgrids_estimate")
+    if error:
+        st.warning(
+            f"SoilGrids estimate unavailable: {error}\n\n"
+            "You can continue planning. Soil properties stay unknown unless you enter them, and the planner explains what that affects.",
+            icon="⚠️",
+        )
+    if estimate is not None and not estimate.has_any_value:
+        st.info(
+            "SoilGrids returned no prediction for this exact location (every requested value was empty). "
+            "The service does not state why; the point may fall outside its soil mask. Soil properties remain unknown unless you enter them."
+        )
+    if estimate is not None and estimate.has_any_value:
+        st.markdown(f"##### 🏷️ {ESTIMATE_LABEL} — not a measured soil test")
+        rows = []
+        for name in SOILGRIDS_PROPERTIES:
+            for depth in SOILGRIDS_DEPTHS:
+                item = estimate.value(name, depth)
+                if item is None:
+                    continue
+                interval = f"{item.q05:.2f} – {item.q95:.2f}" if item.q05 is not None and item.q95 is not None else "Not provided"
+                rows.append({
+                    "Property": item.label,
+                    "Depth": f"{item.top_cm}–{item.bottom_cm} cm",
+                    "Mean estimate": "No value" if item.mean is None else f"{item.mean:.2f}",
+                    "90% prediction range (Q0.05–Q0.95)": interval,
+                    "Uncertainty ratio": "Not provided" if item.uncertainty_ratio is None else f"{item.uncertainty_ratio:.1f}",
+                    "Unit": item.unit,
+                })
+        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.warning(
+            "**Spatial resolution:** each value describes a 250 m grid cell (about 6 ha) predicted by a global model. "
+            "Fields inside one cell can differ a lot, especially after years of different management. "
+            "The wide prediction ranges above show how uncertain the estimate is. Use a laboratory soil test for farm decisions.",
+            icon="📏",
+        )
+        with st.expander("📋 SoilGrids provenance"):
+            st.write({
+                "label": estimate.label,
+                "source_url": estimate.source_url,
+                "retrieved_at_utc": estimate.retrieved_at_utc,
+                "coordinates_requested": f"{estimate.latitude:.5f}, {estimate.longitude:.5f}",
+                "coordinates_returned": None if estimate.returned_latitude is None else f"{estimate.returned_latitude:.5f}, {estimate.returned_longitude:.5f}",
+                "resolution": estimate.resolution,
+                "uncertainty": "Q0.05/Q0.5/Q0.95 quantiles and ISRIC uncertainty ratio (Q0.95 − Q0.05)/Q0.5",
+                "licence": estimate.licence,
+                "documentation": estimate.documentation_url,
+                "access_notes": f"REST API is a beta service and may be paused. {SOILGRIDS_FAIR_USE} Alternatives: {SOILGRIDS_ACCESS_URL}",
+            })
+
+    resolved = _resolved_soil()
+    st.markdown("##### ✅ Soil values the planner actually uses")
+    st.dataframe(
+        pd.DataFrame([
+            {
+                "Property": item.label,
+                "Value used": _format_soil_value(item.value, item.unit),
+                "Range": "—" if item.low is None or item.high is None else f"{item.low:.2f} – {item.high:.2f}",
+                "Source": item.source_label,
+                "Depth": item.depth or "—",
+                "Used in calculations?": "Yes" if item.used_in_model and item.value is not None else "No",
+                "How it is used": item.how_used,
+                "Not used (shown for comparison)": item.not_used_alternative or "—",
+            }
+            for item in resolved.values.values()
+        ]),
+        hide_index=True, use_container_width=True,
+    )
+    for note in resolved.notes:
+        st.caption(f"ℹ️ {note}")
+    st.caption(
+        "🧪 **Replacing an estimate with a laboratory result:** type the laboratory value into the soil form above, "
+        "choose “Laboratory soil test (farmer-entered)”, add the sampling depth and report reference, then save. "
+        "The laboratory value is used immediately; the SoilGrids estimate stays visible only for comparison."
+    )
 
 
 def _request_climate(force_refresh: bool = False) -> None:
@@ -602,9 +961,9 @@ def _climate_provenance(dataset: PowerDataset) -> None:
     if mode == "offline_snapshot":
         st.info(
             f"📦 **Mode: Saved Offline Snapshot (Ludhiana Demonstration Region)**\n\n"
-            f"Verified NASA POWER Daily archive · Location: **{p.latitude_requested:.4f}°N, {p.longitude_requested:.4f}°E** · "
-            f"Date range: **{p.start_date} to {p.end_date}** ({len(dataset.data)} daily observations) · "
-            "All values are real archived NASA POWER observations, never fabricated."
+            f"Unmodified NASA POWER Daily API response saved on {p.retrieved_at_utc[:10]} · Location: **{p.latitude_requested:.4f}°N, {p.longitude_requested:.4f}°E** "
+            "(cropland pixel in rural Ludhiana district) · "
+            f"Date range: **{p.start_date} to {p.end_date}** ({len(dataset.data)} daily observations)."
         )
     else:
         st.success(
@@ -656,7 +1015,7 @@ def render_climate() -> None:
             _request_climate(force_refresh=True)
     if st.session_state["power_error"]:
         st.error(f"⚠️ NASA POWER live request failed: {st.session_state['power_error']}")
-        st.warning("NASA POWER is currently unreachable or slow. You can load the verified offline snapshot to continue evaluating FieldShift without interruption.")
+        st.warning("NASA POWER is currently unreachable or slow. You can load the saved 2024 NASA POWER response for the demonstration farm to continue.")
         if st.button("📦 Load Saved Offline Snapshot for Ludhiana", type="primary", use_container_width=True):
             st.session_state["power_dataset"] = load_offline_demo_snapshot()
             st.session_state["power_mode"] = "offline_snapshot"
@@ -665,7 +1024,7 @@ def render_climate() -> None:
     dataset: PowerDataset | None = st.session_state["power_dataset"]
     if not dataset:
         st.info("No climate dataset is currently active. Retrieve live data above or load the saved offline snapshot.")
-        if st.button("📦 Load Verified Offline NASA POWER Snapshot (2024 Ludhiana)"):
+        if st.button("📦 Load saved NASA POWER response (2024, demo farm)"):
             st.session_state["power_dataset"] = load_offline_demo_snapshot()
             st.session_state["power_mode"] = "offline_snapshot"
             st.session_state["power_error"] = None
@@ -734,23 +1093,23 @@ def render_climate_trends() -> None:
             "Select climate record for trend analysis",
             [
                 f"Current farm profile dataset ({session_dataset.provenance.start_date} to {session_dataset.provenance.end_date}, {session_span_years} years)",
-                "25-Year NASA POWER Ludhiana benchmark (2000–2024, 9,132 daily observations)",
+                "25-year NASA POWER record for the demo farm grid cell (2000–2024, 9,132 days; unmodified API response saved 2026-10-13)",
             ],
             index=0,
             help="At least 3 complete annual seasons are required to estimate a linear trend.",
         )
-        use_fixture = "25-Year" in source_choice
+        use_fixture = "25-year" in source_choice
     else:
         if session_dataset:
             st.info(
                 f"The current session climate request covers {session_dataset.provenance.start_date} to {session_dataset.provenance.end_date} "
                 f"({session_span_years} year{'s' if session_span_years > 1 else ''}). Long-term trend analysis requires multi-year seasonal records (minimum 3 years). "
-                "Displaying the verified 25-Year NASA POWER historical record (2000–2024) for the Ludhiana demonstration region."
+                "Displaying the 25-year NASA POWER record for the demo farm grid cell (2000–2024, 9,132 days; unmodified API response saved 2026-10-13)."
             )
         else:
             st.info(
                 "No custom multi-year farm climate record is loaded. "
-                "Displaying the verified 25-Year NASA POWER historical record (2000–2024) for the Ludhiana demonstration region."
+                "Displaying the 25-year NASA POWER record for the demo farm grid cell (2000–2024, 9,132 days; unmodified API response saved 2026-10-13)."
             )
 
     active_dataset = _load_historical_fixture_dataset() if use_fixture else session_dataset
@@ -943,7 +1302,7 @@ def render_climate_trends() -> None:
     # 6. Scientific Boundary Disclosures
     st.info(
         "🛡️ **Scientific & Interpretive Boundaries:**\n"
-        "- **Descriptive, not causal:** Observed meteorological warming or rainfall trends describe historical atmospheric conditions. They do not prove that crop yield, farm profits, or soil health changed proportionally.\n"
+        "- **Descriptive, not causal:** Observed temperature or rainfall trends describe historical atmospheric conditions in a gridded reanalysis product. They do not prove that crop yield, farm profits, or soil health changed proportionally.\n"
         "- **No linear extrapolation:** Historical trends represent past observations and must not be extrapolated linearly as future climate forecasts.\n"
         "- **Gridded resolution:** NASA POWER observations are derived from NASA GEOS/MERRA-2 gridded models (~0.5° latitude × 0.625° longitude), not direct on-farm microclimate sensors."
     )
@@ -1036,7 +1395,7 @@ def _plan_view(plan: Any, index: int) -> None:
         st.markdown(f"**Composite comparison score:** {'Unavailable' if plan.composite_score is None else f'{plan.composite_score:.2f}'} — preference-weighted comparison only, not a probability of success.")
 
         # Tabs for details
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
             "Why these crops",
             "Feasibility checks",
             "Water balance (FAO-56)",
@@ -1044,6 +1403,7 @@ def _plan_view(plan: Any, index: int) -> None:
             "Score methods",
             "Factors & trade-offs",
             "Soil-state estimate",
+            "Recent land use (MODIS)",
         ])
 
         with tab1:
@@ -1083,7 +1443,32 @@ def _plan_view(plan: Any, index: int) -> None:
         with tab7:
             _render_soil_state_tab(plan)
 
+        with tab8:
+            _render_land_use_tab(plan)
+
         st.caption("Supporting URLs: " + " · ".join(plan.source_urls))
+
+
+def _render_land_use_tab(plan: Any) -> None:
+    """How this plan's seasons compare with MODIS-observed recent land use."""
+    comparison = getattr(plan, "land_use_comparison", None)
+    if comparison is None:
+        st.info("No MODIS land-use record for this farm location. Retrieve it on the Farm Profile page to compare this plan with recent cropping seasons.")
+        return
+    if comparison.added_seasons:
+        demand = comparison.added_crop_water_demand_mm
+        st.warning(
+            "**This plan adds a cropping season** compared with recent land use: "
+            + ", ".join(f"{crop.replace('_', ' ')} in {season}" for crop, season in zip(comparison.added_crops, comparison.added_seasons))
+            + (f". Estimated extra crop water demand: **{demand:.0f} mm** (FAO-56 ETc for that crop period)." if demand is not None else ".")
+            + " Confirm that irrigation water, labour and the sowing window are available.",
+            icon="💧",
+        )
+    else:
+        st.success("Every planned season was green at this location in most recent years; the plan does not add a cropping season.")
+    for line in comparison.evidence:
+        st.write(f"- {line}")
+    st.caption("This comparison changes the plan's status and trade-offs, not its composite score, so crop water demand is not counted twice.")
 
 
 def _render_water_balance_tab(plan: Any) -> None:
@@ -1101,7 +1486,11 @@ def _render_water_balance_tab(plan: Any) -> None:
         return
 
     st.markdown("#### 💧 FAO-56 Crop Water Balance & Net Irrigation Requirement")
-    st.caption("Computed using FAO-56 Penman–Monteith ET₀, crop coefficients (Kc), and USDA SCS effective rainfall.")
+    st.caption(
+        "Computed using FAO-56 Penman–Monteith ET₀, crop coefficients (Kc), and USDA SCS effective rainfall. "
+        "Each crop uses only the days of its own season window (kharif 1 Jun, rabi 1 Nov, summer 1 Apr) for its FAO-56 crop duration. "
+        "A 'Composite' period joins days from different calendar years because no complete season is in the record."
+    )
 
     col1, col2, col3, col4 = st.columns(4)
     with col1:
@@ -1126,6 +1515,7 @@ def _render_water_balance_tab(plan: Any) -> None:
             "Rainfall (mm)": f"{cr.total_rainfall_mm:.1f}",
             "Eff. rain (mm)": f"{cr.effective_rainfall_mm:.1f}",
             "Deficit (mm)": f"{cr.net_irrigation_requirement_mm:.1f}" if cr.net_irrigation_requirement_mm is not None else "N/A",
+            "Climate period used": cr.method.split("climate period: ")[-1] if "climate period: " in cr.method else cr.method.split("mean of ")[-1],
         })
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
 
@@ -1188,6 +1578,7 @@ def _render_climate_suitability_tab(plan: Any) -> None:
             "Heat Days": str(c.heat_stress_days),
             "Score": f"{c.climate_suitability_score:.2f}" if c.climate_suitability_score is not None else "N/A",
             "Status": c.status.capitalize(),
+            "Climate period used": c.climate_period or "—",
         })
 
     if rows:
@@ -1209,16 +1600,25 @@ def _render_soil_state_tab(plan: Any) -> None:
     """Feature E: Render the simplified soil-state / nutrient-balance model."""
     engine = _rotation_engine()
     is_legume = {crop_id: engine.crops[crop_id]["legume"] for crop_id in plan.crop_ids}
-    farm = st.session_state["farm"]
-    soc = farm.get("organic_carbon_percent")
+    soc = _resolved_soil()["organic_carbon"]
+    soc_range = (soc.low, soc.high) if soc.low is not None and soc.high is not None else None
 
     report = build_soil_state_report(
         crop_ids=plan.crop_ids,
         crop_names=plan.crop_names,
         seasons=plan.seasons,
         is_legume=is_legume,
-        initial_soc_percent=soc,
+        initial_soc_percent=soc.value,  # type: ignore[arg-type]
+        soc_source_type=soc.source_type,
+        soc_source_label=soc.source_label if soc.value is not None else None,
+        soc_depth_m=0.30 if soc.source_type == "soilgrids_estimate" else 0.20,
+        soc_range_percent=soc_range,
     )
+    if soc.value is None:
+        st.caption("Starting organic carbon: **unknown** (not entered, and no usable SoilGrids estimate).")
+    else:
+        range_text = f" (range {soc.low:.2f}–{soc.high:.2f}%)" if soc_range else ""
+        st.caption(f"Starting organic carbon used: **{soc.value:.2f}%**{range_text} · source: **{soc.source_label}** · depth: {soc.depth}")
 
     st.warning(
         "**Simplified estimate** — uses published FAO/IPCC equations with assumed defaults. "
@@ -1294,7 +1694,7 @@ def render_recommendations() -> None:
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🧪 Stress-test these alternatives", type="primary", use_container_width=True):
-            _go("Scenario stress tests")
+            _go("Hypothetical stress tests")
     with col2:
         if st.button("📊 Compare alternatives", use_container_width=True):
             _go("Comparison View")
@@ -1302,7 +1702,13 @@ def render_recommendations() -> None:
 
 
 def render_scenarios() -> None:
-    st.title("🧪 Scenario stress tests")
+    st.title("🧪 Hypothetical stress tests")
+    st.info(
+        "This page applies **simple what-if changes you choose** (less rain, hotter days, less irrigation water) to the "
+        "observed NASA POWER record. These are not NASA climate projections; projections are on the "
+        "**🌍 Future climate (NASA CMIP6)** page.",
+        icon="🧪",
+    )
     st.warning(
         "These are **user-configured hypothetical stress tests**, not forecasts or "
         "probabilities. They expose sensitivity to selected assumptions; they do not "
@@ -1458,6 +1864,157 @@ def render_scenarios() -> None:
     _footer()
 
 
+def _fmt_spread(spread: Any, unit: str, digits: int = 1) -> str:
+    if spread is None:
+        return "Not available"
+    return f"{spread.median:+.{digits}f} {unit} (models: {spread.low:+.{digits}f} to {spread.high:+.{digits}f})"
+
+
+def _plan_projection(plan: Any, extract: ProjectionExtract) -> Any:
+    """Cache per session: running 5 models × 3 periods takes a few seconds per plan."""
+    profile = _profile_from_state()
+    key = (
+        plan.crop_ids, profile.start_season, profile.total_crop_water_budget_mm,
+        tuple(sorted(profile.priority_weights.items())), repr(profile.soil), profile.previous_crop_id,
+    )
+    cache = st.session_state.setdefault("projection_cache", {})
+    if key not in cache:
+        cache[key] = compare_plan(_rotation_engine(), plan.crop_ids, profile, extract)
+    return cache[key]
+
+
+def render_future_climate() -> None:
+    st.title("🌍 Future climate projections (NASA NEX-GDDP-CMIP6)")
+    st.warning(
+        "**Climate projections are not weather forecasts.** Each projection describes a plausible 20-year climate under an "
+        "emissions pathway, as simulated by one climate model. Models disagree, so FieldShift shows the middle value "
+        "and the range across models. Values are for a ~25 km grid cell, not your field.",
+        icon="🌍",
+    )
+    with st.container(border=True):
+        st.markdown(
+            "**Three kinds of climate information in FieldShift — kept separate:**\n"
+            "1. **Observed history** (NASA POWER) — Climate Insights and Climate Trends pages.\n"
+            "2. **NASA climate projections** (this page) — each model's future period compared with *the same model's* 1995–2014 simulation.\n"
+            "3. **Hypothetical stress tests** — simple what-if changes you choose, on the Hypothetical stress tests page."
+        )
+    extract = _projection_extract()
+    if extract is None:
+        st.error("No verified projection extract is installed. See docs/FUTURE_CLIMATE.md for how to create one with scripts/extract_nex_gddp_cmip6.py.")
+        _footer()
+        return
+    if not _farm_is_ready():
+        st.info("Save a farm location first.")
+        _footer()
+        return
+    farm = st.session_state["farm"]
+    if not extract.covers(farm["latitude"], farm["longitude"]):
+        st.info(
+            f"The installed projection extract covers only the 0.25° grid cell centred at {extract.grid_cell[0]:.3f} N, "
+            f"{extract.grid_cell[1]:.3f} E (the demonstration farm). FieldShift does not borrow it for other locations. "
+            "Run scripts/extract_nex_gddp_cmip6.py for this farm's coordinates to add one."
+        )
+        _footer()
+        return
+
+    with st.expander("📋 Data provenance: models, scenarios, periods, licences"):
+        rows = []
+        for model in extract.models:
+            ref = extract.records[(model, REFERENCE_EXPERIMENT)]
+            rows.append({
+                "Model": model, "Variant": ref.variant, "Licence": ref.licence or "Not stated",
+                "Dataset version": ref.dataset_version, "Calendar": ref.calendar,
+            })
+        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.markdown(
+            "\n".join(f"- **{SCENARIO_LABELS[name]}**" for name in extract.experiments)
+            + f"\n- Grid cell centre: {extract.grid_cell[0]:.3f} N, {extract.grid_cell[1]:.3f} E (0.25°, about 25 km); "
+            f"requested point {extract.requested_latitude:.2f} N, {extract.requested_longitude:.2f} E"
+            + f"\n- Extracted from the NCCS THREDDS service on {extract.retrieved_utc}"
+            + f"\n- Citation: {extract.citation}"
+            + f"\n- [Dataset page]({extract.documentation}) · [Technical note]({extract.technical_note})"
+        )
+
+    st.subheader("1. How the climate changes by mid-century")
+    season_names = {"kharif": "Kharif (Jun–Oct)", "rabi": "Rabi (Nov–Apr)", "summer": "Summer / zaid (Apr–mid-Jun)"}
+    season_id = st.radio("Season", list(season_names), format_func=season_names.get, horizontal=True)
+    changes = climate_changes(extract, season_id)
+    indicator_rows = [
+        ("Mean temperature", "mean_temperature_c", "°C", 1),
+        ("Average daily maximum", "mean_tmax_c", "°C", 1),
+        ("Days with maximum ≥ 35 °C (per season)", "heat_days", "days", 0),
+        ("Seasonal rainfall", "precipitation_pct", "%", 0),
+    ]
+    table = []
+    for label, key, unit, digits in indicator_rows:
+        row = {"Change vs each model's 1995–2014 simulation": label}
+        for scenario, values in changes.items():
+            spread = values.get(key)
+            row[SHORT_LABELS[scenario]] = _fmt_spread(spread, unit, digits)
+            row[f"{SHORT_LABELS[scenario]}: model agreement"] = spread.agreement if spread else "—"
+        table.append(row)
+    st.dataframe(pd.DataFrame(table), hide_index=True, use_container_width=True)
+    st.caption("Middle value across 5 models, with the lowest and highest model in brackets. Rainfall changes are usually much less certain than temperature changes.")
+
+    st.subheader("2. How your rotation plans compare under each scenario")
+    result = _plans()
+    if not result or not result.plans:
+        st.info("Generate rotation alternatives first (Rotation Recommendations).")
+        _footer()
+        return
+    labels = {f"Alt {i}: {' → '.join(plan.crop_names)}": plan for i, plan in enumerate(result.plans, 1)}
+    chosen_label = st.selectbox("Plan to examine", list(labels))
+    plan = labels[chosen_label]
+    with st.spinner("Running this plan through 5 models × 3 periods…"):
+        comparison = _plan_projection(plan, extract)
+    detail = []
+    for key, label in INDICATOR_LABELS.items():
+        base = ensemble_median(comparison, REFERENCE_EXPERIMENT, key)
+        row = {"Indicator": label, SHORT_LABELS[REFERENCE_EXPERIMENT]: "—" if base is None else f"{base:.2f}" if base <= 1.5 else f"{base:.0f}"}
+        for scenario in comparison.changes:
+            spread = comparison.changes[scenario].get(key)
+            digits = 2 if key in ("water_suitability", "climate_suitability", "composite") else 0
+            row[f"{SHORT_LABELS[scenario]} change"] = _fmt_spread(spread, "", digits).replace(" (", " (").strip()
+        detail.append(row)
+    st.dataframe(pd.DataFrame(detail), hide_index=True, use_container_width=True)
+    st.caption(
+        "Same crops, crop calendar, water budget and priority weights in every column. The first column is the middle value of "
+        "the five models' historical simulations; the others show the change from each model's own historical value."
+    )
+    for scenario, models in comparison.hard_failures.items():
+        st.error(f"Under {SHORT_LABELS[scenario]}, a documented hard constraint fails for: {', '.join(models)}.")
+
+    chart_rows = []
+    for experiment, per_model in comparison.absolute.items():
+        for model, values in per_model.items():
+            for key in ("water_suitability", "climate_suitability"):
+                if values[key] is not None:
+                    chart_rows.append({"Period": SHORT_LABELS[experiment], "Model": model, "Score": values[key], "Indicator": INDICATOR_LABELS[key]})
+    if chart_rows:
+        fig = px.strip(pd.DataFrame(chart_rows), x="Period", y="Score", color="Model", facet_col="Indicator", range_y=[0, 1.05])
+        fig.update_layout(template="plotly_white", height=360, legend=dict(orientation="h", y=-0.25))
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption("Each dot is one climate model. A wide spread means the models disagree.")
+
+    if st.checkbox("Compare the ranking of all plans across scenarios (takes longer)"):
+        ranking = []
+        for label, candidate in labels.items():
+            comp = _plan_projection(candidate, extract)
+            ranking.append({"Plan": label, **{
+                SHORT_LABELS[e]: ensemble_median(comp, e, "composite") for e in extract.experiments
+            }})
+        frame = pd.DataFrame(ranking)
+        for e in extract.experiments:
+            frame[f"Rank: {SHORT_LABELS[e]}"] = frame[SHORT_LABELS[e]].rank(ascending=False, method="min").astype("Int64")
+        st.dataframe(frame.style.format({SHORT_LABELS[e]: "{:.3f}" for e in extract.experiments}, na_rep="—"), hide_index=True, use_container_width=True)
+        st.caption("Composite = your priority weights applied to the median of the five models. A change in rank shows a plan's sensitivity to climate change, not a guarantee.")
+
+    with st.expander("Assumptions used to compare periods"):
+        for item in PROJECTION_ASSUMPTIONS:
+            st.write(f"- {item}")
+    _footer()
+
+
 def render_comparison() -> None:
     st.title("📊 Compare alternatives")
     result = _plans()
@@ -1544,8 +2101,11 @@ def render_comparison() -> None:
     st.subheader("Trade-off summary")
     trade_rows = []
     for position, plan in enumerate(result.plans, 1):
+        land_use = getattr(plan, "land_use_comparison", None)
         trade_rows.append({
             "Alternative": f"Alt {position}: {' → '.join(plan.crop_names)}",
+            "Added season vs recent land use": "Not compared" if land_use is None else (", ".join(land_use.added_seasons) or "None"),
+            "Extra crop water for added season (mm)": None if land_use is None else land_use.added_crop_water_demand_mm,
             "Composite score": plan.composite_score,
             "Status": plan.status.replace("_", " "),
             "Positive factors": len(plan.positive_factors),
@@ -1553,7 +2113,7 @@ def render_comparison() -> None:
             "Uncertainty warnings": len(plan.uncertainty_warnings),
         })
     st.dataframe(
-        pd.DataFrame(trade_rows).style.format({"Composite score": "{:.3f}"}, na_rep="N/A"),
+        pd.DataFrame(trade_rows).style.format({"Composite score": "{:.3f}", "Extra crop water for added season (mm)": "{:.0f}"}, na_rep="—"),
         hide_index=True, use_container_width=True,
     )
 
@@ -1565,7 +2125,7 @@ def render_comparison() -> None:
             _go("Farmer Priorities")
     with col2:
         if st.button("🧪 Run scenario stress tests", use_container_width=True):
-            _go("Scenario stress tests")
+            _go("Hypothetical stress tests")
     _footer()
 
 
@@ -1579,7 +2139,8 @@ def render_methods() -> None:
             ("Farmer-provided", "Coordinates, water budget, irrigation, soil conditions, prior crop, avoid list", "Used as entered; unknown remains unknown."),
             ("Retrieved", "NASA POWER Daily: T2M, T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN", "Historical gridded climate context; not a field measurement."),
             ("Calculated", "Precipitation total and monthly temperature summary", "Derived from retrieved daily values over the selected range."),
-            ("Not estimated", "NPK, soil pH, organic carbon, yield, profit, nitrogen fixed, soil-carbon change", "No values are fabricated when evidence is absent."),
+            ("Estimated (optional)", "ISRIC SoilGrids 250 m: sand, silt, clay, organic carbon, pH, total nitrogen (0–30 cm)", "Labelled 'Estimated from SoilGrids'; farmer/laboratory values override; used only where appropriate."),
+            ("Not estimated", "Available NPK, EC, waterlogging, yield, profit, nitrogen fixed, measured soil-carbon change", "No values are fabricated when evidence is absent."),
         ], columns=["Information type", "Examples", "How FieldShift treats it"]),
         hide_index=True, use_container_width=True,
     )
@@ -1615,9 +2176,13 @@ The simplified soil-state module (Feature E) uses published FAO/IPCC relationshi
         "- `docs/ROTATION_ENGINE.md` — rule checks, scoring and safeguards.\n"
         "- `docs/AGRONOMIC_ASSUMPTIONS.md` — catalogue evidence and items requiring expert review.\n"
         "- `docs/SCENARIOS_AND_UNCERTAINTY.md` — scenario definitions, transforms, and uncertainty categories.\n"
+        "- `docs/SOIL_DATA.md` — SoilGrids access, units, depths, uncertainty, source precedence and limitations.\n"
         "- `data/README.md` — crop-record schema and provenance."
     )
-    st.caption("Optional GPM, MODIS, SMAP/NASA-USDA soil moisture and local economics are documented as later extensions, not required inputs to this interface.")
+    st.caption(
+        "Integrated: NASA POWER, NASA MODIS MCD12Q2 (observed seasonal land use), NASA NEX-GDDP-CMIP6 (projections), ISRIC SoilGrids (optional). "
+        "Not integrated: GPM IMERG (needs Earthdata Login), SMAP. Selection reasoning: docs/DATA_SOURCES.md."
+    )
     _footer()
 
 
@@ -1645,7 +2210,8 @@ def render_application() -> None:
         PAGES[4]: render_priorities,
         PAGES[5]: render_recommendations,
         PAGES[6]: render_scenarios,
-        PAGES[7]: render_comparison,
-        PAGES[8]: render_methods,
+        PAGES[7]: render_future_climate,
+        PAGES[8]: render_comparison,
+        PAGES[9]: render_methods,
     }
     dispatch[st.session_state["page"]]()

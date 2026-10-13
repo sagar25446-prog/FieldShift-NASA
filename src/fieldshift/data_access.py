@@ -24,7 +24,7 @@ def source_statuses() -> tuple[SourceStatus, ...]:
     """Return honest source availability; this is not data retrieval."""
     return (
         SourceStatus("NASA POWER daily climate data", True, "Ready for an on-demand historical point request. It is gridded climate context, not a farm measurement."),
-        SourceStatus("Local soil information", False, "Not connected yet. Field inputs or a documented local source are required."),
+        SourceStatus("Soil information", True, "Farmer or laboratory values, plus an optional ISRIC SoilGrids 250 m estimate (beta service; may be unavailable). Estimates never replace a soil test."),
         SourceStatus("Crop and rotation reference data", True, "Source-linked Punjab crop catalogue is available; agronomic rules are not implemented."),
     )
 

@@ -86,6 +86,8 @@ class CropClimateAssessment:
     method: str
     warnings: tuple[str, ...] = ()
     source_ids: tuple[str, ...] = ()
+    climate_period: str = ""
+    seasons_pooled: int = 1  # heat/frost day counts are per-season averages when > 1
 
 
 @dataclass(frozen=True)
@@ -158,8 +160,16 @@ def assess_crop_climate(
     crop_data: dict,
     climate_slice: pd.DataFrame | None,
     season: str = "kharif",
+    seasons_pooled: int = 1,
+    climate_period: str = "",
 ) -> CropClimateAssessment:
-    """Assess growing-season climate thermal suitability for a single crop."""
+    """Assess growing-season climate thermal suitability for a single crop.
+
+    ``climate_slice`` must contain only the crop's growing-period days. When it
+    pools several seasons, ``seasons_pooled`` converts the reported heat and
+    frost day counts to per-season averages; the stress penalty is a share of
+    days and is unaffected.
+    """
     profile = CropThermalProfile.from_crop_dict(crop_data)
     warnings: list[str] = []
 
@@ -341,6 +351,9 @@ def assess_crop_climate(
 
     # 6. Combined score
     penalty = calculate_stress_penalty(heat_days, frost_days, valid_days)
+    if seasons_pooled > 1:
+        heat_days = int(round(heat_days / seasons_pooled))
+        frost_days = int(round(frost_days / seasons_pooled))
     if base_score is not None:
         final_score = max(0.0, min(1.0, round(base_score * (1.0 - penalty), 4)))
     else:
@@ -385,6 +398,8 @@ def assess_crop_climate(
         method=method_str,
         warnings=tuple(warnings),
         source_ids=profile.source_ids,
+        climate_period=climate_period,
+        seasons_pooled=seasons_pooled,
     )
 
 
@@ -404,26 +419,28 @@ def assess_rotation_climate(
             source_ids=(),
         )
 
-    # Partition climate data across crops if multi-season
-    n_crops = len(crops)
-    n_days = len(climate_data)
-    days_per_crop = max(1, n_days // n_crops)
+    from .growing_season import crop_duration_days, crop_season_slices
 
     crop_assessments: list[CropClimateAssessment] = []
     all_source_ids: set[str] = set()
+    warnings: list[str] = []
 
-    for idx, (crop_dict, season) in enumerate(zip(crops, seasons)):
-        start_idx = idx * days_per_crop
-        end_idx = (idx + 1) * days_per_crop if idx < n_crops - 1 else n_days
-        slice_df = climate_data.iloc[start_idx:end_idx] if n_days > 0 else climate_data
-
-        assessment = assess_crop_climate(crop_dict, slice_df, season=season)
+    # Each crop is assessed only on the days of its own growing period.
+    for crop_dict, season in zip(crops, seasons):
+        slices = crop_season_slices(climate_data, season, crop_duration_days(crop_dict))
+        warnings.extend(f"{crop_dict.get('name', crop_dict.get('id'))}: {w}" for w in slices.warnings)
+        assessment = assess_crop_climate(
+            crop_dict,
+            slices.pooled() if slices.available else None,
+            season=season,
+            seasons_pooled=max(1, len(slices.occurrences)),
+            climate_period=slices.summary_label if slices.available else "",
+        )
         crop_assessments.append(assessment)
         all_source_ids.update(assessment.source_ids)
 
     valid_scores = [c.climate_suitability_score for c in crop_assessments if c.climate_suitability_score is not None]
     total_crops = len(crop_assessments)
-    warnings: list[str] = []
 
     for c in crop_assessments:
         warnings.extend(c.warnings)

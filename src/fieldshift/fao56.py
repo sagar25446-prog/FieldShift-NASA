@@ -89,6 +89,7 @@ def compute_et0_daily(
     latitude_deg: float,
     elevation_m: float,
     doy: int,
+    krs_if_rs_missing: float | None = None,
 ) -> ET0DailyResult:
     """FAO-56 Penman–Monteith daily ET₀ (Eq. 6).
 
@@ -128,9 +129,14 @@ def compute_et0_daily(
         ws2_m_s = 2.0
         warnings.append("Wind speed unavailable; using FAO-56 default 2 m/s.")
 
-    # Solar radiation: required for full calculation
+    # Solar radiation: required, unless the caller allows the FAO-56 Eq. 50
+    # estimate from the temperature range (Hargreaves radiation formula).
     if rs_mj is None or math.isnan(rs_mj):
-        return ET0DailyResult(None, None, "FAO-56 PM", tuple(warnings) + ("Missing solar radiation.",))
+        if krs_if_rs_missing is None:
+            return ET0DailyResult(None, None, "FAO-56 PM", tuple(warnings) + ("Missing solar radiation.",))
+        ra_est = _extraterrestrial_radiation(math.radians(latitude_deg), doy)
+        rs_mj = krs_if_rs_missing * math.sqrt(max(0.0, t_max - t_min)) * ra_est
+        warnings.append(f"Solar radiation estimated from the temperature range (FAO-56 Eq. 50, kRs = {krs_if_rs_missing}).")
 
     # ── Calculations ──
     lat_rad = math.radians(latitude_deg)
@@ -195,6 +201,13 @@ def compute_et0_series(
     """
     required = {"T2M_MAX", "T2M_MIN", "ALLSKY_SFC_SW_DWN"}
     missing_cols = required - set(climate_frame.columns)
+    # A record with no radiation column at all (e.g. a temperature-and-rainfall
+    # climate projection extract) uses FAO-56 Eq. 50 with kRs = 0.16 for
+    # interior locations. A POWER record with occasional missing days does not.
+    krs = None
+    if missing_cols == {"ALLSKY_SFC_SW_DWN"}:
+        krs = 0.16
+        missing_cols = set()
     if missing_cols:
         return ET0SeriesResult(
             pd.Series(dtype=float), None, 0, len(climate_frame),
@@ -209,6 +222,8 @@ def compute_et0_series(
         series_warnings.append("RH2M not available; ea estimated from Tmin (FAO-56 Eq. 48).")
     if not has_ws:
         series_warnings.append("WS2M not available; using FAO-56 default 2 m/s.")
+    if krs is not None:
+        series_warnings.append("ALLSKY_SFC_SW_DWN not available; solar radiation estimated from Tmax − Tmin (FAO-56 Eq. 50, kRs = 0.16, interior location).")
 
     et0_values: list[float] = []
     dates = climate_frame.index
@@ -217,12 +232,13 @@ def compute_et0_series(
         result = compute_et0_daily(
             t_max=row.get("T2M_MAX"),
             t_min=row.get("T2M_MIN"),
-            rs_mj=row.get("ALLSKY_SFC_SW_DWN"),
+            rs_mj=row.get("ALLSKY_SFC_SW_DWN") if krs is None else None,
             rh_mean=row.get("RH2M") if has_rh else None,
             ws2_m_s=row.get("WS2M") if has_ws else None,
             latitude_deg=latitude_deg,
             elevation_m=elevation_m,
             doy=doy,
+            krs_if_rs_missing=krs,
         )
         et0_values.append(result.et0_mm if result.et0_mm is not None else float("nan"))
 
@@ -274,8 +290,9 @@ def estimate_seasonal_effective_rainfall(
 
     total = float(daily_precip.sum(skipna=True))
 
-    # Apply USDA SCS per-month
-    monthly = daily_precip.resample("MS").sum()
+    # Apply USDA SCS per calendar month. Grouping by period (not resampling)
+    # also works for a composite season whose days are not in date order.
+    monthly = daily_precip.groupby(daily_precip.index.to_period("M")).sum(min_count=1)
     effective = sum(effective_rainfall_usda_scs(float(v)) for v in monthly.values if not math.isnan(v))
 
     return total, effective
@@ -392,8 +409,9 @@ def compute_crop_water(
             warnings=tuple(warnings),
         )
 
-    # Compute daily ETc = Kc(day) × ET0(day)
-    n_days = len(valid_et0)
+    # Compute daily ETc = Kc(day) × ET0(day). Kc is indexed by days since the
+    # start of the crop period, so a missing day does not shift crop stages.
+    n_days = len(et0_series)
     season_length = kc.total_days
     if n_days < season_length:
         warnings.append(
@@ -406,10 +424,10 @@ def compute_crop_water(
         kc_values.extend([kc.kc_end] * (n_days - season_length))
 
     kc_array = np.array(kc_values[:n_days])
-    et0_array = valid_et0.values[:n_days]
+    et0_array = et0_series.to_numpy(dtype=float)[:n_days]
     etc_daily = kc_array * et0_array
     etc_total = float(np.nansum(etc_daily))
-    kc_mean = float(np.mean(kc_array))
+    kc_mean = float(np.mean(kc_array[~np.isnan(et0_array)])) if (~np.isnan(et0_array)).any() else float(np.mean(kc_array))
 
     # Net irrigation requirement
     nir = max(0.0, etc_total - effective_rainfall)
@@ -426,6 +444,38 @@ def compute_crop_water(
         net_irrigation_requirement_mm=nir,
         method="FAO-56 Penman–Monteith ET0 × Kc (Allen et al. 1998)",
         warnings=tuple(warnings),
+    )
+
+
+def average_crop_water(results: Sequence[CropWaterResult], period_labels: Sequence[str]) -> CropWaterResult:
+    """Mean of per-season results for one crop (e.g. the same kharif window in several years)."""
+    if not results:
+        raise ValueError("At least one seasonal result is required.")
+    first = results[0]
+    if len(results) == 1:
+        return CropWaterResult(
+            first.crop_id, first.crop_name, first.season, first.et0_total_mm, first.kc_weighted_mean, first.etc_total_mm,
+            first.total_rainfall_mm, first.effective_rainfall_mm, first.net_irrigation_requirement_mm,
+            f"{first.method}; climate period: {period_labels[0]}", first.warnings,
+        )
+
+    def mean(values: list[float | None]) -> float | None:
+        present = [v for v in values if v is not None]
+        return float(np.mean(present)) if len(present) == len(values) else None
+
+    warnings = tuple(dict.fromkeys(w for r in results for w in r.warnings))
+    return CropWaterResult(
+        crop_id=first.crop_id,
+        crop_name=first.crop_name,
+        season=first.season,
+        et0_total_mm=mean([r.et0_total_mm for r in results]),
+        kc_weighted_mean=mean([r.kc_weighted_mean for r in results]),
+        etc_total_mm=mean([r.etc_total_mm for r in results]),
+        total_rainfall_mm=float(np.mean([r.total_rainfall_mm for r in results])),
+        effective_rainfall_mm=float(np.mean([r.effective_rainfall_mm for r in results])),
+        net_irrigation_requirement_mm=mean([r.net_irrigation_requirement_mm for r in results]),
+        method=f"{first.method}; climate period: mean of {len(results)} seasons ({period_labels[0]} to {period_labels[-1]})",
+        warnings=warnings,
     )
 
 
