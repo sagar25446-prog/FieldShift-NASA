@@ -115,12 +115,34 @@ def generate_farmer_summary_card_html(
     gross_margin_text: str = "Indicative positive margin",
     composite_score: float | None = None,
     region_name: str = "Indo-Gangetic Plain (Punjab)",
+    crop_calendar_details: Sequence[Mapping[str, str]] | None = None,
 ) -> str:
     """Generate a clean, printable 1-page HTML summary card with print styling."""
+    from .agronomy import CROP_CALENDARS, PILOT_RECOMMENDATION_TEXT
+
     crops_flow = " &rarr; ".join(
         f"<strong>{c}</strong> <span style='font-size:0.85em;color:#555;'>({s})</span>"
         for c, s in zip(plan_crop_names, plan_seasons)
     )
+
+    calendar_rows = ""
+    for crop_name, season in zip(plan_crop_names, plan_seasons):
+        # Match crop calendar
+        matched_cal = next(
+            (entry for entry in CROP_CALENDARS.values() if entry.crop_name.lower().startswith(crop_name.lower()) or crop_name.lower().startswith(entry.crop_name.lower())),
+            None,
+        )
+        sow_win = matched_cal.sowing_window if matched_cal else f"Recommended for {season} season"
+        harv_win = matched_cal.harvest_window if matched_cal else "End of season"
+        dur = f"{matched_cal.typical_duration_days} days" if matched_cal else "Full season"
+        calendar_rows += f"""
+        <tr>
+          <td style="padding:6px;font-weight:bold;border-bottom:1px solid #eee;">{crop_name} ({season})</td>
+          <td style="padding:6px;border-bottom:1px solid #eee;">{sow_win}</td>
+          <td style="padding:6px;border-bottom:1px solid #eee;">{harv_win}</td>
+          <td style="padding:6px;border-bottom:1px solid #eee;text-align:center;">{dur}</td>
+        </tr>
+        """
 
     lat = farm_profile.get("latitude", "N/A")
     lon = farm_profile.get("longitude", "N/A")
@@ -139,12 +161,12 @@ def generate_farmer_summary_card_html(
 <style>
   @page {{
     size: A4 portrait;
-    margin: 12mm;
+    margin: 10mm;
   }}
   body {{
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     color: #1a301a;
-    line-height: 1.4;
+    line-height: 1.35;
     background: #fff;
     margin: 0;
     padding: 10px;
@@ -160,17 +182,17 @@ def generate_farmer_summary_card_html(
     justify-content: space-between;
     align-items: center;
     border-bottom: 2px solid #2e7d32;
-    padding-bottom: 10px;
-    margin-bottom: 14px;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
   }}
   .title {{
-    font-size: 22px;
+    font-size: 21px;
     font-weight: bold;
     color: #1b5e20;
     margin: 0;
   }}
   .subtitle {{
-    font-size: 12px;
+    font-size: 11px;
     color: #555;
     margin-top: 2px;
   }}
@@ -184,41 +206,51 @@ def generate_farmer_summary_card_html(
     font-size: 13px;
   }}
   .section {{
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }}
   .section-title {{
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     color: #2e7d32;
     border-bottom: 1px solid #e0e0e0;
     padding-bottom: 3px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }}
   .highlight-box {{
     background: #f1f8e9;
     border-left: 4px solid #2e7d32;
-    padding: 10px 14px;
+    padding: 8px 12px;
     border-radius: 4px;
-    font-size: 15px;
+    font-size: 14px;
+    margin: 6px 0;
+  }}
+  .pilot-box {{
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-left: 4px solid #ffb300;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 11px;
+    color: #5d4037;
     margin: 8px 0;
   }}
   .stats-grid {{
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-top: 6px;
+    gap: 8px;
+    margin-top: 4px;
   }}
   .stat-card {{
     background: #f9fbf9;
     border: 1px solid #e0e0e0;
-    padding: 8px 10px;
+    padding: 6px 8px;
     border-radius: 6px;
     text-align: center;
   }}
   .stat-val {{
-    font-size: 17px;
+    font-size: 15px;
     font-weight: bold;
     color: #1b5e20;
   }}
@@ -227,30 +259,44 @@ def generate_farmer_summary_card_html(
     color: #666;
     text-transform: uppercase;
   }}
+  .calendar-table {{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-top: 4px;
+  }}
+  .calendar-table th {{
+    background: #f1f8e9;
+    color: #2e7d32;
+    padding: 6px;
+    text-align: left;
+    font-weight: bold;
+    border-bottom: 1px solid #c8e6c9;
+  }}
   .water-hero {{
     background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
     border: 1px solid #90caf9;
-    padding: 10px 14px;
+    padding: 8px 12px;
     border-radius: 6px;
-    margin-top: 10px;
+    margin-top: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }}
   .water-hero-val {{
-    font-size: 20px;
+    font-size: 18px;
     font-weight: bold;
     color: #0d47a1;
   }}
   .water-hero-txt {{
-    font-size: 12px;
+    font-size: 11px;
     color: #1565c0;
   }}
   .footer {{
-    margin-top: 16px;
-    padding-top: 8px;
+    margin-top: 12px;
+    padding-top: 6px;
     border-top: 1px dashed #ccc;
-    font-size: 10px;
+    font-size: 9px;
     color: #666;
     display: flex;
     justify-content: space-between;
@@ -297,18 +343,39 @@ def generate_farmer_summary_card_html(
     </div>
   </div>
 
+  <div class="section">
+    <div class="section-title">🗓️ Agronomic Calendar: Recommended Sowing & Harvest Windows</div>
+    <table class="calendar-table">
+      <thead>
+        <tr>
+          <th>Crop (Season)</th>
+          <th>Sowing / Transplanting Window</th>
+          <th>Harvest Window</th>
+          <th style="text-align:center;">Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        {calendar_rows}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pilot-box">
+    <strong>🌾 Pilot-First Protocol (Risk-Reduction):</strong> Smallholders and farm managers are advised to trial this new sequence on <strong>10%–20% of acreage</strong> in Year 1. Confirm local seed germination, irrigation turns, and market buyers before complete field transition.
+  </div>
+
   <div class="water-hero">
     <div>
       <div class="water-hero-txt">💧 Water Conservation vs Continuous Paddy-Wheat Baseline:</div>
-      <div style="font-size:11px;color:#333;">Protects regional aquifers tracked by NASA GRACE and preserves tubewell pumping life.</div>
+      <div style="font-size:10px;color:#333;">Protects regional aquifers tracked by NASA GRACE and preserves tubewell pumping life.</div>
     </div>
     <div style="text-align:right;">
       <div class="water-hero-val">{water_saved_mm:,.0f} mm</div>
-      <div style="font-size:11px;font-weight:bold;color:#0d47a1;">{water_saved_m3_ha:,.0f} m³/ha saved</div>
+      <div style="font-size:10px;font-weight:bold;color:#0d47a1;">{water_saved_m3_ha:,.0f} m³/ha saved</div>
     </div>
   </div>
 
-  <div class="section" style="margin-top:14px;">
+  <div class="section" style="margin-top:10px;">
     <div class="section-title">💰 Indicative Economics & Soil Health Trajectory</div>
     <div class="stats-grid">
       <div class="stat-card">
@@ -328,7 +395,7 @@ def generate_farmer_summary_card_html(
 
   <div class="section">
     <div class="section-title">🛰️ NASA Earth Observation Provenance</div>
-    <div style="font-size:11px;color:#444;background:#f5f5f5;padding:8px 12px;border-radius:4px;">
+    <div style="font-size:10px;color:#444;background:#f5f5f5;padding:6px 10px;border-radius:4px;">
       Climate: <strong>NASA POWER</strong> daily historical reanalysis &bull;
       Future Projections: <strong>NASA NEX-GDDP-CMIP6</strong> &bull;
       Soil Moisture: <strong>NASA SMAP</strong> &bull;
@@ -339,7 +406,7 @@ def generate_farmer_summary_card_html(
   </div>
 
   <div class="footer">
-    <div>⚠️ Decision-support advisory prototype. Replace benchmarks with certified soil tests and local extension advice.</div>
+    <div>⚠️ Decision-support advisory prototype. Consult your local Krishi Vigyan Kendra (KVK) or extension specialist before field implementation.</div>
     <div>FieldShift | NASA Space Apps Hackathon</div>
   </div>
 </div>
