@@ -493,18 +493,21 @@
         ]
       },
       "water_requirement": {
-        "status": "unknown",
-        "range_min": null,
-        "range_max": null,
+        "status": "documented_approximation",
+        "range_min": 250,
+        "range_max": 350,
         "unit": "mm per crop period",
-        "source_ids": [],
-        "evidence_needed": "Punjab-relevant crop/method water range."
+        "method_context": "pearl millet (bajra), surface irrigation; total crop water requirement (irrigation plus effective rainfall)",
+        "source_ids": [
+          "goi_crop_water_annexure"
+        ]
       },
       "soil_constraints": {
-        "status": "unknown",
-        "notes": "No field soil threshold is entered.",
-        "source_ids": [],
-        "evidence_needed": "Punjab-specific soil guidance."
+        "status": "documented",
+        "notes": "PAU states bajra (pearl millet) is sensitive to waterlogging and performs best on well-drained light-to-medium textured soils.",
+        "source_ids": [
+          "pau_kharif_2026"
+        ]
       },
       "nutrient_characteristics": {
         "status": "unknown",
@@ -514,9 +517,12 @@
       "rotation_compatibility": {
         "status": "documented_examples_only",
         "examples": [
-          "Groundnut-Potato-Bajra (fodder)"
+          "Bajra-Wheat",
+          "Bajra-Raya (Mustard)",
+          "Bajra-Gram (Chickpea)"
         ],
         "source_ids": [
+          "pau_kharif_2026",
           "pau_rabi_2026"
         ]
       },
@@ -530,6 +536,7 @@
       "source_ids": [
         "pau_kharif_2026",
         "pau_rabi_2026",
+        "goi_crop_water_annexure",
         "fao56_table_12",
         "fao_ecocrop"
       ],
@@ -768,10 +775,12 @@
         "status": "documented_examples_only",
         "examples": [
           "Rice-Gobhi Sarson-Summer Moong",
-          "Maize-Toria-Mentha"
+          "Maize-Toria-Mentha",
+          "Bajra-Raya (Mustard)"
         ],
         "source_ids": [
-          "pau_kharif_2026"
+          "pau_kharif_2026",
+          "pau_rabi_2026"
         ]
       },
       "pest_disease_restrictions": {

@@ -259,6 +259,12 @@ class RotationEngine:
             if soil.well_drained is True and soil.texture in {"light", "medium"}:
                 return (FeasibilityCheck("documented_rapeseed_mustard_soil_context", "pass", "Provided drainage and texture match PAU's stated best soil context.", urls),)
             return (FeasibilityCheck("documented_rapeseed_mustard_soil_context", "unknown", "PAU gives a best-soil context, but the required drainage/texture evidence is incomplete or not matching; no hard rejection is made.", urls),)
+        if crop_id == "pearl_millet":
+            if soil.waterlogged is True:
+                return (FeasibilityCheck("documented_pearl_millet_soil_constraint", "fail", "PAU cautions that bajra (pearl millet) is sensitive to waterlogging.", urls),)
+            if soil.well_drained is True and soil.texture in {"light", "medium"}:
+                return (FeasibilityCheck("documented_pearl_millet_soil_context", "pass", "Provided drainage and texture match PAU's stated best soil context for pearl millet.", urls),)
+            return (FeasibilityCheck("documented_pearl_millet_soil_context", "unknown", "PAU notes bajra performs best on well-drained light-to-medium soils; evidence is incomplete.", urls),)
         return (FeasibilityCheck("soil_constraint", "unknown", "No crop-specific soil threshold has been validated in the catalogue.", urls),)
 
     def _build_plan(self, path: tuple[str, ...], seasons: tuple[str, ...], profile: FarmProfile, weights: Mapping[str, float]) -> RotationPlan:
@@ -349,6 +355,8 @@ class RotationEngine:
         if "wheat" in path and profile.soil.waterlogged is False and profile.soil.highly_deteriorated_alkaline is False:
             soil_values.append(1.0)
         if "rapeseed_mustard" in path and profile.soil.well_drained is True and profile.soil.texture in {"light", "medium"}:
+            soil_values.append(1.0)
+        if "pearl_millet" in path and profile.soil.well_drained is True and profile.soil.texture in {"light", "medium"}:
             soil_values.append(1.0)
         soil = MetricScore(sum(soil_values) / len(soil_values), "Mean of only documented favourable soil-context checks; it is not a soil-health prediction.") if soil_values else MetricScore(None, "Unavailable: no documented favourable soil-context check could be evaluated.", "Missing soil evidence reduces confidence but does not reject crops by itself.")
         diversity = MetricScore(len({crop["family"] for crop in crops}) / len(crops), "Unique crop families divided by planned seasons; a composition indicator, not a soil-benefit estimate.")

@@ -1,7 +1,7 @@
 # FieldShift Test Report
 
 **Date:** 2026-10-13  
-**Status:** ✅ All 140 automated tests passing, 1 skipped (live API)  
+**Status:** ✅ All 149 automated tests passing, 1 skipped (live API)  
 **Python:** 3.13.12 | **pytest:** 9.1.1
 
 ---
@@ -22,7 +22,8 @@
 | `test_nasa_data_dependency.py` | 5 | ✅ All pass |
 | `test_climate_suitability.py` | 17 | ✅ All pass |
 | `test_climate_trends.py` | 12 | ✅ All pass |
-| **Total** | **141** | **140 pass, 1 skip** |
+| `test_rotation_graph.py` | 9 | ✅ All pass |
+| **Total** | **150** | **149 pass, 1 skip** |
 
 ---
 
