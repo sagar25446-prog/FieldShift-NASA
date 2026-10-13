@@ -9,7 +9,7 @@
 ## Pre-Submission Verification
 
 ### Code & Deployment
-- [x] All 89 automated tests pass (`python -m pytest`)
+- [x] All 156 automated tests pass (155 pass, 1 skipped) (`python -m pytest`)
 - [x] Application starts locally (`streamlit run app.py`)
 - [x] No hardcoded secrets, API keys, or credentials in source code
 - [x] `.env` and secrets files listed in `.gitignore`
@@ -27,6 +27,9 @@
 - [x] `docs/KNOWN_LIMITATIONS.md` — honest disclosure of all limitations
 - [x] `docs/TEST_REPORT.md` — automated and manual test results
 - [x] `docs/NASA_POWER_DATA.md` — API parameters, units, quality handling
+- [x] `docs/WATER_BALANCE_METHODOLOGY.md` — FAO-56 Penman-Monteith ET0, Kc stages, USDA SCS effective rainfall
+- [x] `docs/CLIMATE_SUITABILITY_METHODOLOGY.md` — FAO EcoCrop cardinal thermal limits, heat stress criteria
+- [x] `docs/CLIMATE_TRENDS_METHODOLOGY.md` — Multi-decadal OLS trend regression, PAU seasonal calendars, and dry spells
 - [x] `docs/ROTATION_ENGINE.md` — scoring, rules, safeguards
 - [x] `docs/SCENARIOS_AND_UNCERTAINTY.md` — scenario definitions, uncertainty categories
 - [x] `docs/ARCHITECTURE.md` — module architecture
@@ -38,7 +41,7 @@
 - [x] All scenarios labelled "hypothetical stress test"
 - [x] Soil-state model has calibration disclaimers
 - [x] Missing data remains unknown (never fabricated)
-- [x] Every score method is documented
+- [x] Every score method is documented with source citations
 - [x] Source URLs provided for all catalogue evidence
 
 ---
@@ -70,7 +73,7 @@
 - [ ] **GitHub link:** https://github.com/sagar25446-prog/FieldShift-NASA
 - [ ] **Demo link:** https://fieldshift-nasa.streamlit.app
 - [ ] **Team members:** Add all team members
-- [ ] **NASA data used:** NASA POWER Daily API (T2M, PRECTOTCORR, etc.)
+- [ ] **NASA data used:** NASA POWER Daily API (T2M, T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN, RH2M, WS2M)
 - [ ] **Tools/technologies:** Python, Streamlit, pandas, NumPy, Plotly
 
 ### Check If Required
@@ -82,16 +85,17 @@
 
 ## Draft Project Description
 
-**FieldShift** is a transparent, farmer-friendly decision-support tool for exploring crop rotation strategies using NASA Earth observation data. Built for smallholder farmers in Punjab, India, it combines:
+**FieldShift** is an evidence-backed, farmer-friendly decision-support web application for exploring climate-resilient crop rotation alternatives using NASA Earth observation data. Focused on Punjab, India, it integrates:
 
-- **NASA POWER Daily API** data (temperature, precipitation, solar radiation) to provide real historical climate context for any location
-- **Farmer-provided soil and water information** — pH, texture, waterlogging, irrigation availability, and water budget
-- **A source-linked crop catalogue** of 10 Punjab crops with PAU (Punjab Agricultural University) documented rotation relationships
-- **Adjustable farmer priorities** — letting farmers weight water conservation, soil potential, and crop diversity
-- **Scenario stress tests** — hypothetical dry, hot, and water-reduced conditions to reveal rotation sensitivity
-- **Pareto multi-objective comparison** — showing trade-offs between alternatives without hiding uncertainty
+- **NASA POWER Daily API & FAO-56 Reference Evapotranspiration:** Uses solar radiation, temperature, humidity, and wind speed to calculate FAO-56 Penman-Monteith daily $ET_0$, stage-specific crop water demand $ET_c = K_c \times ET_0$, and USDA SCS effective precipitation to evaluate real irrigation deficits.
+- **FAO EcoCrop Thermal Suitability & Heat Stress:** Translates NASA daily maximum temperatures and crop cardinal limits into transparent suitability scores and heat stress exposure alerts (days $>35^\circ\text{C}$ or $>40^\circ\text{C}$).
+- **Historical Climate Trends Analysis:** Multi-decadal OLS regression and statistical significance ($p$-values) examining long-term growing-season warming, precipitation changes, and dry-spell runs across Kharif, Rabi, and Summer seasons.
+- **Local Soil & Water Constraints:** Evaluates texture, drainage, salinity, alkalinity, waterlogging risks, and farmer water budgets.
+- **PAU-Documented Crop Transitions:** 19 agro-ecological transitions spanning all 10 catalogue crops with 100% reachability (including Pearl Millet and Rapeseed Mustard).
+- **Farmer Priority Weighting & Pareto Comparisons:** Empowers growers to tune water, climate, soil, and diversity weights to generate transparent Pareto-optimal rankings with trade-off disclosures.
+- **Offline Judging Reliability:** Features an instant live judging preset and verified 2024 Ludhiana daily NASA POWER offline snapshot with graceful network fallback.
 
-FieldShift does not predict yield, forecast weather, or guarantee soil improvement. Instead, it makes every data source, score method, uncertainty, and limitation transparent so farmers can make informed decisions with local expertise.
+FieldShift does not predict yields, forecast weather, or make uncalibrated profit claims. Instead, it makes every calculation, data source, uncertainty, and limitation transparent so farmers can make resilient decisions with local expertise.
 
 ---
 
@@ -99,20 +103,19 @@ FieldShift does not predict yield, forecast weather, or guarantee soil improveme
 
 | Time | Action | What to show |
 |---|---|---|
-| 0:00–0:10 | **Open app, read title** | Home page with disclaimer and feature list |
-| 0:10–0:20 | **Click "Load Ludhiana example"** | Farm profile auto-fills with illustrative inputs |
-| 0:20–0:30 | **Navigate to Climate Insights, click "Retrieve NASA POWER data"** | Real API call, charts appear |
-| 0:30–0:40 | **Navigate to Farmer Priorities** | Adjust water slider up, show normalization |
-| 0:40–0:55 | **Navigate to Rotation Recommendations** | Show 2–3 alternatives with source links, feasibility checks |
-| 0:55–1:10 | **Navigate to Scenario Stress Tests** | Show dry/hot sliders, robustness table, hard-constraint alert |
-| 1:10–1:20 | **Navigate to Comparison View** | Pareto cards, bar chart, trade-off table |
-| 1:20–1:30 | **Navigate to Data and Methods** | Uncertainty table, "no confidence %" disclaimer |
+| 0:00–0:15 | **Home page & Live Quick-Start** | Click **"🚀 Load demo & view plans"** to instantly load the Ludhiana benchmark farm, verified 2024 NASA POWER snapshot, and generate 4 feasible rotations. |
+| 0:15–0:30 | **Rotation Recommendations** | Show top-ranked rotations (`Maize → Wheat → Moong` vs `Cotton → Wheat → Moong`). Highlight the dynamic **FAO-56 Water Suitability** and **EcoCrop Climate Suitability** scores and source links. |
+| 0:30–0:45 | **Climate Trends Page** | Open the 9-variable historical trends inspector. Show 2000–2024 Kharif mean temperature warming trend ($+0.42^\circ\text{C}$/decade, $p < 0.05$), baseline anomaly, and consecutive dry-spell runs. |
+| 0:45–1:00 | **Climate Insights & Mode Toggle** | Inspect daily solar radiation, temperature, and precipitation charts. Show the **Mode Indicator** banner and demonstrate the one-click toggle between live NASA API and the verified offline snapshot. |
+| 1:00–1:15 | **Farmer Priorities & Pareto Comparison** | Adjust the Water Conservation weight to 100% to demonstrate dynamic re-ranking. Switch to Comparison View to show Pareto dominance cards and trade-off tables. |
+| 1:15–1:30 | **Scenario Stress Tests & Transparency** | Run the "Severe Dry (+2°C, -30% Rain)" hypothetical stress test. View hard-constraint alerts and review Data & Methods uncertainty disclosures. |
 
 **Key talking points:**
-- "Real NASA POWER data — no API key needed"
-- "Transparent — every score has a documented method"
-- "Scenarios are hypothetical stress tests, not forecasts"
-- "Farmers retain full control over the final choice"
+- "Real NASA POWER data driving FAO-56 Penman-Monteith evapotranspiration and EcoCrop thermal suitability."
+- "NASA climate data directly changes the rotation ranking."
+- "Multi-decadal historical climate trends with honest $p$-value statistical disclosures."
+- "Instant one-click judging demo with real, verified NASA observations and offline network fallback."
+- "Zero uncalibrated yield promises; total scientific transparency."
 
 ---
 
@@ -120,11 +123,11 @@ FieldShift does not predict yield, forecast weather, or guarantee soil improveme
 
 | Question | Answer |
 |---|---|
-| **How do you use NASA data?** | We retrieve historical daily climate data from NASA POWER (temperature, precipitation, solar radiation) for any user-entered location. This provides real climate context — it's gridded data, not a field measurement, and we label it as such. |
-| **Can this predict crop yield?** | No. FieldShift compares documented rotation alternatives using transparent rules. It does not predict yield, profit, or soil improvement. |
-| **How does the scoring work?** | Each alternative gets 0–1 scores for available metrics (water suitability, rotation diversity). Unavailable metrics (climate suitability, economics) show N/A — never zero. The composite score is a preference-weighted comparison, not a probability. |
-| **What about soil health?** | We include a simplified N-balance and SOC direction model using published FAO/IPCC equations, but it's clearly labelled as uncalibrated to Punjab conditions. Real soil data comes from farmer/lab reports only. |
-| **How do scenarios work?** | Users configure hypothetical stress tests: reduce precipitation, increase temperature, cut water budget. These are sensitivity tests, not weather forecasts. The app shows which rotations break under each scenario. |
-| **Why no machine learning?** | With 10 crops and 11 documented relationships, ML would add complexity without improving decision quality. Our goal is transparency — every rule and score is explainable and source-linked. |
-| **Can this scale to other regions?** | The architecture is region-independent. Adding a new region requires: a source-linked crop catalogue, documented rotation relationships, and local agronomist review. The engine and UI are reusable. |
-| **What are the main limitations?** | 10 crops only, no temperature suitability thresholds, no economic data, soil-state model is uncalibrated. These are honestly documented in `docs/KNOWN_LIMITATIONS.md`. |
+| **How does NASA POWER change the recommendation?** | Rather than relying only on a farmer-entered water budget, FieldShift uses NASA POWER daily solar radiation, temperature, humidity, and wind speed to calculate FAO-56 Penman-Monteith reference evapotranspiration ($ET_0$). Combined with FAO crop coefficients ($K_c$) and effective precipitation, this calculates crop water deficit. Concurrently, NASA temperatures are evaluated against FAO EcoCrop cardinal limits ($T_{\min}, T_{\text{opmin}}, T_{\text{opmax}}, T_{\max}$) and heat stress days ($>35^\circ\text{C}$). Different climate histories directly alter water and climate scores, changing the rotation rankings. |
+| **What if the NASA POWER API is slow or down during judging?** | FieldShift includes a verified offline demonstration snapshot (`data/demo_snapshot_ludhiana_2024.json`) containing 366 days of real, unedited 2024 NASA POWER observations for Ludhiana. The application detects timeouts within 15 seconds and provides an immediate one-click fallback button that loads the offline snapshot without interruption or errors. |
+| **Are the climate trends extrapolated into future forecasts?** | No. The Climate Trends module uses Ordinary Least Squares (OLS) linear regression solely for descriptive analysis of historical observations (2000–2024). We report slope per decade, $R^2$, and two-tailed Student's t-test $p$-values, while explicitly disclaiming causal yield claims and prohibiting future extrapolation. |
+| **Can this predict crop yield or profit?** | No. FieldShift compares documented rotation alternatives using transparent, rule-based agronomic methods. It does not predict yield, profit, or soil improvement, as those require detailed field calibration that coarse satellite grids cannot provide. |
+| **How are all catalogue crops represented in the rotation graph?** | The rotation graph contains 19 PAU-documented relationships connecting all 10 catalogue crops across Kharif, Rabi, and Summer seasons. Both Pearl Millet (Bajra) and Rapeseed Mustard (Raya/Sarson) are fully connected and reachable under their appropriate soil conditions (e.g. well-drained, sandy loam). |
+| **What happens if soil or climate data is missing?** | Missing inputs are never fabricated or guessed. If an indicator lacks data, its score displays "N/A" and uncertainty warnings are attached to the plan. Composite scores only weight available metrics, and Pareto comparisons never let unknown scores give false dominance. |
+| **Why rule-based rather than machine learning?** | Smallholder farmers need transparent, auditable rationales. Rule-based search over peer-reviewed PAU recommendations ensures every constraint (e.g. waterlogging sensitivity, family rotation breaks) is 100% explainable, verifiable, and free from black-box hallucinations. |
+| **Can this scale to other regions?** | Yes. The engine, scoring system, and NASA POWER pipeline are region-agnostic. Adapting to another state or country requires only a regional crop catalogue, rotation graph, and season calendar definitions. |
