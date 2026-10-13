@@ -1,0 +1,312 @@
+{
+  "catalog_metadata": {
+    "catalog_version": "1.0.0",
+    "demonstration_region": "Guadalquivir Valley, Andalusia, Spain",
+    "access_date": "2026-10-13",
+    "purpose": "Evidence-linked crop rotation planning for the Mediterranean Basin based on IFAPA and MAPA guidelines."
+  },
+  "sources": {
+    "ifapa_rotaciones": {
+      "title": "Rotaciones de Cultivos de Secano y Regadío en el Valle del Guadalquivir",
+      "publisher": "Instituto Andaluz de Investigación y Formación Agraria (IFAPA), Junta de Andalucía",
+      "url": "https://www.juntadeandalucia.es/agriculturaypesca/ifapa/web",
+      "access_date": "2026-10-13"
+    },
+    "mapa_costes": {
+      "title": "Estudios de Costes y Rentabilidad de los Cultivos Herbáceos en España",
+      "publisher": "Ministerio de Agricultura, Pesca y Alimentación (MAPA), Gobierno de España",
+      "url": "https://www.mapa.gob.es/es/estadistica/temas/estadisticas-agrarias/economia/red-contable/",
+      "access_date": "2026-10-13"
+    },
+    "fao56_table_12": {
+      "title": "FAO Irrigation and Drainage Paper 56 — Table 12: Crop Coefficients Kc",
+      "publisher": "Food and Agriculture Organization of the United Nations (FAO)",
+      "url": "https://www.fao.org/4/x0490e/x0490e0b.htm",
+      "access_date": "2026-10-13"
+    },
+    "fao_ecocrop": {
+      "title": "FAO EcoCrop Database — Crop Environmental Requirements",
+      "publisher": "Food and Agriculture Organization of the United Nations (FAO)",
+      "url": "https://ecocrop.apps.fao.org/",
+      "access_date": "2026-10-13"
+    }
+  },
+  "crops": [
+    {
+      "id": "durum_wheat",
+      "name": "Durum Wheat (Trigo Duro)",
+      "scientific_name": "Triticum durum",
+      "family": "Poaceae",
+      "legume": false,
+      "intended_role": "High-protein winter cereal; standard staple of Mediterranean pasta and semolina production.",
+      "growing_seasons": ["autumn_winter"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 2090,
+        "tmin_absolute": 3.0,
+        "tmin_optimal": 12.0,
+        "tmax_optimal": 24.0,
+        "tmax_absolute": 32.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 350,
+        "range_max": 550,
+        "unit": "mm per crop period",
+        "method_context": "Mediterranean winter rainfed / deficit irrigation",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Prefers deep, clayey-loam soils (Vertisols/Buñales); sensitive to winter waterlogging.",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Requires 80-120 kg N/ha; benefits heavily from preceding leguminous pulse.",
+        "source_ids": ["mapa_costes"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Durum Wheat - Sunflower", "Durum Wheat - Chickpea"],
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Susceptible to yellow rust (Puccinia striiformis) in warm, humid springs.",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "evidence_quality": "high_regional_ifapa",
+      "source_ids": ["ifapa_rotaciones", "mapa_costes", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.30,
+        "kc_mid": 1.15,
+        "kc_end": 0.25,
+        "stage_days_ini": 30,
+        "stage_days_dev": 40,
+        "stage_days_mid": 50,
+        "stage_days_late": 30
+      },
+      "indicative_economics": {
+        "status": "documented_market_benchmark",
+        "msp_inr_per_q": 2800.0,
+        "benchmark_yield_q_ha": 38.0,
+        "benchmark_cost_inr_ha": 42000.0,
+        "market_price_eur_per_t": 320.0,
+        "benchmark_cost_eur_ha": 480.0,
+        "benchmark_yield_t_ha": 3.8,
+        "source_ids": ["mapa_costes"]
+      }
+    },
+    {
+      "id": "sunflower",
+      "name": "Sunflower (Girasol)",
+      "scientific_name": "Helianthus annuus",
+      "family": "Asteraceae",
+      "legume": false,
+      "intended_role": "Deep-rooting spring-summer oilseed break crop; taps residual moisture down to 1.8 m.",
+      "growing_seasons": ["spring_summer"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1184,
+        "tmin_absolute": 8.0,
+        "tmin_optimal": 20.0,
+        "tmax_optimal": 32.0,
+        "tmax_absolute": 38.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 300,
+        "range_max": 500,
+        "unit": "mm per crop period",
+        "method_context": "Deep soil moisture extraction in Andalusian dryland",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Requires deep soils without impermeable plow pan for taproot penetration.",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Efficient scavenger of subsoil potassium and nitrogen.",
+        "source_ids": ["mapa_costes"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Durum Wheat - Sunflower", "Chickpea - Durum Wheat - Sunflower"],
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Orobanche cumana (broomrape) requires resistant hybrids and minimum 3-year rotation interval.",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "evidence_quality": "high_regional_ifapa",
+      "source_ids": ["ifapa_rotaciones", "mapa_costes", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.35,
+        "kc_mid": 1.15,
+        "kc_end": 0.35,
+        "stage_days_ini": 25,
+        "stage_days_dev": 35,
+        "stage_days_mid": 45,
+        "stage_days_late": 25
+      },
+      "indicative_economics": {
+        "status": "documented_market_benchmark",
+        "msp_inr_per_q": 4500.0,
+        "benchmark_yield_q_ha": 18.0,
+        "benchmark_cost_inr_ha": 32000.0,
+        "market_price_eur_per_t": 460.0,
+        "benchmark_cost_eur_ha": 370.0,
+        "benchmark_yield_t_ha": 1.8,
+        "source_ids": ["mapa_costes"]
+      }
+    },
+    {
+      "id": "chickpea",
+      "name": "Chickpea / Garbanzo (Garbanzo Blanco)",
+      "scientific_name": "Cicer arietinum",
+      "family": "Fabaceae",
+      "legume": true,
+      "intended_role": "Nitrogen-fixing pulse restoring soil organic N and breaking cereal monoculture disease cycles.",
+      "growing_seasons": ["autumn_winter", "spring_summer"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 699,
+        "tmin_absolute": 5.0,
+        "tmin_optimal": 15.0,
+        "tmax_optimal": 26.0,
+        "tmax_absolute": 34.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 250,
+        "range_max": 400,
+        "unit": "mm per crop period",
+        "method_context": "Drought-adapted Mediterranean pulse requiring no supplemental irrigation",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Extremely sensitive to soil waterlogging and root rot; requires well-drained terrain.",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Fixes 40-70 kg N/ha; leaves positive N balance for following durum wheat.",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Chickpea - Durum Wheat", "Durum Wheat - Chickpea - Sunflower"],
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Ascochyta rabiei blight risk during wet spring conditions.",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "evidence_quality": "high_regional_ifapa",
+      "source_ids": ["ifapa_rotaciones", "mapa_costes", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.40,
+        "kc_mid": 1.00,
+        "kc_end": 0.35,
+        "stage_days_ini": 25,
+        "stage_days_dev": 30,
+        "stage_days_mid": 45,
+        "stage_days_late": 25
+      },
+      "indicative_economics": {
+        "status": "documented_market_benchmark",
+        "msp_inr_per_q": 5440.0,
+        "benchmark_yield_q_ha": 20.0,
+        "benchmark_cost_inr_ha": 35000.0,
+        "market_price_eur_per_t": 750.0,
+        "benchmark_cost_eur_ha": 400.0,
+        "benchmark_yield_t_ha": 2.0,
+        "source_ids": ["mapa_costes"]
+      }
+    },
+    {
+      "id": "barley",
+      "name": "Barley (Cebada)",
+      "scientific_name": "Hordeum vulgare",
+      "family": "Poaceae",
+      "legume": false,
+      "intended_role": "Drought- and salinity-tolerant winter cereal; high adaptation to shallow dry soils.",
+      "growing_seasons": ["autumn_winter"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1215,
+        "tmin_absolute": 2.0,
+        "tmin_optimal": 12.0,
+        "tmax_optimal": 22.0,
+        "tmax_absolute": 30.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 250,
+        "range_max": 450,
+        "unit": "mm per crop period",
+        "method_context": "Low water demand dryland cereal",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Tolerates higher soil salinity and alkaline conditions than wheat.",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Moderate nitrogen demand (60-90 kg N/ha).",
+        "source_ids": ["mapa_costes"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Barley - Sunflower", "Barley - Chickpea"],
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Low disease susceptibility compared to wheat.",
+        "source_ids": ["ifapa_rotaciones"]
+      },
+      "evidence_quality": "high_regional_ifapa",
+      "source_ids": ["ifapa_rotaciones", "mapa_costes", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.30,
+        "kc_mid": 1.15,
+        "kc_end": 0.25,
+        "stage_days_ini": 25,
+        "stage_days_dev": 35,
+        "stage_days_mid": 45,
+        "stage_days_late": 25
+      },
+      "indicative_economics": {
+        "status": "documented_market_benchmark",
+        "msp_inr_per_q": 1850.0,
+        "benchmark_yield_q_ha": 35.0,
+        "benchmark_cost_inr_ha": 32000.0,
+        "market_price_eur_per_t": 220.0,
+        "benchmark_cost_eur_ha": 360.0,
+        "benchmark_yield_t_ha": 3.5,
+        "source_ids": ["mapa_costes"]
+      }
+    }
+  ]
+}

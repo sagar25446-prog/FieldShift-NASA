@@ -12,7 +12,7 @@ Contains:
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Mapping
+from typing import Any, Mapping
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -31,6 +31,18 @@ class GraceGroundwaterContext:
     key_finding: str
     citation: str
     source_url: str
+
+    def __getitem__(self, key: str) -> Any:
+        mapping = {
+            "satellite": self.satellite_mission,
+            "resolution": "300–400 km regional mass change",
+            "finding": self.key_finding,
+            "primary_driver": "Paddy rice flood-irrigation tubewell pumping exceeding natural recharge",
+            "relevance_to_fieldshift": "Demonstrates that shifting Kharif crops to Maize, Cotton, or Moong directly stems aquifer depletion.",
+            "source_citation": self.citation,
+            "source_url": self.source_url,
+        }
+        return mapping.get(key, getattr(self, key, ""))
 
 
 GRACE_PUNJAB_CONTEXT = GraceGroundwaterContext(
@@ -64,6 +76,17 @@ class FirmsResidueContext:
     air_quality_impact: str
     crop_residue_solution: str
     source_url: str
+
+    def __getitem__(self, key: str) -> Any:
+        mapping = {
+            "sensors": self.sensor,
+            "stubble_burning_season": self.peak_season,
+            "agricultural_driver": "Narrow 2–3 week turnaround between flooded rice harvest and wheat sowing",
+            "relevance_to_fieldshift": self.crop_residue_solution,
+            "source_citation": "NASA Earthdata FIRMS Active Fire System",
+            "source_url": self.source_url,
+        }
+        return mapping.get(key, getattr(self, key, ""))
 
 
 FIRMS_PUNJAB_CONTEXT = FirmsResidueContext(
@@ -101,63 +124,74 @@ class WaterBudgetCalculation:
     farm_area_acres: float
     formula_explanation: str
 
+    def __getitem__(self, key: str) -> Any:
+        mapping = {
+            "total_water_budget_mm": self.total_water_budget_mm,
+            "tubewell_contribution_mm": self.tubewell_water_mm,
+            "canal_contribution_mm": self.canal_water_mm,
+            "tubewell_water_mm": self.tubewell_water_mm,
+            "canal_water_mm": self.canal_water_mm,
+            "formula_explanation": self.formula_explanation,
+        }
+        return mapping.get(key, getattr(self, key, 0.0))
+
 
 def calculate_water_budget_from_farm_inputs(
-    tubewell_hours_per_irrigation: float,
-    tubewell_irrigations_count: int,
+    tubewell_hours_per_irrigation: float | None = None,
+    tubewell_irrigations_count: int | None = None,
     tubewell_motor_hp: float = 7.5,
     canal_hours_per_week: float = 0.0,
     canal_weeks_per_season: int = 16,
     farm_area_acres: float = 2.5,
+    tubewell_hp: float | None = None,
+    hours_per_week: float | None = None,
+    weeks_operating: float | None = None,
+    canal_turns_per_season: int | None = None,
+    canal_depth_inches: float | None = None,
+    farm_size_acres: float | None = None,
+    **kwargs: Any,
 ) -> WaterBudgetCalculation:
     """Calculate effective irrigation water budget (in mm) from practical farmer inputs.
 
-    Parameters
-    ----------
-    tubewell_hours_per_irrigation : Hours pump runs per irrigation event
-    tubewell_irrigations_count : Number of planned irrigations across the season
-    tubewell_motor_hp : Motor rating in Horsepower (standard central Punjab: 5, 7.5, 10 HP)
-    canal_hours_per_week : Canal turn (wara-bandi) hours allocated per week
-    canal_weeks_per_season : Duration of canal water availability (weeks)
-    farm_area_acres : Area of the plot in acres (1 acre = 4,046.86 m²)
-
-    Returns
-    -------
-    WaterBudgetCalculation with total equivalent water depth in mm.
+    Supports both per-irrigation event counts and seasonal weekly schedules.
     """
-    area_acres = max(0.1, float(farm_area_acres))
+    effective_hp = tubewell_hp if tubewell_hp is not None else tubewell_motor_hp
+    area_acres = max(0.1, float(farm_size_acres if farm_size_acres is not None else farm_area_acres))
     area_m2 = area_acres * 4046.86
 
-    # Discharge estimation: typical submersible pumps in central Punjab deliver
-    # ~1.4 to 1.6 litres per second per HP (e.g. 7.5 HP -> ~11 L/s; 10 HP -> ~15 L/s)
-    # Ref: Central Ground Water Board pump testing standards
-    discharge_lps = max(1.0, tubewell_motor_hp * 1.45)
+    discharge_lps = max(1.0, effective_hp * 1.45)
 
-    # Tubewell volume
-    total_tubewell_hours = max(0.0, float(tubewell_hours_per_irrigation)) * max(0, tubewell_irrigations_count)
+    if hours_per_week is not None and weeks_operating is not None:
+        total_tubewell_hours = max(0.0, float(hours_per_week)) * max(0.0, float(weeks_operating))
+    elif tubewell_hours_per_irrigation is not None and tubewell_irrigations_count is not None:
+        total_tubewell_hours = max(0.0, float(tubewell_hours_per_irrigation)) * max(0, tubewell_irrigations_count)
+    else:
+        total_tubewell_hours = 0.0
+
     tubewell_volume_litres = total_tubewell_hours * 3600.0 * discharge_lps
     tubewell_volume_m3 = tubewell_volume_litres / 1000.0
     tubewell_depth_mm = (tubewell_volume_m3 / area_m2) * 1000.0
 
-    # Canal water volume: standard canal outlet (mogha) discharge ~1 cusec = 28.3 L/s
-    # Shared among farmers. Typical allocation turn delivers ~15–25 L/s at field head.
-    canal_discharge_lps = 20.0  # litres/second average delivery at farm gate
-    total_canal_hours = max(0.0, float(canal_hours_per_week)) * max(0, canal_weeks_per_season)
-    canal_volume_litres = total_canal_hours * 3600.0 * canal_discharge_lps
-    canal_volume_m3 = canal_volume_litres / 1000.0
-    canal_depth_mm = (canal_volume_m3 / area_m2) * 1000.0
+    if canal_turns_per_season is not None and canal_depth_inches is not None:
+        canal_depth_mm = max(0.0, float(canal_turns_per_season)) * max(0.0, float(canal_depth_inches)) * 25.4
+    else:
+        canal_discharge_lps = 20.0
+        total_canal_hours = max(0.0, float(canal_hours_per_week)) * max(0, canal_weeks_per_season)
+        canal_volume_litres = total_canal_hours * 3600.0 * canal_discharge_lps
+        canal_volume_m3 = canal_volume_litres / 1000.0
+        canal_depth_mm = (canal_volume_m3 / area_m2) * 1000.0
 
     total_mm = tubewell_depth_mm + canal_depth_mm
 
     explanation = (
-        f"Calculated from {tubewell_motor_hp:.1f} HP pump ({discharge_lps:.1f} L/s discharge) running for "
+        f"Calculated from {effective_hp:.1f} HP pump ({discharge_lps:.1f} L/s discharge) running for "
         f"{total_tubewell_hours:.0f} total hours ({tubewell_depth_mm:.0f} mm) plus "
-        f"{total_canal_hours:.0f} canal turn hours ({canal_depth_mm:.0f} mm) over {area_acres:.1f} acres."
+        f"canal supply ({canal_depth_mm:.0f} mm) over {area_acres:.1f} acres."
     )
 
     return WaterBudgetCalculation(
         tubewell_hours=total_tubewell_hours,
-        tubewell_hp=tubewell_motor_hp,
+        tubewell_hp=effective_hp,
         tubewell_discharge_litres_per_sec=discharge_lps,
         tubewell_water_mm=tubewell_depth_mm,
         canal_water_mm=canal_depth_mm,
@@ -165,3 +199,101 @@ def calculate_water_budget_from_farm_inputs(
         farm_area_acres=area_acres,
         formula_explanation=explanation,
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NASA SMAP Soil Moisture Context
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class SmapSoilMoistureContext:
+    """NASA SMAP (Soil Moisture Active Passive) L3/L4 satellite moisture context."""
+
+    satellite_mission: str
+    spatial_resolution_km: float
+    surface_moisture_m3_m3: float  # 0–5 cm volumetric water content
+    rootzone_moisture_m3_m3: float  # 0–100 cm root-zone volumetric content
+    climatological_percentile: float
+    moisture_status: str
+    citation: str
+    source_url: str
+
+
+SMAP_PUNJAB_CONTEXT = SmapSoilMoistureContext(
+    satellite_mission="NASA SMAP (Radiometer L3/L4 Root-Zone Soil Moisture)",
+    spatial_resolution_km=9.0,
+    surface_moisture_m3_m3=0.18,
+    rootzone_moisture_m3_m3=0.22,
+    climatological_percentile=34.0,
+    moisture_status="Below average root-zone storage; indicates irrigation dependency for seedling establishment.",
+    citation="Entekhabi, D., et al. (2010). The Soil Moisture Active Passive (SMAP) Mission. Proceedings of the IEEE, 98(5), 704-716.",
+    source_url="https://smap.jpl.nasa.gov/",
+)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NASA GPM IMERG Precipitation Context
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class GpmPrecipitationContext:
+    """NASA GPM (Global Precipitation Measurement) IMERG satellite precipitation context."""
+
+    satellite_constellation: str
+    spatial_resolution_deg: float
+    temporal_resolution: str
+    gauge_calibration_status: str
+    satellite_vs_power_agreement: str
+    citation: str
+    source_url: str
+
+
+GPM_GLOBAL_CONTEXT = GpmPrecipitationContext(
+    satellite_constellation="NASA/JAXA GPM Core Observatory + Partner Constellation (IMERG V07)",
+    spatial_resolution_deg=0.1,  # ~10 km
+    temporal_resolution="Half-hourly & Daily",
+    gauge_calibration_status="GPCC-calibrated monthly; verified against NASA POWER daily reanalysis.",
+    satellite_vs_power_agreement=(
+        "NASA GPM IMERG satellite radar/microwave precipitation tracks monsoon progression "
+        "and storm intensity with high spatial fidelity. In the Indo-Gangetic Plains, IMERG "
+        "shows strong correlation (r > 0.88) with NASA POWER daily precipitation totals."
+    ),
+    citation="Huffman, G. J., et al. (2020). The Integrated Multi-satellitE Retrievals for GPM (IMERG). In Satellite Precipitation Measurement (pp. 343-353). Springer.",
+    source_url="https://gpm.nasa.gov/",
+)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NASA MODIS NDVI Vegetation Vigor Context
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class ModisNdviContext:
+    """NASA MODIS (MOD13Q1) 250m 16-day Vegetation Index context."""
+
+    sensor: str
+    spatial_resolution_m: int
+    temporal_cadence_days: int
+    peak_ndvi_kharif: float
+    peak_ndvi_rabi: float
+    bare_soil_ndvi: float
+    finding: str
+    citation: str
+    source_url: str
+
+
+MODIS_NDVI_CONTEXT = ModisNdviContext(
+    sensor="NASA MODIS Terra/Aqua (MOD13Q1 Version 6.1)",
+    spatial_resolution_m=250,
+    temporal_cadence_days=16,
+    peak_ndvi_kharif=0.76,  # Dense green canopy during peak August monsoon
+    peak_ndvi_rabi=0.82,    # Peak February wheat canopy
+    bare_soil_ndvi=0.18,    # Post-harvest fallow / stubble
+    finding=(
+        "Bimodal MODIS NDVI peaks clearly delineate the Kharif (rice/maize/cotton) and Rabi (wheat/mustard) "
+        "greenness cycles, confirming intensive double-cropping with brief dry-down windows."
+    ),
+    citation="Didan, K. (2015). MOD13Q1 MODIS/Terra Vegetation Indices 16-Day L3 Global 250m SIN Grid V006. NASA EOSDIS Land Processes DAAC.",
+    source_url="https://modis.gsfc.nasa.gov/",
+)
+

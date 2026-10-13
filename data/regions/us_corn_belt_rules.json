@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "scope": "Supported US Corn Belt crop transitions based on USDA-ARS Marsden farm experiments and Iowa State University Extension.",
+  "season_cycle": ["spring", "summer", "fall_cover"],
+  "relationships": [
+    {"from": "corn", "to": "soybean", "source_ids": ["usda_ars_marsden"]},
+    {"from": "corn", "to": "cereal_rye", "source_ids": ["usda_ars_marsden"]},
+    {"from": "soybean", "to": "cereal_rye", "source_ids": ["usda_ars_marsden"]},
+    {"from": "soybean", "to": "corn", "source_ids": ["usda_ars_marsden"]},
+    {"from": "cereal_rye", "to": "corn", "source_ids": ["usda_ars_marsden"]},
+    {"from": "cereal_rye", "to": "soybean", "source_ids": ["usda_ars_marsden"]},
+    {"from": "cereal_rye", "to": "oats", "source_ids": ["usda_ars_marsden"]},
+    {"from": "oats", "to": "alfalfa", "source_ids": ["usda_ars_marsden"]},
+    {"from": "alfalfa", "to": "cereal_rye", "source_ids": ["usda_ars_marsden"]},
+    {"from": "alfalfa", "to": "corn", "source_ids": ["usda_ars_marsden"]}
+  ],
+  "notes": "USDA-ARS 3-year and 4-year rotations incorporate small grains and legumes to reduce synthetic fertilizer application by 85% while matching continuous corn profitability."
+}

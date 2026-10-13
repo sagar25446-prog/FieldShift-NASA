@@ -1,0 +1,306 @@
+{
+  "catalog_metadata": {
+    "catalog_version": "1.0.0",
+    "demonstration_region": "Deccan Plateau, Maharashtra, India",
+    "access_date": "2026-10-13",
+    "purpose": "Evidence-linked crop rotation planning for semi-arid tropical drylands based on ICRISAT and MPKV Rahuri research."
+  },
+  "sources": {
+    "icrisat_dryland_rotations": {
+      "title": "Improved Cropping Systems for Rainfed Vertisols in the Semi-Arid Tropics",
+      "publisher": "International Crops Research Institute for the Semi-Arid Tropics (ICRISAT), Hyderabad",
+      "url": "https://www.icrisat.org/",
+      "access_date": "2026-10-13"
+    },
+    "mpkv_package_practices": {
+      "title": "Krishi Margdarshini: Package of Practices for Kharif and Rabi Crops in Maharashtra",
+      "publisher": "Mahatma Phule Krishi Vidyapeeth (MPKV), Rahuri",
+      "url": "https://mpkv.ac.in/",
+      "access_date": "2026-10-13"
+    },
+    "fao56_table_12": {
+      "title": "FAO Irrigation and Drainage Paper 56 — Table 12: Crop Coefficients Kc",
+      "publisher": "Food and Agriculture Organization of the United Nations (FAO)",
+      "url": "https://www.fao.org/4/x0490e/x0490e0b.htm",
+      "access_date": "2026-10-13"
+    },
+    "fao_ecocrop": {
+      "title": "FAO EcoCrop Database — Crop Environmental Requirements",
+      "publisher": "Food and Agriculture Organization of the United Nations (FAO)",
+      "url": "https://ecocrop.apps.fao.org/",
+      "access_date": "2026-10-13"
+    },
+    "cacp_msp_2024_25": {
+      "title": "Price Policy for Kharif & Rabi Crops 2024-25: Minimum Support Prices (MSP)",
+      "publisher": "Commission for Agricultural Costs and Prices (CACP), Government of India",
+      "url": "https://cacp.dacnet.nic.in/",
+      "access_date": "2026-10-13"
+    }
+  },
+  "crops": [
+    {
+      "id": "sorghum",
+      "name": "Sorghum (Jowar)",
+      "scientific_name": "Sorghum bicolor",
+      "family": "Poaceae",
+      "legume": false,
+      "intended_role": "Drought-resilient C4 cereal with deep fibrous root system; stable staple in dryland Vertisols.",
+      "growing_seasons": ["kharif", "rabi"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1990,
+        "tmin_absolute": 10.0,
+        "tmin_optimal": 22.0,
+        "tmax_optimal": 34.0,
+        "tmax_absolute": 42.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 350,
+        "range_max": 550,
+        "unit": "mm per crop period",
+        "method_context": "Deep black soil stored-moisture and rainfed monsoon profile",
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Excellent performance on deep clay Vertisols; tolerates moderate salinity.",
+        "source_ids": ["mpkv_package_practices"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Moderate N response (60-80 kg N/ha); high biomass return.",
+        "source_ids": ["mpkv_package_practices"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Sorghum - Chickpea", "Soybean - Sorghum"],
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Shoot fly (Atherigona soccata) during late Kharif sowings; grain mold under prolonged late rains.",
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "evidence_quality": "high_regional_icrisat",
+      "source_ids": ["icrisat_dryland_rotations", "mpkv_package_practices", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.30,
+        "kc_mid": 1.05,
+        "kc_end": 0.55,
+        "stage_days_ini": 20,
+        "stage_days_dev": 35,
+        "stage_days_mid": 45,
+        "stage_days_late": 30
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 3371.0,
+        "benchmark_yield_q_ha": 28.0,
+        "benchmark_cost_inr_ha": 34000.0,
+        "source_ids": ["cacp_msp_2024_25"]
+      }
+    },
+    {
+      "id": "pigeonpea",
+      "name": "Pigeonpea / Red Gram (Tur / Arhar)",
+      "scientific_name": "Cajanus cajan",
+      "family": "Fabaceae",
+      "legume": true,
+      "intended_role": "Deep-rooting semi-perennial pulse; extracts deep subsoil nutrients and fixes substantial atmospheric N.",
+      "growing_seasons": ["kharif"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 560,
+        "tmin_absolute": 12.0,
+        "tmin_optimal": 22.0,
+        "tmax_optimal": 35.0,
+        "tmax_absolute": 40.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 450,
+        "range_max": 700,
+        "unit": "mm per crop period",
+        "method_context": "Long-duration rainfed pulse utilizing late stored soil moisture",
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Sensitive to waterlogging and soil compaction; requires well-drained medium-to-deep soils.",
+        "source_ids": ["mpkv_package_practices"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Fixes 60-90 kg N/ha; deep root channels improve subsoil aeration and drainage.",
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Pigeonpea - Wheat", "Pigeonpea - Sorghum"],
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Pod borer (Helicoverpa armigera) and Fusarium wilt in repetitive monoculture.",
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "evidence_quality": "high_regional_icrisat",
+      "source_ids": ["icrisat_dryland_rotations", "mpkv_package_practices", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.40,
+        "kc_mid": 1.15,
+        "kc_end": 0.45,
+        "stage_days_ini": 30,
+        "stage_days_dev": 45,
+        "stage_days_mid": 65,
+        "stage_days_late": 40
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 7550.0,
+        "benchmark_yield_q_ha": 18.0,
+        "benchmark_cost_inr_ha": 38000.0,
+        "source_ids": ["cacp_msp_2024_25"]
+      }
+    },
+    {
+      "id": "chickpea",
+      "name": "Chickpea / Bengal Gram (Chana)",
+      "scientific_name": "Cicer arietinum",
+      "family": "Fabaceae",
+      "legume": true,
+      "intended_role": "Premier post-monsoon pulse grown on residual soil moisture in dryland Vertisols.",
+      "growing_seasons": ["rabi"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 699,
+        "tmin_absolute": 6.0,
+        "tmin_optimal": 16.0,
+        "tmax_optimal": 28.0,
+        "tmax_absolute": 34.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 250,
+        "range_max": 400,
+        "unit": "mm per crop period",
+        "method_context": "Residual profile moisture after Kharif rains with minimal irrigation",
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Prefers medium to heavy black soils with good water-holding capacity.",
+        "source_ids": ["mpkv_package_practices"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Fixes 40-70 kg N/ha; enhances soil phosphorus availability through root exudates.",
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Soybean - Chickpea", "Sorghum - Chickpea"],
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Wilt (Fusarium oxysporum f. sp. ciceris) and dry root rot under dry soil heat stress.",
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "evidence_quality": "high_regional_icrisat",
+      "source_ids": ["icrisat_dryland_rotations", "mpkv_package_practices", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.40,
+        "kc_mid": 1.00,
+        "kc_end": 0.35,
+        "stage_days_ini": 20,
+        "stage_days_dev": 30,
+        "stage_days_mid": 40,
+        "stage_days_late": 25
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 5440.0,
+        "benchmark_yield_q_ha": 18.0,
+        "benchmark_cost_inr_ha": 32000.0,
+        "source_ids": ["cacp_msp_2024_25"]
+      }
+    },
+    {
+      "id": "soybean",
+      "name": "Soybean",
+      "scientific_name": "Glycine max",
+      "family": "Fabaceae",
+      "legume": true,
+      "intended_role": "High-value commercial monsoon legume; early maturity enables productive Rabi follow-up.",
+      "growing_seasons": ["kharif"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1133,
+        "tmin_absolute": 10.0,
+        "tmin_optimal": 20.0,
+        "tmax_optimal": 32.0,
+        "tmax_absolute": 38.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 450,
+        "range_max": 650,
+        "unit": "mm per crop period",
+        "method_context": "Monsoon rainfed cultivation in Central Indian Vertisols",
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Sensitive to waterlogging during early germination; requires ridge-and-furrow planting.",
+        "source_ids": ["mpkv_package_practices"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Symbiotic N fixation supplies 50-60% of crop N requirements.",
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Soybean - Chickpea", "Soybean - Sorghum"],
+        "source_ids": ["icrisat_dryland_rotations"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Stem fly and yellow mosaic virus.",
+        "source_ids": ["mpkv_package_practices"]
+      },
+      "evidence_quality": "high_regional_icrisat",
+      "source_ids": ["icrisat_dryland_rotations", "mpkv_package_practices", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.40,
+        "kc_mid": 1.15,
+        "kc_end": 0.50,
+        "stage_days_ini": 20,
+        "stage_days_dev": 30,
+        "stage_days_mid": 45,
+        "stage_days_late": 25
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 4892.0,
+        "benchmark_yield_q_ha": 22.0,
+        "benchmark_cost_inr_ha": 36000.0,
+        "source_ids": ["cacp_msp_2024_25"]
+      }
+    }
+  ]
+}

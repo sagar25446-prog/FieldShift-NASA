@@ -1,7 +1,7 @@
 # FieldShift Test Report
 
 **Date:** 2026-10-13  
-**Status:** ✅ All 247 automated tests passing, 4 skipped (live API)  
+**Status:** ✅ All 257 automated tests passing, 4 skipped (live API)  
 **Python:** 3.13.12 | **pytest:** 9.1.1
 
 ---
@@ -32,7 +32,10 @@
 | `test_modis_integration.py` | 1 | ⏭️ Skipped (live API) |
 | `test_economics.py` | 3 | ✅ All pass |
 | `test_satellite_and_sensitivity.py` | 4 | ✅ All pass |
-| **Total** | **251** | **247 pass, 4 skip** |
+| `test_regions.py` | 5 | ✅ All pass |
+| `test_multi_year_simulation.py` | 2 | ✅ All pass |
+| `test_export_import.py` | 3 | ✅ All pass |
+| **Total** | **261** | **257 pass, 4 skip** |
 
 ---
 

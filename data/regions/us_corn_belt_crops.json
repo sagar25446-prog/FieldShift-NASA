@@ -1,0 +1,381 @@
+{
+  "catalog_metadata": {
+    "catalog_version": "1.0.0",
+    "demonstration_region": "Story County, Iowa, US Corn Belt",
+    "access_date": "2026-10-13",
+    "purpose": "Evidence-linked crop rotation planning for the US Corn Belt based on USDA-ARS and Iowa State University data."
+  },
+  "sources": {
+    "usda_ars_marsden": {
+      "title": "Marsden Farm Long-Term Crop Rotation Experiment: Agronomic, Economic, and Ecological Outcomes",
+      "publisher": "USDA Agricultural Research Service (USDA-ARS) & Iowa State University",
+      "url": "https://www.ars.usda.gov/research/project/?accnNo=421516",
+      "access_date": "2026-10-13"
+    },
+    "isu_extension_pm1714": {
+      "title": "Estimated Costs of Crop Production in Iowa — 2024 (File A1-20)",
+      "publisher": "Iowa State University Extension and Outreach",
+      "url": "https://www.extension.iastate.edu/agdm/crops/html/a1-20.html",
+      "access_date": "2026-10-13"
+    },
+    "fao56_table_12": {
+      "title": "FAO Irrigation and Drainage Paper 56 — Table 12: Crop Coefficients Kc",
+      "publisher": "Food and Agriculture Organization of the United Nations (FAO)",
+      "url": "https://www.fao.org/4/x0490e/x0490e0b.htm",
+      "access_date": "2026-10-13"
+    },
+    "fao_ecocrop": {
+      "title": "FAO EcoCrop Database — Crop Environmental Requirements",
+      "publisher": "Food and Agriculture Organization of the United Nations (FAO)",
+      "url": "https://ecocrop.apps.fao.org/",
+      "access_date": "2026-10-13"
+    }
+  },
+  "crops": [
+    {
+      "id": "corn",
+      "name": "Corn (Field Maize)",
+      "scientific_name": "Zea mays",
+      "family": "Poaceae",
+      "legume": false,
+      "intended_role": "High-yielding grain cereal; foundation of Midwest feed and biofuel systems.",
+      "growing_seasons": ["spring", "summer"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 2200,
+        "tmin_absolute": 10.0,
+        "tmin_optimal": 18.0,
+        "tmax_optimal": 32.0,
+        "tmax_absolute": 38.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 500,
+        "range_max": 800,
+        "unit": "mm per crop period",
+        "method_context": "Rainfed/supplemental sprinkler irrigation in Upper Midwest",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Sensitive to compaction and prolonged ponding in early vegetative stages.",
+        "source_ids": ["isu_extension_pm1714"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "High nitrogen demand (140-180 kg N/ha in Iowa following corn).",
+        "source_ids": ["isu_extension_pm1714"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Corn-Soybean-Cereal Rye", "Corn-Soybean-Oats-Alfalfa"],
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Corn rootworm pressure rises under continuous corn.",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "evidence_quality": "high_regional_usda",
+      "source_ids": ["usda_ars_marsden", "isu_extension_pm1714", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.30,
+        "kc_mid": 1.20,
+        "kc_end": 0.35,
+        "stage_days_ini": 25,
+        "stage_days_dev": 40,
+        "stage_days_mid": 45,
+        "stage_days_late": 30
+      },
+      "indicative_economics": {
+        "status": "documented_market_benchmark",
+        "msp_inr_per_q": 2000.0,
+        "benchmark_yield_q_ha": 110.0,
+        "benchmark_cost_inr_ha": 65000.0,
+        "market_price_usd_per_t": 180.0,
+        "benchmark_cost_usd_ha": 750.0,
+        "benchmark_yield_t_ha": 11.0,
+        "source_ids": ["isu_extension_pm1714"]
+      }
+    },
+    {
+      "id": "soybean",
+      "name": "Soybean",
+      "scientific_name": "Glycine max",
+      "family": "Fabaceae",
+      "legume": true,
+      "intended_role": "Nitrogen-fixing oilseed pulse paired with corn across the Midwest.",
+      "growing_seasons": ["summer"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1133,
+        "tmin_absolute": 10.0,
+        "tmin_optimal": 20.0,
+        "tmax_optimal": 30.0,
+        "tmax_absolute": 38.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 450,
+        "range_max": 700,
+        "unit": "mm per crop period",
+        "method_context": "Midwest rainfed seasonal evapotranspiration",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Iron deficiency chlorosis in high-pH calcareous soils.",
+        "source_ids": ["isu_extension_pm1714"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Symbiotic biological N fixation supplies 50-60% of crop N requirements.",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Corn-Soybean-Cereal Rye", "Soybean-Winter Wheat-Red Clover"],
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Soybean cyst nematode (SCN) requires rotation break.",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "evidence_quality": "high_regional_usda",
+      "source_ids": ["usda_ars_marsden", "isu_extension_pm1714", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.40,
+        "kc_mid": 1.15,
+        "kc_end": 0.50,
+        "stage_days_ini": 20,
+        "stage_days_dev": 35,
+        "stage_days_mid": 50,
+        "stage_days_late": 25
+      },
+      "indicative_economics": {
+        "status": "documented_market_benchmark",
+        "msp_inr_per_q": 4892.0,
+        "benchmark_yield_q_ha": 35.0,
+        "benchmark_cost_inr_ha": 45000.0,
+        "market_price_usd_per_t": 410.0,
+        "benchmark_cost_usd_ha": 520.0,
+        "benchmark_yield_t_ha": 3.5,
+        "source_ids": ["isu_extension_pm1714"]
+      }
+    },
+    {
+      "id": "cereal_rye",
+      "name": "Cereal Rye (Winter Cover Crop)",
+      "scientific_name": "Secale cereale",
+      "family": "Poaceae",
+      "legume": false,
+      "intended_role": "Overwinter cover crop; scavenges residual soil nitrates, halts winter erosion.",
+      "growing_seasons": ["fall_cover", "spring"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1944,
+        "tmin_absolute": 1.0,
+        "tmin_optimal": 10.0,
+        "tmax_optimal": 22.0,
+        "tmax_absolute": 30.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 200,
+        "range_max": 350,
+        "unit": "mm per crop period",
+        "method_context": "Utilizes fall/spring moisture with minimal summer depletion",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Highly adaptable to all soil textures and acidic soils down to pH 5.0.",
+        "source_ids": ["isu_extension_pm1714"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Scavenges up to 40-70 kg N/ha of leachable nitrate from prior corn crop.",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Corn-Cereal Rye-Soybean"],
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Terminate 10-14 days prior to corn planting to avoid allelopathy.",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "evidence_quality": "high_regional_usda",
+      "source_ids": ["usda_ars_marsden", "isu_extension_pm1714", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.30,
+        "kc_mid": 1.05,
+        "kc_end": 0.25,
+        "stage_days_ini": 30,
+        "stage_days_dev": 40,
+        "stage_days_mid": 40,
+        "stage_days_late": 20
+      },
+      "indicative_economics": {
+        "status": "documented_market_benchmark",
+        "msp_inr_per_q": 1500.0,
+        "benchmark_yield_q_ha": 25.0,
+        "benchmark_cost_inr_ha": 15000.0,
+        "market_price_usd_per_t": 160.0,
+        "benchmark_cost_usd_ha": 90.0,
+        "benchmark_yield_t_ha": 2.5,
+        "source_ids": ["isu_extension_pm1714"]
+      }
+    },
+    {
+      "id": "oats",
+      "name": "Oats with Alfalfa Underseeding",
+      "scientific_name": "Avena sativa",
+      "family": "Poaceae",
+      "legume": false,
+      "intended_role": "Spring small grain nurse crop in extended 3-4 year low-input rotation.",
+      "growing_seasons": ["spring"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 432,
+        "tmin_absolute": 5.0,
+        "tmin_optimal": 15.0,
+        "tmax_optimal": 22.0,
+        "tmax_absolute": 28.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 350,
+        "range_max": 500,
+        "unit": "mm per crop period",
+        "method_context": "Spring grain water budget in temperate Midwest",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Prefers well-drained loam; tolerates cool, wet spring soils.",
+        "source_ids": ["isu_extension_pm1714"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Low fertilizer demand; excellent residual nutrient utilization.",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Corn-Soybean-Oats-Alfalfa"],
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Crown rust risk in late-planted stands.",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "evidence_quality": "high_regional_usda",
+      "source_ids": ["usda_ars_marsden", "isu_extension_pm1714", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.30,
+        "kc_mid": 1.15,
+        "kc_end": 0.25,
+        "stage_days_ini": 20,
+        "stage_days_dev": 30,
+        "stage_days_mid": 40,
+        "stage_days_late": 25
+      },
+      "indicative_economics": {
+        "status": "documented_market_benchmark",
+        "msp_inr_per_q": 2200.0,
+        "benchmark_yield_q_ha": 40.0,
+        "benchmark_cost_inr_ha": 30000.0,
+        "market_price_usd_per_t": 220.0,
+        "benchmark_cost_usd_ha": 350.0,
+        "benchmark_yield_t_ha": 4.0,
+        "source_ids": ["isu_extension_pm1714"]
+      }
+    },
+    {
+      "id": "alfalfa",
+      "name": "Alfalfa (Lucerne Perennial Legume)",
+      "scientific_name": "Medicago sativa",
+      "family": "Fabaceae",
+      "legume": true,
+      "intended_role": "Perennial forage legume restoring soil organic matter and building deep soil porosity.",
+      "growing_seasons": ["summer", "spring"],
+      "temperature_suitability": {
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1438,
+        "tmin_absolute": 5.0,
+        "tmin_optimal": 18.0,
+        "tmax_optimal": 28.0,
+        "tmax_absolute": 36.0,
+        "unit": "degC",
+        "source_ids": ["fao_ecocrop"]
+      },
+      "water_requirement": {
+        "status": "documented_approximation",
+        "range_min": 600,
+        "range_max": 900,
+        "unit": "mm per crop period",
+        "method_context": "Deep rooting taproot utilizes deep subsoil moisture profiles",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "soil_constraints": {
+        "status": "partial",
+        "notes": "Intolerant of waterlogging; requires well-drained soil pH 6.5-7.5.",
+        "source_ids": ["isu_extension_pm1714"]
+      },
+      "nutrient_characteristics": {
+        "status": "documented",
+        "notes": "Fixes 150-250 kg N/ha/yr; provides massive nitrogen credit to following corn.",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "rotation_compatibility": {
+        "status": "documented_examples_only",
+        "examples": ["Corn-Soybean-Oats-Alfalfa-Alfalfa"],
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "pest_disease_restrictions": {
+        "status": "partial",
+        "notes": "Alfalfa weevil and Aphanomyces root rot under poorly drained conditions.",
+        "source_ids": ["usda_ars_marsden"]
+      },
+      "evidence_quality": "high_regional_usda",
+      "source_ids": ["usda_ars_marsden", "isu_extension_pm1714", "fao56_table_12", "fao_ecocrop"],
+      "crop_coefficient": {
+        "status": "fao56_table_12",
+        "kc_ini": 0.40,
+        "kc_mid": 1.20,
+        "kc_end": 1.15,
+        "stage_days_ini": 15,
+        "stage_days_dev": 25,
+        "stage_days_mid": 45,
+        "stage_days_late": 15
+      },
+      "indicative_economics": {
+        "status": "documented_market_benchmark",
+        "msp_inr_per_q": 3000.0,
+        "benchmark_yield_q_ha": 90.0,
+        "benchmark_cost_inr_ha": 48000.0,
+        "market_price_usd_per_t": 240.0,
+        "benchmark_cost_usd_ha": 580.0,
+        "benchmark_yield_t_ha": 9.0,
+        "source_ids": ["isu_extension_pm1714"]
+      }
+    }
+  ]
+}

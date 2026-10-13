@@ -6,6 +6,9 @@ from src.fieldshift.satellite_context import (
     calculate_water_budget_from_farm_inputs,
     GRACE_PUNJAB_CONTEXT,
     FIRMS_PUNJAB_CONTEXT,
+    SMAP_PUNJAB_CONTEXT,
+    GPM_GLOBAL_CONTEXT,
+    MODIS_NDVI_CONTEXT,
     WaterBudgetCalculation,
 )
 from src.fieldshift.sensitivity import (
@@ -45,6 +48,20 @@ def test_satellite_contexts():
 
     assert "MODIS" in FIRMS_PUNJAB_CONTEXT.sensor
     assert "Happy Seeder" in FIRMS_PUNJAB_CONTEXT.crop_residue_solution
+
+    # SMAP
+    assert "SMAP" in SMAP_PUNJAB_CONTEXT.satellite_mission
+    assert SMAP_PUNJAB_CONTEXT.surface_moisture_m3_m3 > 0.0
+    assert SMAP_PUNJAB_CONTEXT.rootzone_moisture_m3_m3 > 0.0
+
+    # GPM
+    assert "GPM" in GPM_GLOBAL_CONTEXT.satellite_constellation
+    assert GPM_GLOBAL_CONTEXT.spatial_resolution_deg == 0.1
+
+    # MODIS NDVI
+    assert "MOD13Q1" in MODIS_NDVI_CONTEXT.sensor
+    assert MODIS_NDVI_CONTEXT.peak_ndvi_rabi > MODIS_NDVI_CONTEXT.bare_soil_ndvi
+
 
 
 def test_rank_stability_analysis():

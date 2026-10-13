@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "scope": "Supported Mediterranean crop transitions based on IFAPA (Junta de Andalucía) dryland rotation guides.",
+  "season_cycle": ["autumn_winter", "spring_summer"],
+  "relationships": [
+    {"from": "durum_wheat", "to": "sunflower", "source_ids": ["ifapa_rotaciones"]},
+    {"from": "durum_wheat", "to": "chickpea", "source_ids": ["ifapa_rotaciones"]},
+    {"from": "barley", "to": "sunflower", "source_ids": ["ifapa_rotaciones"]},
+    {"from": "barley", "to": "chickpea", "source_ids": ["ifapa_rotaciones"]},
+    {"from": "sunflower", "to": "durum_wheat", "source_ids": ["ifapa_rotaciones"]},
+    {"from": "sunflower", "to": "barley", "source_ids": ["ifapa_rotaciones"]},
+    {"from": "chickpea", "to": "durum_wheat", "source_ids": ["ifapa_rotaciones"]},
+    {"from": "chickpea", "to": "barley", "source_ids": ["ifapa_rotaciones"]}
+  ],
+  "notes": "Incorporating pulse legumes (Garbanzo) prior to cereals increases durum wheat grain protein and cuts mineral nitrogen applications by 40-50 kg N/ha."
+}

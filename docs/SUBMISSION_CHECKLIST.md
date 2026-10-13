@@ -9,24 +9,28 @@
 ## Pre-Submission Verification
 
 ### Code & Deployment
-- [x] All 251 automated tests pass (247 pass, 4 skipped) (`python -m pytest`)
+- [x] All 261 automated tests pass (257 pass, 4 skipped) (`python -m pytest`)
 - [x] Application starts locally (`streamlit run app.py`)
+- [x] GitHub Actions CI workflow configured (`.github/workflows/ci.yml`)
 - [x] No hardcoded secrets, API keys, or credentials in source code
 - [x] `.env` and secrets files listed in `.gitignore`
 - [x] `LICENSE` file present (MIT License)
-- [x] `requirements.txt` lists all dependencies
+- [x] `requirements.txt` lists all pinned dependencies
 - [x] `.streamlit/config.toml` present for deployment
 - [x] Code pushed to GitHub (`main` branch)
 - [ ] **Deploy to Streamlit Cloud** (manual step — see instructions below)
 - [ ] **Verify public URL loads and completes full workflow**
 
-### Documentation
-- [x] `README.md` — project overview, features, setup, tests
+### Documentation & Competition Materials
+- [x] `README.md` — project overview, global features, setup, tests
+- [x] `docs/PITCH_DECK.md` — 5-slide competition deck with farmer persona
+- [x] `docs/DEMO_VIDEO_SCRIPT.md` — 75-second timed demonstration video script
+- [x] `docs/EXPERT_VALIDATION.md` — institutional alignment (FAO, PAU, USDA) and quotes
 - [x] `docs/CHALLENGE_REQUIREMENTS.md` — official challenge text mapped to features
 - [x] `docs/DATA_SOURCES.md` — all data sources with provenance
 - [x] `docs/AGRONOMIC_ASSUMPTIONS.md` — evidence boundaries and expert review items
 - [x] `docs/KNOWN_LIMITATIONS.md` — honest disclosure of all limitations
-- [x] `docs/TEST_REPORT.md` — automated and manual test results
+- [x] `docs/TEST_REPORT.md` — automated and manual test results (257 passed)
 - [x] `docs/NASA_POWER_DATA.md` — API parameters, units, quality handling
 - [x] `docs/WATER_BALANCE_METHODOLOGY.md` — FAO-56 Penman-Monteith ET0, Kc stages, USDA SCS effective rainfall
 - [x] `docs/CLIMATE_SUITABILITY_METHODOLOGY.md` — FAO EcoCrop cardinal thermal limits, heat stress criteria

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "scope": "Supported Semi-Arid Tropics crop transitions based on ICRISAT and MPKV Rahuri dryland farming guides.",
+  "season_cycle": ["kharif", "rabi"],
+  "relationships": [
+    {"from": "sorghum", "to": "chickpea", "source_ids": ["icrisat_dryland_rotations"]},
+    {"from": "soybean", "to": "chickpea", "source_ids": ["icrisat_dryland_rotations"]},
+    {"from": "soybean", "to": "sorghum", "source_ids": ["icrisat_dryland_rotations"]},
+    {"from": "chickpea", "to": "sorghum", "source_ids": ["icrisat_dryland_rotations"]},
+    {"from": "chickpea", "to": "soybean", "source_ids": ["icrisat_dryland_rotations"]},
+    {"from": "chickpea", "to": "pigeonpea", "source_ids": ["icrisat_dryland_rotations"]},
+    {"from": "pigeonpea", "to": "sorghum", "source_ids": ["icrisat_dryland_rotations"]}
+  ],
+  "notes": "Rotating deep-rooted legume pulses (Chickpea, Pigeonpea) with Sorghum breaks striga weed and pest cycles while fixing up to 70 kg biological N per hectare."
+}
