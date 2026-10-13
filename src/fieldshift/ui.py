@@ -21,7 +21,14 @@ from .climate_trends import (
     compute_annual_season_summaries,
 )
 from .data_access import source_statuses
-from .nasa_power import PowerClient, PowerDataset, PowerError, PowerRequest, parse_power_daily_response
+from .nasa_power import (
+    PowerClient,
+    PowerDataset,
+    PowerError,
+    PowerRequest,
+    load_offline_demo_snapshot,
+    parse_power_daily_response,
+)
 from .rotation_engine import (
     METRICS,
     ClimateContext,
@@ -135,6 +142,7 @@ def _init_state() -> None:
     st.session_state.setdefault("page", PAGES[0])
     st.session_state.setdefault("power_dataset", None)
     st.session_state.setdefault("power_error", None)
+    st.session_state.setdefault("power_mode", None)
 
 
 def _go(page: str) -> None:
@@ -146,7 +154,7 @@ def _reset() -> None:
     for key in list(st.session_state):
         if key.startswith(("farm_", "priority_", "block_")) or key in {
             "farm", "weights", "planning_horizon", "scenario",
-            "power_dataset", "power_error",
+            "power_dataset", "power_error", "power_mode",
             "dry_reduction_pct", "hot_increase_c", "irrigation_reduction_pct",
         }:
             del st.session_state[key]
@@ -214,29 +222,46 @@ def _scenario_definitions() -> tuple[Any, ...]:
     )
 
 
-def _load_ludhiana_example() -> None:
-    """Load clearly labelled illustrative inputs; never label them as farm data."""
+def _load_complete_demo_workflow(with_cached_climate: bool = True) -> None:
+    """Load complete, verified demonstration workflow (Ludhiana profile + 2024 NASA snapshot)."""
     st.session_state["farm"] = {
         **_fresh_farm(),
         "latitude": 30.9010,
         "longitude": 75.8573,
         "start_date": date(2024, 1, 1),
-        "end_date": date(2024, 3, 31),
+        "end_date": date(2024, 12, 31),
         "texture": "medium",
+        "ph": 7.4,
+        "organic_carbon_percent": 0.55,
+        "electrical_conductivity_ds_m": 0.35,
         "waterlogged": False,
         "highly_deteriorated_alkaline": False,
         "well_drained": True,
-        "soil_source": "Illustrative demonstration input — replace with farmer/laboratory evidence.",
+        "soil_source": "Illustrative demonstration input (Ludhiana, Punjab) — replace with farmer/laboratory evidence.",
         "irrigation": "Irrigated",
-        "water_budget_mm": 600.0,
+        "water_budget_mm": 800.0,
+        "field_size_ha": 2.5,
+        "previous_crop_id": None,
+        "blocked_crop_ids": [],
         "start_season": "kharif",
     }
     for key in list(st.session_state):
         if key.startswith(("farm_", "block_")):
             del st.session_state[key]
-    st.session_state["power_dataset"] = None
+    if with_cached_climate:
+        st.session_state["power_dataset"] = load_offline_demo_snapshot()
+        st.session_state["power_mode"] = "offline_snapshot"
+    else:
+        st.session_state["power_dataset"] = None
+        st.session_state["power_mode"] = None
     st.session_state["power_error"] = None
-    st.toast("Illustrative Ludhiana inputs loaded. They are not measurements from a real farm.", icon=":material/info:")
+    st.session_state["planning_horizon"] = 3
+    st.toast("Demonstration profile loaded (Ludhiana, Punjab). Not real farmer data.", icon="🌟")
+
+
+def _load_ludhiana_example() -> None:
+    """Load illustrative profile with offline NASA POWER snapshot."""
+    _load_complete_demo_workflow(with_cached_climate=True)
 
 
 # ────────────────────────────────── theme ──────────────────────────────────
@@ -387,8 +412,14 @@ def _sidebar() -> None:
         if _farm_is_ready():
             farm = st.session_state["farm"]
             st.success(f"📍 Farm: {farm['latitude']:.4f}, {farm['longitude']:.4f}")
-            if st.session_state["power_dataset"]:
-                st.success("🌤️ Climate data loaded")
+            if st.session_state.get("power_dataset"):
+                mode = st.session_state.get("power_mode", "live")
+                if mode == "offline_snapshot":
+                    st.info("📦 Mode: Offline snapshot")
+                else:
+                    st.success("🌐 Mode: Live NASA API")
+            else:
+                st.caption("🌤️ Climate data: Not retrieved")
         else:
             st.info("No farm location saved yet.")
         if st.button("🔄 Reset farm profile", use_container_width=True):
@@ -430,11 +461,14 @@ def render_home() -> None:
 
     with col2:
         with st.container(border=True):
-            st.markdown("##### 🗺️ Demonstration region")
-            st.write("**Ludhiana district, Punjab, India**")
-            st.caption("First climate source: NASA POWER Daily API")
-            if st.button("▶️ Load Ludhiana example", use_container_width=True):
-                _load_ludhiana_example()
+            st.markdown("##### 🌟 Live Judging Quick-Start")
+            st.write("**Ludhiana demonstration preset**")
+            st.caption("Pre-configured profile with verified offline NASA POWER dataset.")
+            if st.button("🚀 Load demo & view plans", type="primary", use_container_width=True):
+                _load_complete_demo_workflow(with_cached_climate=True)
+                _go("Rotation Recommendations")
+            if st.button("▶️ Load demo farm profile", use_container_width=True):
+                _load_complete_demo_workflow(with_cached_climate=True)
                 _go("Farm Profile")
 
     st.divider()
@@ -454,10 +488,16 @@ def render_farm_profile() -> None:
     st.title("🧑‍🌾 Farm profile")
     st.caption("Enter what you know. Leave a value unknown if it has not been measured; the planner will explain the effect.")
 
-    if st.button("▶️ Load illustrative Ludhiana example"):
-        _load_ludhiana_example()
-        st.rerun()
-    st.caption("The example is a demonstration only — replace every value with farm or laboratory evidence before using results.")
+    col_demo_a, col_demo_b = st.columns(2)
+    with col_demo_a:
+        if st.button("🌟 Load complete demo farm & cached climate data", type="primary", use_container_width=True):
+            _load_complete_demo_workflow(with_cached_climate=True)
+            st.rerun()
+    with col_demo_b:
+        if st.button("▶️ Load demo farm inputs only", use_container_width=True):
+            _load_complete_demo_workflow(with_cached_climate=False)
+            st.rerun()
+    st.caption("The demonstration profile is an illustrative benchmark (Ludhiana, Punjab) — replace every value with farm or laboratory evidence before real-world use.")
 
     farm = st.session_state["farm"]
     crops = _rotation_engine().crops
@@ -546,21 +586,50 @@ def _request_climate(force_refresh: bool = False) -> None:
     farm = st.session_state["farm"]
     try:
         request = PowerRequest(farm["latitude"], farm["longitude"], farm["start_date"], farm["end_date"])
-        with st.spinner("Retrieving historical daily data from NASA POWER…"):
+        with st.spinner("Retrieving historical daily data from NASA POWER… (timeout: 15 s)"):
             st.session_state["power_dataset"] = _power_client().fetch_daily(request, force_refresh=force_refresh)
+        st.session_state["power_mode"] = "live"
         st.session_state["power_error"] = None
     except PowerError as error:
         st.session_state["power_dataset"] = None
+        st.session_state["power_mode"] = None
         st.session_state["power_error"] = str(error)
 
 
 def _climate_provenance(dataset: PowerDataset) -> None:
     p = dataset.provenance
-    st.success(f"Retrieved **daily historical climate context** for {p.start_date} to {p.end_date}.")
+    mode = st.session_state.get("power_mode", "live")
+    if mode == "offline_snapshot":
+        st.info(
+            f"📦 **Mode: Saved Offline Snapshot (Ludhiana Demonstration Region)**\n\n"
+            f"Verified NASA POWER Daily archive · Location: **{p.latitude_requested:.4f}°N, {p.longitude_requested:.4f}°E** · "
+            f"Date range: **{p.start_date} to {p.end_date}** ({len(dataset.data)} daily observations) · "
+            "All values are real archived NASA POWER observations, never fabricated."
+        )
+    else:
+        st.success(
+            f"🌐 **Mode: Live NASA POWER API Data**\n\n"
+            f"Retrieved at **{p.retrieved_at_utc} UTC** · Location: **{p.latitude_requested:.4f}°N, {p.longitude_requested:.4f}°E** · "
+            f"Date range: **{p.start_date} to {p.end_date}** ({len(dataset.data)} daily observations)."
+        )
     st.caption("Retrieved values are gridded NASA POWER context, not direct field or soil measurements, and not a future forecast.")
-    st.markdown(f"[Exact API request]({p.source_url}) · [NASA POWER daily API documentation]({p.documentation_url})")
-    with st.expander("Provenance details"):
+    col_mode_a, col_mode_b = st.columns([2, 1])
+    with col_mode_a:
+        st.markdown(f"[Exact API request URL]({p.source_url}) · [NASA POWER daily API documentation]({p.documentation_url})")
+    with col_mode_b:
+        if mode == "offline_snapshot":
+            if st.button("🌐 Switch to Live NASA API", use_container_width=True):
+                _request_climate(force_refresh=True)
+                st.rerun()
+        else:
+            if st.button("📦 Switch to Offline Snapshot", use_container_width=True):
+                st.session_state["power_dataset"] = load_offline_demo_snapshot()
+                st.session_state["power_mode"] = "offline_snapshot"
+                st.session_state["power_error"] = None
+                st.rerun()
+    with st.expander("📋 Detailed Provenance & Quality Metadata"):
         st.write({
+            "mode": mode,
             "retrieved_at_utc": p.retrieved_at_utc,
             "parameters": {name: meta.unit for name, meta in p.parameter_metadata.items()},
             "missing_observation_counts": dict(p.missing_observation_counts),
@@ -586,10 +655,21 @@ def render_climate() -> None:
         if st.button("🔄 Retry / refresh request", use_container_width=True):
             _request_climate(force_refresh=True)
     if st.session_state["power_error"]:
-        st.error(f"NASA POWER data was not available: {st.session_state['power_error']} Retry shortly, verify the coordinates/date range, or continue with explicitly limited planning.")
+        st.error(f"⚠️ NASA POWER live request failed: {st.session_state['power_error']}")
+        st.warning("NASA POWER is currently unreachable or slow. You can load the verified offline snapshot to continue evaluating FieldShift without interruption.")
+        if st.button("📦 Load Saved Offline Snapshot for Ludhiana", type="primary", use_container_width=True):
+            st.session_state["power_dataset"] = load_offline_demo_snapshot()
+            st.session_state["power_mode"] = "offline_snapshot"
+            st.session_state["power_error"] = None
+            st.rerun()
     dataset: PowerDataset | None = st.session_state["power_dataset"]
     if not dataset:
-        st.empty()
+        st.info("No climate dataset is currently active. Retrieve live data above or load the saved offline snapshot.")
+        if st.button("📦 Load Verified Offline NASA POWER Snapshot (2024 Ludhiana)"):
+            st.session_state["power_dataset"] = load_offline_demo_snapshot()
+            st.session_state["power_mode"] = "offline_snapshot"
+            st.session_state["power_error"] = None
+            st.rerun()
         _footer()
         return
     _climate_provenance(dataset)

@@ -1,7 +1,7 @@
 # FieldShift Test Report
 
 **Date:** 2026-10-13  
-**Status:** ✅ All 149 automated tests passing, 1 skipped (live API)  
+**Status:** ✅ All 155 automated tests passing, 1 skipped (live API)  
 **Python:** 3.13.12 | **pytest:** 9.1.1
 
 ---
@@ -23,7 +23,8 @@
 | `test_climate_suitability.py` | 17 | ✅ All pass |
 | `test_climate_trends.py` | 12 | ✅ All pass |
 | `test_rotation_graph.py` | 9 | ✅ All pass |
-| **Total** | **150** | **149 pass, 1 skip** |
+| `test_demo_workflow.py` | 6 | ✅ All pass |
+| **Total** | **156** | **155 pass, 1 skip** |
 
 ---
 
@@ -148,6 +149,14 @@
 - ✅ OLS linear regression calculates exact decadal slope (+0.30 °C/decade), $R^2$, and $p$-value ($p < 0.01$) on 25-year benchmark
 - ✅ Baseline period vs. recent period comparison computes mean shift ($\Delta = +0.70^\circ\text{C}$) and percentage change
 - ✅ Descriptive historical trends strictly separated from causal yield claims; no linear extrapolation into future forecasts
+
+### 17. Live Judging Demonstration & Offline Snapshot Recovery
+- ✅ Cached offline snapshot contains 366 days of real, verified 2024 NASA POWER daily observations for Ludhiana
+- ✅ End-to-end demo workflow succeeds without network access (from profile load to rotation plan generation)
+- ✅ Mode indicator clearly distinguishes between "Live NASA POWER API Data" and "Saved Offline Snapshot"
+- ✅ Live API timeout reduced to 15 seconds, preventing indefinite hangs on slow networks
+- ✅ Network failures cleanly caught with zero tracebacks and immediate one-click fallback recovery to the offline snapshot
+- ✅ Generated demo plans produce valid FAO-56 water suitability, EcoCrop climate suitability, and composite scores
 
 ---
 

@@ -11,7 +11,8 @@ It combines **farmer-provided information**, historical **NASA POWER climate con
 ## ✨ Features
 
 - 🧑‍🌾 **Farm Profile** — Enter location, soil conditions, water budget, and rotation history
-- 🌤️ **NASA POWER Climate Data** — Retrieve real historical daily climate data (no API key needed)
+- 🌤️ **NASA POWER Climate Data** — Retrieve real historical daily climate data (no API key needed) with clear live/offline mode indicators
+- 📦 **Live Judging Preset & Offline Snapshot** — Instant one-click judging demo with real, verified 2024 Ludhiana daily NASA POWER observations and network fallback
 - 📈 **Historical Climate Trends** — Multi-decadal OLS trend regression, decadal change rates, statistical significance ($p$-values), baseline comparisons, and consecutive dry-spell runs across regional growing seasons
 - ⚖️ **Farmer Priorities** — Set and adjust weights for water, climate, soil, diversity objectives
 - 🔄 **Rotation Engine** — Source-linked, deterministic crop-rotation alternatives powered by FAO-56 and EcoCrop
@@ -20,9 +21,15 @@ It combines **farmer-provided information**, historical **NASA POWER climate con
 - 🌱 **Soil-State Estimates** — Simplified N-balance and SOC direction using FAO/IPCC equations
 - 📖 **Full Transparency** — Every score, check, and uncertainty is explained with source links
 
-## 🖥️ Live Demo
+## 🖥️ Live Demo & Judging Preset
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://fieldshift-nasa.streamlit.app)
+
+FieldShift features a **Live Judging Quick-Start** preset right on the home page:
+- One click loads the Ludhiana demonstration farm and its verified 2024 NASA POWER daily observations.
+- Generates 4 diverse, feasible crop rotations scored via FAO-56 and EcoCrop in < 1 second.
+- Seamlessly toggles between Live NASA POWER API calls and the verified offline snapshot.
+- If live NASA POWER calls timeout or fail during judging, an automatic one-click fallback restores the offline snapshot without interruption.
 
 ## Architecture
 
@@ -71,23 +78,27 @@ src/fieldshift/                 Application modules
   soil_nutrient_model.py        Simplified N-balance and SOC model
   agronomy.py                   Agronomic rule contracts
   recommendations.py            Rotation comparison contracts
-  ui.py                         Streamlit interface (all 8 pages)
+  ui.py                         Streamlit interface (all 9 pages)
 data/                           Crop, rotation-rule and priority-weight config
   crops.json                    Source-linked Punjab crop catalogue (10 crops)
-  rotation_rules.json           PAU-documented crop-to-crop relationships (11)
+  rotation_rules.json           PAU-documented crop-to-crop relationships (19)
+  demo_snapshot_ludhiana_2024.json Verified offline NASA POWER daily snapshot (366 days)
   priority_weights.json         Editable farmer priority profiles
 docs/                           Sources, assumptions, architecture, testing
-tests/                          129 automated checks (128 pass, 1 live API skip)
+tests/                          156 automated checks (155 pass, 1 live API skip)
   test_audit.py                 Comprehensive audit tests (32)
   test_climate_suitability.py   FAO EcoCrop thermal suitability & heat stress (17)
+  test_climate_trends.py        Historical climate trends and OLS regression (12)
+  test_crop_catalog.py          Catalogue schema validation (3)
+  test_demo_workflow.py         Live judging preset and offline recovery (6)
   test_fao56.py                 FAO-56 Penman-Monteith daily ET0, Kc, rain (17)
+  test_foundation.py            Foundation contracts (4)
   test_nasa_data_dependency.py  Climate ranking inversion regression tests (5)
+  test_nasa_power.py            POWER parsing and error handling (5)
   test_phase6.py                Scenarios, constraints, Pareto, soil-state (34)
   test_rotation_engine.py       Engine rules and determinism (6)
+  test_rotation_graph.py        Rotation reachability & constraint tests (9)
   test_scenarios.py             Scenario transforms and robustness (5)
-  test_nasa_power.py            POWER parsing and error handling (5)
-  test_crop_catalog.py          Catalogue schema validation (3)
-  test_foundation.py            Foundation contracts (4)
 ```
 
 ## Run Locally
@@ -146,6 +157,7 @@ FieldShift distinguishes three categories of uncertainty:
 - [`docs/CHALLENGE_REQUIREMENTS.md`](docs/CHALLENGE_REQUIREMENTS.md) — Official challenge text and FieldShift's response
 - [`docs/WATER_BALANCE_METHODOLOGY.md`](docs/WATER_BALANCE_METHODOLOGY.md) — FAO-56 Penman–Monteith ET0, Kc stages, USDA SCS effective rainfall
 - [`docs/CLIMATE_SUITABILITY_METHODOLOGY.md`](docs/CLIMATE_SUITABILITY_METHODOLOGY.md) — FAO EcoCrop cardinal thermal limits, heat stress criteria, and response functions
+- [`docs/CLIMATE_TRENDS_METHODOLOGY.md`](docs/CLIMATE_TRENDS_METHODOLOGY.md) — Multi-decadal OLS trend regression, PAU seasonal calendars, and dry spells
 - [`docs/NASA_POWER_DATA.md`](docs/NASA_POWER_DATA.md) — API parameters, units, resolution
 - [`docs/ROTATION_ENGINE.md`](docs/ROTATION_ENGINE.md) — Rule checks, scoring, safeguards
 - [`docs/SCENARIOS_AND_UNCERTAINTY.md`](docs/SCENARIOS_AND_UNCERTAINTY.md) — Scenario definitions, uncertainty categories

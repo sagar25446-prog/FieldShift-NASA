@@ -40,7 +40,7 @@
 ## UI/UX Limitations
 
 1. **Mobile layout:** Not optimised. 5-column metric layouts and dynamic Pareto card columns can be cramped on screens < 480px wide. Streamlit provides basic responsiveness but no custom mobile CSS is applied.
-2. **No offline mode:** Requires internet for NASA POWER requests. Catalogue-only checks work offline but climate context is absent.
+2. **Offline Mode Scope:** Includes a verified offline demonstration snapshot for the primary Ludhiana demonstration region (`data/demo_snapshot_ludhiana_2024.json`) enabling complete judging walkthroughs and automatic network fallback. Arbitrary coordinates outside Ludhiana require live internet access to NASA POWER or pre-caching.
 3. **No multi-user support:** No authentication, no persistent user accounts, no database.
 4. **Session persistence:** Session state is lost on page refresh (Streamlit limitation). No server-side storage.
 5. **Charts require JavaScript:** Plotly charts will not render in environments where JavaScript is disabled.

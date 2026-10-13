@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 import json
+from pathlib import Path
 from time import monotonic
 from typing import Callable, Mapping
 from urllib.error import HTTPError, URLError
@@ -157,7 +158,7 @@ class PowerClient:
 
     def __init__(
         self,
-        timeout_seconds: float = 20.0,
+        timeout_seconds: float = 15.0,
         cache_ttl_seconds: float = 21_600.0,
         transport: Transport = _default_transport,
     ) -> None:
@@ -289,3 +290,29 @@ def parse_power_daily_response(payload: object, request: PowerRequest, source_ur
         api_messages=messages,
     )
     return PowerDataset(data=frame, provenance=provenance)
+
+
+DEMO_SNAPSHOT_PATH = Path(__file__).resolve().parents[2] / "data" / "demo_snapshot_ludhiana_2024.json"
+
+
+def load_offline_demo_snapshot(path: Path | str | None = None) -> PowerDataset:
+    """Load the verified, real offline NASA POWER daily snapshot for Ludhiana, Punjab (2024).
+
+    Contains actual daily historical observations retrieved from NASA POWER.
+    Values are never fabricated.
+    """
+    snapshot_file = Path(path) if path is not None else DEMO_SNAPSHOT_PATH
+    if not snapshot_file.exists():
+        raise FileNotFoundError(f"Offline demonstration snapshot not found at {snapshot_file}")
+    payload = json.loads(snapshot_file.read_text(encoding="utf-8"))
+    parameters = tuple(payload["properties"]["parameter"].keys())
+    req = PowerRequest(
+        latitude=30.9010,
+        longitude=75.8573,
+        start_date=date(2024, 1, 1),
+        end_date=date(2024, 12, 31),
+        parameters=parameters,
+    )
+    source_url = "https://power.larc.nasa.gov/api/temporal/daily/point?start=20240101&end=20241231&latitude=30.9010&longitude=75.8573&community=AG&parameters=T2M,T2M_MAX,T2M_MIN,PRECTOTCORR,ALLSKY_SFC_SW_DWN,RH2M,WS2M&format=JSON"
+    return parse_power_daily_response(payload, req, source_url)
+
