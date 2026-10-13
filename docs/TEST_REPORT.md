@@ -1,7 +1,7 @@
 # FieldShift Test Report
 
 **Date:** 2026-10-13  
-**Status:** ✅ All 89 automated tests passing, 1 skipped (live API)  
+**Status:** ✅ All 111 automated tests passing, 1 skipped (live API)  
 **Python:** 3.13.12 | **pytest:** 9.1.1
 
 ---
@@ -18,7 +18,9 @@
 | `test_rotation_engine.py` | 6 | ✅ All pass |
 | `test_scenarios.py` | 5 | ✅ All pass |
 | `test_audit.py` | 32 | ✅ All pass |
-| **Total** | **90** | **89 pass, 1 skip** |
+| `test_fao56.py` | 17 | ✅ All pass |
+| `test_nasa_data_dependency.py` | 5 | ✅ All pass |
+| **Total** | **112** | **111 pass, 1 skip** |
 
 ---
 
@@ -111,6 +113,20 @@
 - ✅ Baseline scenario is not hypothetical
 - ✅ All stress tests are hypothetical
 - ✅ No fake confidence percentages in plans or robustness reports
+
+### 14. FAO-56 Climate Water Balance & NASA Data Dependency
+- ✅ FAO-56 Penman–Monteith daily $ET_0$ calculation reproduces standard Summer/Winter test points
+- ✅ Psychrometric constant, saturation vapour pressure slope, and extraterrestrial radiation formulas verified
+- ✅ Actual vapour pressure $e_a$ derived from $RH_{2m}$ or estimated via $T_{\min}$ fallback (FAO-56 Eq. 48)
+- ✅ Wind speed defaults safely to standard 2.0 m/s when $WS_{2m}$ missing
+- ✅ Missing solar radiation cleanly triggers graceful degraded fallback without fabricating numbers
+- ✅ USDA SCS monthly effective rainfall calculation accounts for $ET_c$ and precipitation bounds
+- ✅ Multi-stage linear interpolation of $K_c$ across initial, crop development, mid-season, and late-season
+- ✅ Arid vs. Wet climate comparison shifts candidate rotation scores and inverts recommendation ranking:
+  - Arid drought: Low-water rotation (`maize-wheat-moong`) outperforms water-intensive rotation (`rice-potato-moong`)
+  - Wet monsoon: Ample rainfall satisfies water demand, boosting `rice-potato-moong` relative ranking
+- ✅ Removing climate data cleanly switches engine to catalogue fallback without crashes
+- ✅ Scenario climate transformations directly flow through daily FAO-56 series to update water metrics
 
 ---
 

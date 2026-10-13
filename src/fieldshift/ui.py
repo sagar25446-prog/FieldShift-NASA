@@ -164,6 +164,7 @@ def _profile_from_state() -> FarmProfile:
         blocked_crop_ids=frozenset(farm["blocked_crop_ids"]), priority_weights=st.session_state["weights"],
         number_of_seasons=st.session_state["planning_horizon"], start_season=farm["start_season"],
         climate_scenario=st.session_state["scenario"],
+        climate_data=dataset.data if dataset else None,
     )
 
 
@@ -680,7 +681,7 @@ def _plan_view(plan: Any, index: int) -> None:
         st.markdown(f"**Composite comparison score:** {'Unavailable' if plan.composite_score is None else f'{plan.composite_score:.2f}'} — preference-weighted comparison only, not a probability of success.")
 
         # Tabs for details
-        tab1, tab2, tab3, tab4, tab5 = st.tabs(["Why these crops", "Feasibility checks", "Score methods", "Factors & trade-offs", "Soil-state estimate"])
+        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Why these crops", "Feasibility checks", "Water balance (FAO-56)", "Score methods", "Factors & trade-offs", "Soil-state estimate"])
 
         with tab1:
             crop_data = _rotation_engine().crops
@@ -695,6 +696,9 @@ def _plan_view(plan: Any, index: int) -> None:
                 st.markdown(f"{_status_icon(check.status)} **{check.rule}:** {check.message} {sources}")
 
         with tab3:
+            _render_water_balance_tab(plan)
+
+        with tab4:
             details = pd.DataFrame({
                 "Metric": [METRIC_LABELS[m] for m in METRICS],
                 "Score": [plan.metrics[m].score for m in METRICS],
@@ -703,17 +707,73 @@ def _plan_view(plan: Any, index: int) -> None:
             })
             st.dataframe(details.style.format({"Score": "{:.2f}", "Effective weight": "{:.2f}"}, na_rep="N/A"), hide_index=True, use_container_width=True)
 
-        with tab4:
+        with tab5:
             for heading, items in (("✅ Positive factors", plan.positive_factors), ("⚖️ Trade-offs", plan.tradeoffs), ("⚠️ Missing information / uncertainty", plan.uncertainty_warnings)):
                 if items:
                     st.markdown(f"**{heading}**")
                     for item in items:
                         st.write(f"- {item}")
 
-        with tab5:
+        with tab6:
             _render_soil_state_tab(plan)
 
         st.caption("Supporting URLs: " + " · ".join(plan.source_urls))
+
+
+def _render_water_balance_tab(plan: Any) -> None:
+    """Render the FAO-56 crop water requirement and water balance details."""
+    wb = getattr(plan, "water_balance", None)
+    if wb is None or getattr(wb, "total_etc_mm", None) is None:
+        st.info(
+            "💧 **FAO-56 climate water balance is not active for this plan.** "
+            "Retrieve NASA POWER climate data in Climate Insights to compute crop water requirements (ETc) "
+            "from real meteorological observations."
+        )
+        water_metric = plan.metrics.get("water_suitability")
+        if water_metric and water_metric.method:
+            st.caption(f"Current method: {water_metric.method}")
+        return
+
+    st.markdown("#### 💧 FAO-56 Crop Water Balance & Net Irrigation Requirement")
+    st.caption("Computed using FAO-56 Penman–Monteith ET₀, crop coefficients (Kc), and USDA SCS effective rainfall.")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total crop demand (ETc)", f"{wb.total_etc_mm:.1f} mm")
+    with col2:
+        st.metric("Effective rainfall", f"{wb.total_effective_rainfall_mm:.1f} mm")
+    with col3:
+        nir = wb.total_net_irrigation_mm if wb.total_net_irrigation_mm is not None else 0.0
+        st.metric("Net irrigation deficit", f"{nir:.1f} mm")
+    with col4:
+        score = plan.metrics["water_suitability"].score
+        st.metric("Water score", f"{score:.2f}" if score is not None else "N/A")
+
+    rows = []
+    for cr in wb.crop_results:
+        rows.append({
+            "Crop": cr.crop_name,
+            "Season": cr.season,
+            "ET₀ (mm)": f"{cr.et0_total_mm:.1f}" if cr.et0_total_mm is not None else "N/A",
+            "Mean Kc": f"{cr.kc_weighted_mean:.2f}" if cr.kc_weighted_mean is not None else "N/A",
+            "ETc demand (mm)": f"{cr.etc_total_mm:.1f}" if cr.etc_total_mm is not None else "N/A",
+            "Rainfall (mm)": f"{cr.total_rainfall_mm:.1f}",
+            "Eff. rain (mm)": f"{cr.effective_rainfall_mm:.1f}",
+            "Deficit (mm)": f"{cr.net_irrigation_requirement_mm:.1f}" if cr.net_irrigation_requirement_mm is not None else "N/A",
+        })
+    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+
+    with st.expander("Methodology, sources & limitations"):
+        st.markdown("""
+- **ET₀ Method:** FAO-56 Penman–Monteith equation (Allen et al. 1998, Eq. 6) using NASA POWER daily T2M_MAX, T2M_MIN, and ALLSKY_SFC_SW_DWN.
+- **Crop Coefficients (Kc):** Sourced from [FAO-56 Table 12](https://www.fao.org/4/x0490e/x0490e0b.htm) for each crop development stage (initial, mid, end).
+- **Effective Rainfall:** Estimated using USDA Soil Conservation Service (SCS) method per monthly timestep.
+- **Omitted factors:** Deep percolation, surface runoff, groundwater capillary rise, and application efficiency are not modelled.
+- **Root zone disclosure:** ET₀ and water deficit do NOT directly measure water stored in a specific farm's root zone.
+        """)
+        if wb.warnings:
+            for w in wb.warnings:
+                st.warning(f"⚠️ {w}")
 
 
 def _render_soil_state_tab(plan: Any) -> None:

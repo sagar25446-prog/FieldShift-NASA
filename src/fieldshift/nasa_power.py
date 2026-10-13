@@ -28,6 +28,15 @@ DEFAULT_PARAMETERS = (
     "PRECTOTCORR",
     "ALLSKY_SFC_SW_DWN",
 )
+FAO56_METEOROLOGICAL_PARAMETERS = (
+    "T2M",
+    "T2M_MAX",
+    "T2M_MIN",
+    "PRECTOTCORR",
+    "ALLSKY_SFC_SW_DWN",
+    "RH2M",
+    "WS2M",
+)
 
 
 class PowerError(RuntimeError):

@@ -129,10 +129,18 @@ def transform_climate_frame(frame: pd.DataFrame, scenario: ScenarioDefinition) -
 
 
 def scenario_profile(profile: FarmProfile, scenario: ScenarioDefinition) -> FarmProfile:
-    """Apply only the documented budget adjustment to a planning profile."""
+    """Apply only the documented budget adjustment and climate perturbation to a planning profile."""
     budget = profile.total_crop_water_budget_mm
     adjusted_budget = None if budget is None else budget * scenario.water_budget_factor
-    return replace(profile, total_crop_water_budget_mm=adjusted_budget, climate_scenario=scenario.label)
+    transformed_climate = None
+    if profile.climate_data is not None and isinstance(profile.climate_data, pd.DataFrame):
+        transformed_climate = transform_climate_frame(profile.climate_data, scenario)
+    return replace(
+        profile,
+        total_crop_water_budget_mm=adjusted_budget,
+        climate_scenario=scenario.label,
+        climate_data=transformed_climate,
+    )
 
 
 def evaluate_robustness(

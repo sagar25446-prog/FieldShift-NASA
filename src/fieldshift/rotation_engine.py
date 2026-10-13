@@ -42,7 +42,7 @@ class ClimateContext:
     available_parameters: tuple[str, ...] = ()
 
 
-@dataclass(frozen=True)
+@dataclass
 class FarmProfile:
     """Inputs used by the rule engine for one planning run."""
 
@@ -52,12 +52,13 @@ class FarmProfile:
     climate: ClimateContext
     total_crop_water_budget_mm: float | None
     previous_crop_id: str | None
-    blocked_crop_ids: frozenset[str] = frozenset()
-    blocked_families: frozenset[str] = frozenset()
+    blocked_crop_ids: frozenset[str] = field(default_factory=frozenset)
+    blocked_families: frozenset[str] = field(default_factory=frozenset)
     priority_weights: Mapping[str, float] = field(default_factory=dict)
     number_of_seasons: int = 3
     start_season: str = "kharif"
     climate_scenario: str = "historical NASA POWER context"
+    climate_data: object = None  # pd.DataFrame | None — kept as object to avoid import
 
 
 @dataclass(frozen=True)
@@ -95,6 +96,7 @@ class RotationPlan:
     tradeoffs: tuple[str, ...]
     uncertainty_warnings: tuple[str, ...]
     source_urls: tuple[str, ...]
+    water_balance: object = None
 
 
 @dataclass(frozen=True)
@@ -273,7 +275,7 @@ class RotationEngine:
         weights: Mapping[str, float],
         checks: list[FeasibilityCheck],
     ) -> RotationPlan:
-        metrics = self._metrics(path, profile)
+        metrics, water_balance = self._metrics(path, profile)
         available = {name: metric for name, metric in metrics.items() if metric.score is not None and weights[name] > 0}
         total_weight = sum(weights[name] for name in available)
         effective_weights = {name: (weights[name] / total_weight if name in available else 0.0) for name in METRICS} if total_weight else {name: 0.0 for name in METRICS}
@@ -285,7 +287,18 @@ class RotationEngine:
         factors = [f"Rotation contains {len({self.crops[crop]['family'] for crop in path})} crop family/families across {len(path)} planned season(s)."]
         if not failed_checks:
             factors.insert(0, "Every crop-to-crop step is documented in the supported relationship graph.")
-        tradeoffs = ["Composite score is a preference-weighted comparison, not a probability of success."]
+        if water_balance is not None and getattr(water_balance, "total_etc_mm", None) is not None:
+            factors.append(
+                f"FAO-56 estimated rotation water demand (ETc): {water_balance.total_etc_mm:.1f} mm; "
+                f"effective rainfall: {water_balance.total_effective_rainfall_mm:.1f} mm."
+            )
+            if getattr(water_balance, "total_net_irrigation_mm", None) is not None and water_balance.total_net_irrigation_mm > 0:
+                tradeoffs = ["Composite score is a preference-weighted comparison, not a probability of success."]
+                tradeoffs.append(f"Estimated net irrigation requirement (deficit): {water_balance.total_net_irrigation_mm:.1f} mm.")
+            else:
+                tradeoffs = ["Composite score is a preference-weighted comparison, not a probability of success."]
+        else:
+            tradeoffs = ["Composite score is a preference-weighted comparison, not a probability of success."]
         if metrics["economic_potential"].score is None:
             tradeoffs.append("Economic potential is unavailable because no credible local cost/price data is configured.")
         source_ids = {source_id for crop_id in path for source_id in self.crops[crop_id]["source_ids"]}
@@ -302,25 +315,15 @@ class RotationEngine:
             checks=tuple(checks), metrics=metrics, effective_weights=effective_weights, composite_score=composite,
             positive_factors=tuple(factors), tradeoffs=tuple(tradeoffs), uncertainty_warnings=tuple(dict.fromkeys(warnings)),
             source_urls=tuple(sorted(self.sources[source_id]["url"] for source_id in source_ids)),
+            water_balance=water_balance,
         )
 
-    def _metrics(self, path: tuple[str, ...], profile: FarmProfile) -> dict[str, MetricScore]:
+    def _metrics(self, path: tuple[str, ...], profile: FarmProfile) -> tuple[dict[str, MetricScore], object]:
         crops = [self.crops[crop_id] for crop_id in path]
-        water_values: list[float] = []
-        if profile.total_crop_water_budget_mm is None:
-            water = MetricScore(None, "Unavailable: no total crop-water budget was supplied.", "Water suitability cannot be scored without a total crop-water budget.")
-        elif any(crop["water_requirement"]["status"] != "documented_approximation" for crop in crops):
-            water = MetricScore(None, "Unavailable: at least one crop lacks a documented water range.", "Water suitability is not scored when a selected crop has unknown water evidence.")
-        else:
-            for crop in crops:
-                requirement = crop["water_requirement"]
-                low, high = requirement["range_min"], requirement["range_max"]
-                if profile.total_crop_water_budget_mm >= high:
-                    water_values.append(1.0)
-                else:
-                    margin_score = 0.5 + 0.5 * (profile.total_crop_water_budget_mm - low) / (high - low)
-                    water_values.append(min(1.0, max(0.0, margin_score)))
-            water = MetricScore(sum(water_values) / len(water_values), "Mean 0–1 margin above documented crop-method minimums; values are only comparable within stated catalogue contexts.")
+
+        # ── Water suitability — FAO-56 climate-derived when available ──
+        water, water_balance = self._water_metric(path, crops, profile)
+
         soil_values: list[float] = []
         if "wheat" in path and profile.soil.waterlogged is False and profile.soil.highly_deteriorated_alkaline is False:
             soil_values.append(1.0)
@@ -334,7 +337,80 @@ class RotationEngine:
             "soil_related_potential": soil,
             "rotation_diversity": diversity,
             "economic_potential": MetricScore(None, "Unavailable: no credible local cost or price data is configured.", "No economic estimate is fabricated."),
-        }
+        }, water_balance
+
+    def _water_metric(self, path: tuple[str, ...], crops: list, profile: FarmProfile) -> tuple[MetricScore, object]:
+        """Compute water suitability using FAO-56 climate-derived ETc when possible, falling back to catalogue ranges."""
+        import pandas as pd
+        from .fao56 import CropKc, compute_crop_water, compute_et0_series, compute_rotation_water_balance
+
+        climate_frame = profile.climate_data
+        has_climate = climate_frame is not None and isinstance(climate_frame, pd.DataFrame) and not climate_frame.empty
+
+        # ── Try FAO-56 climate-derived water score ──
+        if has_climate:
+            et0_result = compute_et0_series(climate_frame, profile.latitude)
+            if et0_result.total_et0_mm is not None and et0_result.valid_days > 0:
+                precip = climate_frame["PRECTOTCORR"] if "PRECTOTCORR" in climate_frame.columns else pd.Series(dtype=float)
+                crop_results = []
+
+                for i, (crop_id, crop) in enumerate(zip(path, crops)):
+                    kc_data = crop.get("crop_coefficient", {})
+                    if kc_data.get("status") == "fao56_table_12":
+                        kc = CropKc(
+                            kc_ini=kc_data["kc_ini"], kc_mid=kc_data["kc_mid"], kc_end=kc_data["kc_end"],
+                            stage_days_ini=kc_data["stage_days_ini"], stage_days_dev=kc_data["stage_days_dev"],
+                            stage_days_mid=kc_data["stage_days_mid"], stage_days_late=kc_data["stage_days_late"],
+                            source=kc_data["source"],
+                        )
+                    else:
+                        kc = None
+
+                    cr = compute_crop_water(
+                        et0_series=et0_result.daily_et0_mm,
+                        precip_series=precip,
+                        kc=kc,
+                        crop_id=crop_id,
+                        crop_name=crop["name"],
+                        season=self._seasons(profile.start_season, profile.number_of_seasons)[i],
+                    )
+                    crop_results.append(cr)
+
+                balance = compute_rotation_water_balance(crop_results, profile.total_crop_water_budget_mm)
+
+                if balance.climate_water_score is not None:
+                    method_parts = [
+                        "FAO-56 Penman–Monteith ET0 × Kc crop coefficients (Allen et al. 1998).",
+                        f"ET0 computed from {et0_result.valid_days}/{et0_result.total_days} valid climate days.",
+                        "Effective rainfall: USDA SCS method.",
+                    ]
+                    if profile.total_crop_water_budget_mm is not None:
+                        method_parts.append(f"Farmer water budget ({profile.total_crop_water_budget_mm:.0f} mm) used as supplemental irrigation supply.")
+                    warning = "; ".join(balance.warnings) if balance.warnings else None
+                    return MetricScore(balance.climate_water_score, " ".join(method_parts), warning), balance
+
+        # ── Fallback: catalogue water-requirement ranges (original logic) ──
+        if profile.total_crop_water_budget_mm is None:
+            return MetricScore(None, "Unavailable: no climate-derived ET0 or farmer water budget.", "Water suitability cannot be scored without climate data or a farmer-entered water budget."), None
+
+        if any(crop["water_requirement"]["status"] != "documented_approximation" for crop in crops):
+            return MetricScore(None, "Unavailable: at least one crop lacks a documented water range.", "Water suitability is not scored when a selected crop has unknown water evidence."), None
+
+        water_values: list[float] = []
+        for crop in crops:
+            requirement = crop["water_requirement"]
+            low, high = requirement["range_min"], requirement["range_max"]
+            if profile.total_crop_water_budget_mm >= high:
+                water_values.append(1.0)
+            else:
+                margin_score = 0.5 + 0.5 * (profile.total_crop_water_budget_mm - low) / (high - low)
+                water_values.append(min(1.0, max(0.0, margin_score)))
+
+        return MetricScore(
+            sum(water_values) / len(water_values),
+            "Fallback: farmer-entered budget compared to catalogue water-requirement ranges (no climate data available).",
+            "This score uses catalogue ranges only because NASA POWER climate data was not provided.",
+        ), None
 
     @staticmethod
     def _without_dominated(plans: list[RotationPlan]) -> list[RotationPlan]:
