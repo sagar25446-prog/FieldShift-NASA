@@ -36,8 +36,14 @@ def test_water_temperature_units_sources_and_unknowns_are_explicit() -> None:
     valid_source_ids = set(catalog["sources"])
     for crop in catalog["crops"]:
         temperature, water = crop["temperature_suitability"], crop["water_requirement"]
-        assert temperature["unit"] == "degC" and temperature["status"] == "unknown"
-        assert temperature["value"] is None and temperature["evidence_needed"]
+        assert temperature["unit"] == "degC"
+        assert temperature["status"] in {"unknown", "documented_ecocrop"}
+        if temperature["status"] == "unknown":
+            assert temperature["value"] is None and temperature["evidence_needed"]
+        else:
+            assert temperature["tmin_absolute"] < temperature["tmin_optimal"]
+            assert temperature["tmin_optimal"] <= temperature["tmax_optimal"]
+            assert temperature["tmax_optimal"] < temperature["tmax_absolute"]
         assert set(temperature["source_ids"]) <= valid_source_ids
         assert water["unit"] == "mm per crop period"
         assert set(water["source_ids"]) <= valid_source_ids

@@ -650,9 +650,8 @@ def render_priorities() -> None:
         st.caption("The baseline plan uses historical NASA POWER context. Hypothetical stress tests are configured after baseline alternatives are generated.")
 
     st.info(
-        "Current catalogue evidence does not support a numeric climate-suitability or "
-        "economic-potential score. If selected, those unavailable metrics receive "
-        "effective weight 0 for a plan; this is disclosed with the result.",
+        "Current catalogue evidence supports FAO-56 crop water balance and FAO EcoCrop thermal suitability. "
+        "Economic potential remains unavailable until credible local cost/price data is configured.",
         icon="ℹ️",
     )
     if st.button("🔄 View rotation recommendations", type="primary"):
@@ -681,7 +680,15 @@ def _plan_view(plan: Any, index: int) -> None:
         st.markdown(f"**Composite comparison score:** {'Unavailable' if plan.composite_score is None else f'{plan.composite_score:.2f}'} — preference-weighted comparison only, not a probability of success.")
 
         # Tabs for details
-        tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["Why these crops", "Feasibility checks", "Water balance (FAO-56)", "Score methods", "Factors & trade-offs", "Soil-state estimate"])
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+            "Why these crops",
+            "Feasibility checks",
+            "Water balance (FAO-56)",
+            "Climate suitability (EcoCrop)",
+            "Score methods",
+            "Factors & trade-offs",
+            "Soil-state estimate",
+        ])
 
         with tab1:
             crop_data = _rotation_engine().crops
@@ -699,6 +706,9 @@ def _plan_view(plan: Any, index: int) -> None:
             _render_water_balance_tab(plan)
 
         with tab4:
+            _render_climate_suitability_tab(plan)
+
+        with tab5:
             details = pd.DataFrame({
                 "Metric": [METRIC_LABELS[m] for m in METRICS],
                 "Score": [plan.metrics[m].score for m in METRICS],
@@ -707,14 +717,14 @@ def _plan_view(plan: Any, index: int) -> None:
             })
             st.dataframe(details.style.format({"Score": "{:.2f}", "Effective weight": "{:.2f}"}, na_rep="N/A"), hide_index=True, use_container_width=True)
 
-        with tab5:
+        with tab6:
             for heading, items in (("✅ Positive factors", plan.positive_factors), ("⚖️ Trade-offs", plan.tradeoffs), ("⚠️ Missing information / uncertainty", plan.uncertainty_warnings)):
                 if items:
                     st.markdown(f"**{heading}**")
                     for item in items:
                         st.write(f"- {item}")
 
-        with tab6:
+        with tab7:
             _render_soil_state_tab(plan)
 
         st.caption("Supporting URLs: " + " · ".join(plan.source_urls))
@@ -773,6 +783,69 @@ def _render_water_balance_tab(plan: Any) -> None:
         """)
         if wb.warnings:
             for w in wb.warnings:
+                st.warning(f"⚠️ {w}")
+
+
+def _render_climate_suitability_tab(plan: Any) -> None:
+    """Render the FAO EcoCrop thermal suitability and heat-stress assessment."""
+    ca = getattr(plan, "climate_assessment", None)
+    if ca is None or not getattr(ca, "crops", ()):
+        st.info(
+            "🌡️ **FAO EcoCrop climate suitability is not active for this plan.** "
+            "Retrieve NASA POWER climate data in Climate Insights to evaluate crop thermal suitability "
+            "against documented FAO EcoCrop cardinal temperature ranges."
+        )
+        clim_metric = plan.metrics.get("climate_suitability")
+        if clim_metric and clim_metric.method:
+            st.caption(f"Current method: {clim_metric.method}")
+        return
+
+    st.markdown("#### 🌡️ FAO EcoCrop Thermal Suitability & Heat Stress Assessment")
+    st.caption("Evaluates growing-season temperature compatibility using FAO EcoCrop cardinal thermal limits and regional extreme heat thresholds.")
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        score = plan.metrics["climate_suitability"].score
+        st.metric("Climate score", f"{score:.2f}" if score is not None else "N/A")
+    with col2:
+        st.metric("Thermal status", ca.status.capitalize())
+    with col3:
+        total_heat_days = sum(getattr(c, "heat_stress_days", 0) for c in ca.crops)
+        st.metric("Heat-stress days", f"{total_heat_days} days")
+    with col4:
+        total_frost_days = sum(getattr(c, "frost_stress_days", 0) for c in ca.crops)
+        st.metric("Frost/chilling days", f"{total_frost_days} days")
+
+    rows = []
+    for c in ca.crops:
+        opt_str = f"{c.tmin_optimal:.0f} – {c.tmax_optimal:.0f} °C" if c.tmin_optimal is not None else "N/A"
+        abs_str = f"{c.tmin_absolute:.0f} – {c.tmax_absolute:.0f} °C" if c.tmin_absolute is not None else "N/A"
+        heat_str = f"{c.extreme_heat_threshold:.0f} °C" if c.extreme_heat_threshold is not None else "N/A"
+        rows.append({
+            "Crop": c.crop_name,
+            "Season": c.season,
+            "Mean Temp (°C)": f"{c.t_mean:.1f}" if c.t_mean is not None else "N/A",
+            "Optimal Range": opt_str,
+            "Absolute Limits": abs_str,
+            "Max Temp (°C)": f"{c.t_max:.1f}" if c.t_max is not None else "N/A",
+            "Heat Threshold": heat_str,
+            "Heat Days": str(c.heat_stress_days),
+            "Score": f"{c.climate_suitability_score:.2f}" if c.climate_suitability_score is not None else "N/A",
+            "Status": c.status.capitalize(),
+        })
+
+    if rows:
+        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+
+    with st.expander("Methodology, sources & limitations"):
+        st.markdown("""
+- **Thermal Suitability:** Piece-wise linear response function based on [FAO EcoCrop Database](https://ecocrop.apps.fao.org/) cardinal temperature limits ($T_{\\min,\\text{abs}}$, $T_{\\min,\\text{opt}}$, $T_{\\max,\\text{opt}}$, $T_{\\max,\\text{abs}}$).
+- **Extreme Heat Thresholds:** Sourced from Punjab Agricultural University (PAU) Packages of Practices (Rabi & Kharif 2026) for regional thermal risks (e.g. 32°C terminal heat for wheat).
+- **Stress Deduction:** Proportional reduction in suitability based on frequency of daily maximum temperatures reaching documented threshold.
+- **Scientific Boundary:** Assesses physiological thermal adaptation from gridded meteorological observations. It does not predict yield or model localized microclimate canopy variations.
+        """)
+        if ca.warnings:
+            for w in ca.warnings:
                 st.warning(f"⚠️ {w}")
 
 

@@ -1,7 +1,7 @@
 # FieldShift Test Report
 
 **Date:** 2026-10-13  
-**Status:** ✅ All 111 automated tests passing, 1 skipped (live API)  
+**Status:** ✅ All 128 automated tests passing, 1 skipped (live API)  
 **Python:** 3.13.12 | **pytest:** 9.1.1
 
 ---
@@ -20,7 +20,8 @@
 | `test_audit.py` | 32 | ✅ All pass |
 | `test_fao56.py` | 17 | ✅ All pass |
 | `test_nasa_data_dependency.py` | 5 | ✅ All pass |
-| **Total** | **112** | **111 pass, 1 skip** |
+| `test_climate_suitability.py` | 17 | ✅ All pass |
+| **Total** | **129** | **128 pass, 1 skip** |
 
 ---
 
@@ -127,6 +128,16 @@
   - Wet monsoon: Ample rainfall satisfies water demand, boosting `rice-potato-moong` relative ranking
 - ✅ Removing climate data cleanly switches engine to catalogue fallback without crashes
 - ✅ Scenario climate transformations directly flow through daily FAO-56 series to update water metrics
+
+### 15. FAO EcoCrop Thermal Suitability & Heat Stress Assessment
+- ✅ Piece-wise linear response function verified for optimal, suboptimal, and boundary temperatures
+- ✅ Extreme heat stress days ($T_{\max} \ge \text{threshold}$) reduce crop score proportionally
+- ✅ Frost / chilling days ($T_{\min} \le T_{\text{kill}}$) penalize crop score
+- ✅ Sourced EcoCrop cardinal thresholds ($T_{\min,\text{abs}}, T_{\min,\text{opt}}, T_{\max,\text{opt}}, T_{\max,\text{abs}}$) integrated for all 10 Punjab crops
+- ✅ Absence of thresholds degrades cleanly to `status="unavailable"` without inventing arbitrary numbers
+- ✅ Incomplete daily temperature series (NaNs) produce data coverage warnings
+- ✅ Controlled test confirms ranking inversion under heatwave: heat-tolerant rotation (`pearl_millet-chickpea-moong`) overtakes heat-sensitive rotation (`maize-wheat-moong`) in climate score and composite ranking
+- ✅ Climate suitability kept strictly separated from water suitability (no double counting of precipitation)
 
 ---
 

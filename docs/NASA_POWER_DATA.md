@@ -37,12 +37,14 @@ POWER parameters are based on satellite-derived solar radiation and meteorologic
 - **Crop evapotranspiration ($ET_c$):** $ET_c = K_c \times ET_0$ using stage-interpolated crop coefficients from FAO-56 Table 12.
 - **USDA SCS Effective Rainfall ($P_{\text{eff}}$):** Monthly USDA Soil Conservation Service formula separating usable rainfall from runoff/deep percolation.
 - **Net Irrigation Requirement / Water Deficit ($NIR$):** $\max(0, \sum ET_c - P_{\text{eff}})$, fed directly into rotation water suitability scoring.
+- **FAO EcoCrop Thermal Suitability:** Piece-wise linear score (0.0 to 1.0) evaluating mean growing-season temperature against cardinal thermal limits ($T_{\min,\text{abs}}, T_{\min,\text{opt}}, T_{\max,\text{opt}}, T_{\max,\text{abs}}$).
+- **Extreme Heat Stress Days:** Count of days where daily $T_{\max}$ reaches or exceeds documented crop threshold (e.g. 32°C for wheat, 35°C for rice, 30°C for potato), reducing suitability proportionally.
 - **Selected-range precipitation total:** sum of available `PRECTOTCORR` daily values, reported in mm and warned when days are missing.
 - **Monthly temperature summary:** mean `T2M`, minimum `T2M_MIN`, and maximum `T2M_MAX` by calendar month.
 - **Historical anomaly:** current indicator minus the mean of a caller-supplied, same-definition historical baseline. The baseline label and values are required; the code does not select one silently.
 - **Consecutive dry periods:** contiguous days at or below a caller-declared `dry_day_max_mm`. This is an analytical definition, not a crop threshold; missing dates end a run.
 
-See [`docs/WATER_BALANCE_METHODOLOGY.md`](WATER_BALANCE_METHODOLOGY.md) for complete mathematical formulas.
+See [`docs/WATER_BALANCE_METHODOLOGY.md`](WATER_BALANCE_METHODOLOGY.md) for water balance formulas and [`docs/CLIMATE_SUITABILITY_METHODOLOGY.md`](CLIMATE_SUITABILITY_METHODOLOGY.md) for thermal suitability equations.
 
 ## Error, retry and cache policy
 

@@ -97,6 +97,7 @@ class RotationPlan:
     uncertainty_warnings: tuple[str, ...]
     source_urls: tuple[str, ...]
     water_balance: object = None
+    climate_assessment: object = None
 
 
 @dataclass(frozen=True)
@@ -275,7 +276,7 @@ class RotationEngine:
         weights: Mapping[str, float],
         checks: list[FeasibilityCheck],
     ) -> RotationPlan:
-        metrics, water_balance = self._metrics(path, profile)
+        metrics, water_balance, climate_assessment = self._metrics(path, profile, seasons)
         available = {name: metric for name, metric in metrics.items() if metric.score is not None and weights[name] > 0}
         total_weight = sum(weights[name] for name in available)
         effective_weights = {name: (weights[name] / total_weight if name in available else 0.0) for name in METRICS} if total_weight else {name: 0.0 for name in METRICS}
@@ -299,6 +300,18 @@ class RotationEngine:
                 tradeoffs = ["Composite score is a preference-weighted comparison, not a probability of success."]
         else:
             tradeoffs = ["Composite score is a preference-weighted comparison, not a probability of success."]
+        if climate_assessment is not None and getattr(climate_assessment, "climate_suitability_score", None) is not None:
+            factors.append(
+                f"FAO EcoCrop thermal suitability score: {climate_assessment.climate_suitability_score:.2f} "
+                f"({climate_assessment.status})."
+            )
+            heat_stressed = [c for c in getattr(climate_assessment, "crops", ()) if getattr(c, "heat_stress_days", 0) > 0]
+            if heat_stressed:
+                for hc in heat_stressed:
+                    tradeoffs.append(
+                        f"Thermal stress noted: {hc.crop_name} experienced {hc.heat_stress_days} day(s) "
+                        f"exceeding {hc.extreme_heat_threshold:.1f}°C threshold."
+                    )
         if metrics["economic_potential"].score is None:
             tradeoffs.append("Economic potential is unavailable because no credible local cost/price data is configured.")
         source_ids = {source_id for crop_id in path for source_id in self.crops[crop_id]["source_ids"]}
@@ -307,6 +320,10 @@ class RotationEngine:
                 matching_source = next((source_id for source_id, source in self.sources.items() if source["url"] == url), None)
                 if matching_source:
                     source_ids.add(matching_source)
+        if climate_assessment is not None and hasattr(climate_assessment, "source_ids"):
+            for sid in climate_assessment.source_ids:
+                if sid in self.sources:
+                    source_ids.add(sid)
         return RotationPlan(
             crop_ids=path,
             crop_names=tuple(self.crops[crop_id]["name"] for crop_id in path),
@@ -316,13 +333,17 @@ class RotationEngine:
             positive_factors=tuple(factors), tradeoffs=tuple(tradeoffs), uncertainty_warnings=tuple(dict.fromkeys(warnings)),
             source_urls=tuple(sorted(self.sources[source_id]["url"] for source_id in source_ids)),
             water_balance=water_balance,
+            climate_assessment=climate_assessment,
         )
 
-    def _metrics(self, path: tuple[str, ...], profile: FarmProfile) -> tuple[dict[str, MetricScore], object]:
+    def _metrics(self, path: tuple[str, ...], profile: FarmProfile, seasons: tuple[str, ...] = ()) -> tuple[dict[str, MetricScore], object, object]:
         crops = [self.crops[crop_id] for crop_id in path]
 
         # ── Water suitability — FAO-56 climate-derived when available ──
         water, water_balance = self._water_metric(path, crops, profile)
+
+        # ── Climate suitability — FAO EcoCrop thermal ranges and stress days ──
+        climate, climate_assessment = self._climate_metric(path, crops, profile, seasons)
 
         soil_values: list[float] = []
         if "wheat" in path and profile.soil.waterlogged is False and profile.soil.highly_deteriorated_alkaline is False:
@@ -333,11 +354,52 @@ class RotationEngine:
         diversity = MetricScore(len({crop["family"] for crop in crops}) / len(crops), "Unique crop families divided by planned seasons; a composition indicator, not a soil-benefit estimate.")
         return {
             "water_suitability": water,
-            "climate_suitability": MetricScore(None, "Unavailable: crop-specific thermal thresholds are not documented in the catalogue.", "Retrieved climate data is preserved but cannot be converted to crop suitability without sourced thresholds."),
+            "climate_suitability": climate,
             "soil_related_potential": soil,
             "rotation_diversity": diversity,
             "economic_potential": MetricScore(None, "Unavailable: no credible local cost or price data is configured.", "No economic estimate is fabricated."),
-        }, water_balance
+        }, water_balance, climate_assessment
+
+    def _climate_metric(
+        self,
+        path: tuple[str, ...],
+        crops: list[dict],
+        profile: FarmProfile,
+        seasons: tuple[str, ...] = (),
+    ) -> tuple[MetricScore, object]:
+        """Compute climate suitability using FAO EcoCrop thermal ranges and extreme heat days."""
+        import pandas as pd
+        from .climate_suitability import assess_rotation_climate
+
+        climate_frame = profile.climate_data
+        has_climate = climate_frame is not None and isinstance(climate_frame, pd.DataFrame) and not climate_frame.empty
+
+        if not has_climate:
+            return MetricScore(
+                None,
+                "Unavailable: no daily climate observations provided in profile.",
+                "Retrieved NASA POWER daily climate data is required to evaluate crop thermal suitability.",
+            ), None
+
+        effective_seasons = seasons if seasons and len(seasons) == len(crops) else tuple(
+            crop.get("growing_seasons", ["kharif"])[0] for crop in crops
+        )
+        assessment = assess_rotation_climate(crops, climate_frame, effective_seasons)
+
+        if assessment.climate_suitability_score is not None:
+            warning_str = "; ".join(assessment.warnings) if assessment.warnings else None
+            return MetricScore(
+                assessment.climate_suitability_score,
+                assessment.method,
+                warning_str,
+            ), assessment
+        else:
+            warning_str = "; ".join(assessment.warnings) or "Crop thermal thresholds are undocumented."
+            return MetricScore(
+                None,
+                assessment.method,
+                warning_str,
+            ), assessment
 
     def _water_metric(self, path: tuple[str, ...], crops: list, profile: FarmProfile) -> tuple[MetricScore, object]:
         """Compute water suitability using FAO-56 climate-derived ETc when possible, falling back to catalogue ranges."""

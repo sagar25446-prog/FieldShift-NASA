@@ -30,6 +30,12 @@
       "publisher": "Food and Agriculture Organization of the United Nations (FAO), Rome",
       "url": "https://www.fao.org/4/x0490e/x0490e0b.htm",
       "access_date": "2026-10-13"
+    },
+    "fao_ecocrop": {
+      "title": "FAO EcoCrop Database — Crop Environmental Requirements",
+      "publisher": "Food and Agriculture Organization of the United Nations (FAO), Rome",
+      "url": "https://ecocrop.apps.fao.org/",
+      "access_date": "2026-10-13"
     }
   },
   "crops": [
@@ -44,11 +50,21 @@
         "kharif"
       ],
       "temperature_suitability": {
-        "status": "unknown",
-        "value": null,
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1574,
+        "tmin_absolute": 10.0,
+        "tmin_optimal": 20.0,
+        "tmax_optimal": 30.0,
+        "tmax_absolute": 36.0,
+        "killing_temperature": null,
+        "extreme_heat_threshold": 35.0,
+        "extreme_heat_threshold_context": "Daily maximum temperature above 35 degC during anthesis/flowering increases spikelet sterility (PAU Kharif 2026 / EcoCrop).",
         "unit": "degC",
-        "source_ids": [],
-        "evidence_needed": "PAU/ICAR, crop-stage thermal ranges for the selected rice method and cultivar."
+        "notes": "Optimal growing season mean temperature 20-30 degC. Growth ceases below 10 degC or above 36 degC.",
+        "source_ids": [
+          "fao_ecocrop",
+          "pau_kharif_2026"
+        ]
       },
       "water_requirement": {
         "status": "documented_approximation",
@@ -96,7 +112,8 @@
         "pau_kharif_2026",
         "pau_rabi_2026",
         "goi_crop_water_annexure",
-        "fao56_table_12"
+        "fao56_table_12",
+        "fao_ecocrop"
       ],
       "crop_coefficient": {
         "status": "fao56_table_12",
@@ -122,11 +139,21 @@
         "kharif"
       ],
       "temperature_suitability": {
-        "status": "unknown",
-        "value": null,
+        "status": "documented_ecocrop",
+        "ecocrop_code": 2175,
+        "tmin_absolute": 10.0,
+        "tmin_optimal": 18.0,
+        "tmax_optimal": 33.0,
+        "tmax_absolute": 47.0,
+        "killing_temperature": null,
+        "extreme_heat_threshold": 38.0,
+        "extreme_heat_threshold_context": "Daily maximum temperature above 38 degC during pollination and silking impairs grain set (PAU Kharif 2026 / EcoCrop).",
         "unit": "degC",
-        "source_ids": [],
-        "evidence_needed": "Locally applicable, stage-specific PAU/ICAR thermal guidance."
+        "notes": "Optimal growing season mean temperature 18-33 degC. Growth stalls below 10 degC.",
+        "source_ids": [
+          "fao_ecocrop",
+          "pau_kharif_2026"
+        ]
       },
       "water_requirement": {
         "status": "documented_approximation",
@@ -172,7 +199,8 @@
         "pau_kharif_2026",
         "pau_rabi_2026",
         "goi_crop_water_annexure",
-        "fao56_table_12"
+        "fao56_table_12",
+        "fao_ecocrop"
       ],
       "crop_coefficient": {
         "status": "fao56_table_12",
@@ -198,11 +226,21 @@
         "kharif"
       ],
       "temperature_suitability": {
-        "status": "unknown",
-        "value": null,
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1160,
+        "tmin_absolute": 15.0,
+        "tmin_optimal": 22.0,
+        "tmax_optimal": 36.0,
+        "tmax_absolute": 42.0,
+        "killing_temperature": null,
+        "extreme_heat_threshold": 42.0,
+        "extreme_heat_threshold_context": "Daily maximum temperature exceeding 42 degC induces severe square and boll shedding (PAU Kharif 2026 / EcoCrop).",
         "unit": "degC",
-        "source_ids": [],
-        "evidence_needed": "Current Punjab cultivar-specific thermal guidance."
+        "notes": "Warm-season C3 fiber crop. Optimal mean temperature 22-36 degC. Fails below 15 degC or above 42 degC.",
+        "source_ids": [
+          "fao_ecocrop",
+          "pau_kharif_2026"
+        ]
       },
       "water_requirement": {
         "status": "unknown",
@@ -243,7 +281,8 @@
       "source_ids": [
         "pau_kharif_2026",
         "pau_rabi_2026",
-        "fao56_table_12"
+        "fao56_table_12",
+        "fao_ecocrop"
       ],
       "crop_coefficient": {
         "status": "fao56_table_12",
@@ -270,11 +309,21 @@
         "summer"
       ],
       "temperature_suitability": {
-        "status": "unknown",
-        "value": null,
+        "status": "documented_ecocrop",
+        "ecocrop_code": 2150,
+        "tmin_absolute": 8.0,
+        "tmin_optimal": 21.0,
+        "tmax_optimal": 36.0,
+        "tmax_absolute": 40.0,
+        "killing_temperature": null,
+        "extreme_heat_threshold": 40.0,
+        "extreme_heat_threshold_context": "Daily maximum temperature exceeding 40 degC accelerates flower drop and reduces pod setting (PAU Kharif 2026 / EcoCrop).",
         "unit": "degC",
-        "source_ids": [],
-        "evidence_needed": "Locally applicable, stage-specific thermal guidance."
+        "notes": "Short-duration pulse. Optimal mean temperature 21-36 degC. Fails below 8 degC.",
+        "source_ids": [
+          "fao_ecocrop",
+          "pau_kharif_2026"
+        ]
       },
       "water_requirement": {
         "status": "documented_approximation",
@@ -320,7 +369,8 @@
         "pau_kharif_2026",
         "pau_rabi_2026",
         "goi_crop_water_annexure",
-        "fao56_table_12"
+        "fao56_table_12",
+        "fao_ecocrop"
       ],
       "crop_coefficient": {
         "status": "fao56_table_12",
@@ -346,11 +396,21 @@
         "kharif"
       ],
       "temperature_suitability": {
-        "status": "unknown",
-        "value": null,
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1150,
+        "tmin_absolute": 10.0,
+        "tmin_optimal": 20.0,
+        "tmax_optimal": 33.0,
+        "tmax_absolute": 38.0,
+        "killing_temperature": null,
+        "extreme_heat_threshold": 38.0,
+        "extreme_heat_threshold_context": "Daily maximum temperature above 38 degC during reproductive stages impairs pod fill and nodulation (PAU Kharif 2026 / EcoCrop).",
         "unit": "degC",
-        "source_ids": [],
-        "evidence_needed": "Locally applicable, stage-specific thermal guidance."
+        "notes": "Optimal growing season mean temperature 20-33 degC. Growth inhibited below 10 degC or above 38 degC.",
+        "source_ids": [
+          "fao_ecocrop",
+          "pau_kharif_2026"
+        ]
       },
       "water_requirement": {
         "status": "unknown",
@@ -389,7 +449,8 @@
       "evidence_quality": "high_regional_for_inclusion and documented sequence; constraints unverified",
       "source_ids": [
         "pau_kharif_2026",
-        "fao56_table_12"
+        "fao56_table_12",
+        "fao_ecocrop"
       ],
       "crop_coefficient": {
         "status": "fao56_table_12",
@@ -415,11 +476,21 @@
         "kharif"
       ],
       "temperature_suitability": {
-        "status": "unknown",
-        "value": null,
+        "status": "documented_ecocrop",
+        "ecocrop_code": 8418,
+        "tmin_absolute": 12.0,
+        "tmin_optimal": 25.0,
+        "tmax_optimal": 35.0,
+        "tmax_absolute": 40.0,
+        "killing_temperature": 0.0,
+        "extreme_heat_threshold": 42.0,
+        "extreme_heat_threshold_context": "Highly heat tolerant C4 cereal; extreme heat above 42 degC causes leaf scorch and floret sterility (PAU Kharif 2026 / EcoCrop).",
         "unit": "degC",
-        "source_ids": [],
-        "evidence_needed": "Locally applicable, stage-specific thermal guidance."
+        "notes": "Drought- and heat-resilient C4 cereal. Optimal mean temperature 25-35 degC.",
+        "source_ids": [
+          "fao_ecocrop",
+          "pau_kharif_2026"
+        ]
       },
       "water_requirement": {
         "status": "unknown",
@@ -459,7 +530,8 @@
       "source_ids": [
         "pau_kharif_2026",
         "pau_rabi_2026",
-        "fao56_table_12"
+        "fao56_table_12",
+        "fao_ecocrop"
       ],
       "crop_coefficient": {
         "status": "fao56_table_12",
@@ -485,11 +557,21 @@
         "rabi"
       ],
       "temperature_suitability": {
-        "status": "unknown",
-        "value": null,
+        "status": "documented_ecocrop",
+        "ecocrop_code": 2114,
+        "tmin_absolute": 5.0,
+        "tmin_optimal": 15.0,
+        "tmax_optimal": 23.0,
+        "tmax_absolute": 27.0,
+        "killing_temperature": 0.0,
+        "extreme_heat_threshold": 32.0,
+        "extreme_heat_threshold_context": "Daily maximum temperature exceeding 32 degC during March grain filling causes terminal heat stress and forced maturity (PAU Rabi 2026 / EcoCrop).",
         "unit": "degC",
-        "source_ids": [],
-        "evidence_needed": "Locally applicable, stage-specific thermal guidance."
+        "notes": "Cool-season C3 cereal. Optimal mean temperature 15-23 degC. Highly vulnerable to terminal heat stress above 32 degC.",
+        "source_ids": [
+          "fao_ecocrop",
+          "pau_rabi_2026"
+        ]
       },
       "water_requirement": {
         "status": "documented_approximation",
@@ -535,7 +617,8 @@
       "source_ids": [
         "pau_rabi_2026",
         "goi_crop_water_annexure",
-        "fao56_table_12"
+        "fao56_table_12",
+        "fao_ecocrop"
       ],
       "crop_coefficient": {
         "status": "fao56_table_12",
@@ -561,11 +644,21 @@
         "rabi"
       ],
       "temperature_suitability": {
-        "status": "unknown",
-        "value": null,
+        "status": "documented_ecocrop",
+        "ecocrop_code": 2479,
+        "tmin_absolute": 7.0,
+        "tmin_optimal": 15.0,
+        "tmax_optimal": 29.0,
+        "tmax_absolute": 35.0,
+        "killing_temperature": 0.0,
+        "extreme_heat_threshold": 32.0,
+        "extreme_heat_threshold_context": "Daily maximum temperature exceeding 32 degC during flowering causes flower and pod abortion (PAU Rabi 2026 / EcoCrop).",
         "unit": "degC",
-        "source_ids": [],
-        "evidence_needed": "Locally applicable, stage-specific thermal guidance."
+        "notes": "Cool-season legume. Optimal mean temperature 15-29 degC. Vulnerable to late-season heat stress above 32 degC.",
+        "source_ids": [
+          "fao_ecocrop",
+          "pau_rabi_2026"
+        ]
       },
       "water_requirement": {
         "status": "unknown",
@@ -606,7 +699,8 @@
       "source_ids": [
         "pau_kharif_2026",
         "pau_rabi_2026",
-        "fao56_table_12"
+        "fao56_table_12",
+        "fao_ecocrop"
       ],
       "crop_coefficient": {
         "status": "fao56_table_12",
@@ -632,11 +726,21 @@
         "rabi"
       ],
       "temperature_suitability": {
-        "status": "unknown",
-        "value": null,
+        "status": "documented_ecocrop",
+        "ecocrop_code": 548,
+        "tmin_absolute": 7.0,
+        "tmin_optimal": 15.0,
+        "tmax_optimal": 28.0,
+        "tmax_absolute": 40.0,
+        "killing_temperature": 0.0,
+        "extreme_heat_threshold": 30.0,
+        "extreme_heat_threshold_context": "Daily maximum temperature exceeding 30 degC during siliqua/pod development causes premature drying and shriveled seeds (PAU Rabi 2026 / EcoCrop).",
         "unit": "degC",
-        "source_ids": [],
-        "evidence_needed": "Type- and stage-specific Punjab guidance."
+        "notes": "Rabi oilseed. Optimal mean temperature 15-28 degC. High sensitivity to early frost and late heat above 30 degC.",
+        "source_ids": [
+          "fao_ecocrop",
+          "pau_rabi_2026"
+        ]
       },
       "water_requirement": {
         "status": "documented_approximation",
@@ -681,7 +785,8 @@
         "pau_kharif_2026",
         "pau_rabi_2026",
         "goi_crop_water_annexure",
-        "fao56_table_12"
+        "fao56_table_12",
+        "fao_ecocrop"
       ],
       "crop_coefficient": {
         "status": "fao56_table_12",
@@ -707,11 +812,21 @@
         "rabi"
       ],
       "temperature_suitability": {
-        "status": "unknown",
-        "value": null,
+        "status": "documented_ecocrop",
+        "ecocrop_code": 1971,
+        "tmin_absolute": 7.0,
+        "tmin_optimal": 15.0,
+        "tmax_optimal": 25.0,
+        "tmax_absolute": 30.0,
+        "killing_temperature": -1.0,
+        "extreme_heat_threshold": 30.0,
+        "extreme_heat_threshold_context": "Daily maximum temperature exceeding 30 degC halts tuber initiation and bulking (PAU Rabi 2026 / EcoCrop).",
         "unit": "degC",
-        "source_ids": [],
-        "evidence_needed": "Locally applicable, cultivar- and stage-specific thermal guidance."
+        "notes": "Cool-season tuber. Optimal mean temperature 15-25 degC. Tuberization fails above 30 degC day temperature.",
+        "source_ids": [
+          "fao_ecocrop",
+          "pau_rabi_2026"
+        ]
       },
       "water_requirement": {
         "status": "documented_approximation",
@@ -757,7 +872,8 @@
         "pau_kharif_2026",
         "pau_rabi_2026",
         "goi_crop_water_annexure",
-        "fao56_table_12"
+        "fao56_table_12",
+        "fao_ecocrop"
       ],
       "crop_coefficient": {
         "status": "fao56_table_12",

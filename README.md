@@ -76,8 +76,9 @@ data/                           Crop, rotation-rule and priority-weight config
   rotation_rules.json           PAU-documented crop-to-crop relationships (11)
   priority_weights.json         Editable farmer priority profiles
 docs/                           Sources, assumptions, architecture, testing
-tests/                          112 automated checks (111 pass, 1 live API skip)
+tests/                          129 automated checks (128 pass, 1 live API skip)
   test_audit.py                 Comprehensive audit tests (32)
+  test_climate_suitability.py   FAO EcoCrop thermal suitability & heat stress (17)
   test_fao56.py                 FAO-56 Penman-Monteith daily ET0, Kc, rain (17)
   test_nasa_data_dependency.py  Climate ranking inversion regression tests (5)
   test_phase6.py                Scenarios, constraints, Pareto, soil-state (34)
@@ -143,6 +144,7 @@ FieldShift distinguishes three categories of uncertainty:
 
 - [`docs/CHALLENGE_REQUIREMENTS.md`](docs/CHALLENGE_REQUIREMENTS.md) — Official challenge text and FieldShift's response
 - [`docs/WATER_BALANCE_METHODOLOGY.md`](docs/WATER_BALANCE_METHODOLOGY.md) — FAO-56 Penman–Monteith ET0, Kc stages, USDA SCS effective rainfall
+- [`docs/CLIMATE_SUITABILITY_METHODOLOGY.md`](docs/CLIMATE_SUITABILITY_METHODOLOGY.md) — FAO EcoCrop cardinal thermal limits, heat stress criteria, and response functions
 - [`docs/NASA_POWER_DATA.md`](docs/NASA_POWER_DATA.md) — API parameters, units, resolution
 - [`docs/ROTATION_ENGINE.md`](docs/ROTATION_ENGINE.md) — Rule checks, scoring, safeguards
 - [`docs/SCENARIOS_AND_UNCERTAINTY.md`](docs/SCENARIOS_AND_UNCERTAINTY.md) — Scenario definitions, uncertainty categories
