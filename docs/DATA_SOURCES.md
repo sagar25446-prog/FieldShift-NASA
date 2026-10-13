@@ -1,38 +1,49 @@
-# Phase 2 data-source plan
+# Data Sources
 
-## Demonstration region
+## Demonstration Region
 
-**Ludhiana district, Punjab, India** is the FieldShift demonstration region. It is a planning boundary, not a claim that every district field is alike. It was selected because Punjab Agricultural University (PAU), in Ludhiana, publishes current Punjab-specific crop guidance and rotation examples. A future user must provide a field boundary or point; FieldShift will not assume a default farm coordinate.
+**Ludhiana district, Punjab, India** — selected because Punjab Agricultural University (PAU), in Ludhiana, publishes current Punjab-specific crop guidance and rotation examples.
 
-## Minimum viable data
+---
 
-| Source | Planned use | Classification | Status |
-| --- | --- | --- | --- |
-| [NASA POWER Daily API](https://power.larc.nasa.gov/docs/services/api/temporal/daily/) | Daily climate context for an entered location | Gridded NASA meteorological data, not a farm measurement | **Integrated for historical point retrieval; schema/provenance in `NASA_POWER_DATA.md`** |
-| Farmer input | Field location, history, irrigation, planting window and priorities | Farmer-provided | Required |
-| Soil Health Card/accredited lab report | pH, EC, organic carbon, nutrients with date/depth/method | Measured soil data | Required for a soil rule |
-| PAU 2026 packages | Catalogue, crop windows and local rotation examples | Regional extension/research guidance | Catalogue evidence |
+## Operational Data Sources
 
-The POWER Daily API provides analysis-ready daily solar and meteorological data. The implemented historical point client requests `T2M`, `T2M_MAX`, `T2M_MIN`, `PRECTOTCORR`, and `ALLSKY_SFC_SW_DWN`, preserves response metadata/units, explicitly requests UTC, and caches exact requests for six hours. `RH2M` and `WS2M` remain candidates for a later justified indicator. POWER warns against repeatedly requesting the same location. These parameters are not crop-suitability thresholds.
+| Source | Use in FieldShift | Classification | Status |
+|---|---|---|---|
+| [NASA POWER Daily API](https://power.larc.nasa.gov/docs/services/api/temporal/daily/) | Historical daily climate context (T2M, T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN) | Gridded NASA meteorological data (~0.5°), not a field measurement | ✅ Integrated |
+| Farmer input | Location, soil conditions, water budget, irrigation, previous crop, blocked crops, priorities | Farmer-provided | ✅ Required input |
+| Soil Health Card / lab report | pH, EC, organic carbon, waterlogging, drainage | Measured soil data | ✅ Optional (unknown if absent) |
+| [PAU Kharif 2026](https://pau.edu/content/ccil/pf/pp_kharif.pdf) | Crop catalogue, growing seasons, rotation sequences | Regional extension guidance | ✅ Catalogue evidence |
+| [PAU Rabi 2026](https://pau.edu/content/ccil/pf/pp_rabi.pdf) | Crop catalogue, soil constraints, rotation sequences | Regional extension guidance | ✅ Catalogue evidence |
+| [GoI Crop Water Annexure](https://sansad.in/getFile/annex/256/AS110.pdf?source=pqars) | Water requirement ranges (mm) | Government documented approximation | ✅ Catalogue evidence |
 
-## Optional indicators — not first-version dependencies
+## NASA POWER Details
 
-| Source | Later use | Classification and limitation |
-| --- | --- | --- |
-| [GPM IMERG Final](https://daac.gsfc.nasa.gov/datasets/GPM_3IMERGHH_07/summary?keywords=IMERGHH) | Rainfall timing and anomaly context | Satellite precipitation estimate; 0.1° Version 07 product; not a farm gauge |
-| [MODIS MOD13Q1 NDVI/EVI](https://modis.gsfc.nasa.gov/data/dataprod/mod13.php) | Vegetation-condition context | 16-day, 250 m remote-sensing index; not crop identity, yield or soil health |
-| [NASA–USDA Global Soil Moisture](https://earth.gsfc.nasa.gov/hydro/data/nasa-usda-global-soil-moisture-data) | Broad moisture context | 0.25° modelled-assimilated estimate; never a soil-test replacement |
+- **Endpoint:** `https://power.larc.nasa.gov/api/temporal/daily/point`
+- **Community:** AG (Agroclimatology)
+- **Parameters:** T2M, T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN
+- **Temporal coverage:** 1981-01-01 to near-present
+- **Spatial resolution:** ~0.5° × 0.5° grid
+- **Authentication:** None required (public API)
+- **Fill value:** −999.0 → converted to NaN
+- **Time standard:** UTC
+- **Caching:** 6-hour in-memory TTL per request
+- **Full documentation:** [`docs/NASA_POWER_DATA.md`](NASA_POWER_DATA.md)
 
-NASA–USDA combines SMAP/SMOS observations with a modified two-layer Palmer model. GPM and this soil-moisture data are too coarse to state a specific field condition, so they are explicitly excluded from the first implementation.
+## Optional Future Sources (Not Implemented)
 
-## Soil policy
+| Source | Later use | Limitation |
+|---|---|---|
+| [GPM IMERG Final](https://daac.gsfc.nasa.gov/datasets/GPM_3IMERGHH_07/summary) | Higher-resolution rainfall context | 0.1° satellite estimate; not a farm gauge |
+| [MODIS MOD13Q1](https://modis.gsfc.nasa.gov/data/dataprod/mod13.php) | Vegetation condition context | 16-day, 250 m; not crop identity or yield |
+| [NASA–USDA Global Soil Moisture](https://earth.gsfc.nasa.gov/hydro/data/nasa-usda-global-soil-moisture-data) | Broad moisture context | 0.25° modelled; never a soil-test replacement |
 
-The preferred evidence is a field-specific laboratory report including date, depth, method/lab and units. India's [Soil Health Card FAQ](https://soilhealth.dac.gov.in/files/FAQ_Final_English.pdf) describes a farmer report based on laboratory-tested samples; PAU also provides [Soil & Water Testing](https://pauwp.pau.edu/testing/). A satellite layer, map or district average must never overwrite a laboratory result. If no valid report exists, a soil-dependent check must state **unknown**.
+These are excluded from the first implementation because they are too coarse for field-level statements.
 
-## Crop references
+## Soil Policy
 
-- [PAU Kharif 2026 package](https://pau.edu/content/ccil/pf/pp_kharif.pdf)
-- [PAU Rabi 2026 package](https://pau.edu/content/ccil/pf/pp_rabi.pdf)
-- [Government of India crop/irrigation water-requirement annexure](https://sansad.in/getFile/annex/256/AS110.pdf?source=pqars)
-
-Every future input needs source/product ID, retrieval time, unit, spatial/temporal resolution, geographic selection, QA/missing-data flag and transformation history. Economics is not planned yet: costs, prices, returns and profitability remain unavailable.
+- Preferred evidence: field-specific laboratory report with date, depth, method, and units
+- India's [Soil Health Card](https://soilhealth.dac.gov.in/files/FAQ_Final_English.pdf) program provides farmer reports based on lab-tested samples
+- A satellite layer, map, or district average **never overwrites** a laboratory result
+- If no valid report exists, soil-dependent checks state **unknown**
+- No soil values are fabricated or estimated from remote sensing
