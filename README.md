@@ -177,10 +177,13 @@ streamlit run app.py
 
 ## 📄 Documentation Directory
 
+- [Judge Defense Q&A Dossier (10 Judge Questions)](docs/JUDGE_QA.md)
+- [Rotation Engine & Decision Architecture](docs/ROTATION_ENGINE.md)
+- [Challenge Requirements Point-by-Point](docs/CHALLENGE_REQUIREMENTS.md)
 - [5-Slide Pitch Deck](docs/PITCH_DECK.md)
 - [75-Second Demo Video Script](docs/DEMO_VIDEO_SCRIPT.md)
 - [Agronomic & Institutional Methodology Validation](docs/EXPERT_VALIDATION.md)
-- [Test Report & Automated Audit](docs/TEST_REPORT.md)
+- [Test Report & Automated Audit (266 Tests)](docs/TEST_REPORT.md)
 - [Known Limitations & Disclosures](docs/KNOWN_LIMITATIONS.md)
 - [Submission Checklist](docs/SUBMISSION_CHECKLIST.md)
 - [NASA POWER Data Guide](docs/NASA_POWER_DATA.md)
