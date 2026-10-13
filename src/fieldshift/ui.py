@@ -79,6 +79,20 @@ from .land_use_phenology import (
     load_demo_phenology,
     season_use,
 )
+from .economics import (
+    ECONOMIC_DISCLAIMERS,
+    compare_vs_rice_wheat_baseline,
+    compute_rotation_economics,
+)
+from .satellite_context import (
+    FIRMS_PUNJAB_CONTEXT,
+    GRACE_PUNJAB_CONTEXT,
+    calculate_water_budget_from_farm_inputs,
+)
+from .sensitivity import (
+    evaluate_rank_stability,
+    generate_plain_language_explanation,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -596,6 +610,28 @@ def render_home() -> None:
         "Also used: NASA MODIS land-cover dynamics (observed cropping seasons), NASA NEX-GDDP-CMIP6 climate projections "
         "(demo farm grid cell) and optional ISRIC SoilGrids estimates. GPM IMERG and SMAP are not integrated (see docs/DATA_SOURCES.md)."
     )
+
+    with st.expander("🛰️ Regional Earth Observation Context: NASA GRACE & NASA FIRMS (Punjab Agronomic Crisis)", expanded=False):
+        g_col, f_col = st.columns(2)
+        with g_col:
+            st.markdown(f"#### 🌊 NASA GRACE Groundwater Depletion")
+            st.markdown(f"""
+- **Satellite:** {GRACE_PUNJAB_CONTEXT['satellite']} ({GRACE_PUNJAB_CONTEXT['resolution']})
+- **Finding:** {GRACE_PUNJAB_CONTEXT['finding']}
+- **Root Cause:** {GRACE_PUNJAB_CONTEXT['primary_driver']}
+- **Why FieldShift Helps:** {GRACE_PUNJAB_CONTEXT['relevance_to_fieldshift']}
+- **Source:** [{GRACE_PUNJAB_CONTEXT['source_citation']}]({GRACE_PUNJAB_CONTEXT['source_url']})
+            """)
+        with f_col:
+            st.markdown(f"#### 🔥 NASA FIRMS Stubble Fire Detection")
+            st.markdown(f"""
+- **Sensors:** {FIRMS_PUNJAB_CONTEXT['sensors']}
+- **Peak Fire Window:** {FIRMS_PUNJAB_CONTEXT['stubble_burning_season']}
+- **Agronomic Driver:** {FIRMS_PUNJAB_CONTEXT['agricultural_driver']}
+- **Why FieldShift Helps:** {FIRMS_PUNJAB_CONTEXT['relevance_to_fieldshift']}
+- **Source:** [{FIRMS_PUNJAB_CONTEXT['source_citation']}]({FIRMS_PUNJAB_CONTEXT['source_url']})
+            """)
+
     _footer()
 
 
@@ -617,6 +653,39 @@ def render_farm_profile() -> None:
     farm = st.session_state["farm"]
     crops = _rotation_engine().crops
     labels = {crop_id: crop["name"] for crop_id, crop in crops.items()}
+
+    with st.expander("🧮 Water Budget Helper: Estimate from Tubewell & Canal Turns (for farmers)", expanded=False):
+        st.markdown(
+            "Converts local irrigation practices (tubewell motor HP, weekly pumping hours, canal water turns) "
+            "into an equivalent seasonal crop-water budget in mm."
+        )
+        wb_c1, wb_c2, wb_c3 = st.columns(3)
+        with wb_c1:
+            tw_hp = st.number_input("Tubewell motor power (HP)", min_value=1.0, max_value=50.0, value=10.0, step=1.0, key="calc_tw_hp")
+            tw_hours = st.number_input("Pumping hours per week", min_value=0.0, max_value=168.0, value=25.0, step=5.0, key="calc_tw_hours")
+        with wb_c2:
+            tw_weeks = st.number_input("Operating weeks per season", min_value=1.0, max_value=26.0, value=16.0, step=1.0, key="calc_tw_weeks")
+            canal_turns = st.number_input("Canal water turns (warrabandi)", min_value=0, max_value=20, value=4, step=1, key="calc_canal_turns")
+        with wb_c3:
+            canal_depth = st.number_input("Depth per canal turn (inches)", min_value=0.0, max_value=12.0, value=3.0, step=0.5, key="calc_canal_depth")
+            farm_acres = st.number_input("Farm size for water calculation (acres)", min_value=0.5, max_value=500.0, value=5.0, step=0.5, key="calc_farm_acres")
+
+        if st.button("Apply estimated water budget (mm)", key="btn_apply_water_calc"):
+            est_budget = calculate_water_budget_from_farm_inputs(
+                tubewell_hp=tw_hp,
+                hours_per_week=tw_hours,
+                weeks_operating=tw_weeks,
+                canal_turns_per_season=canal_turns,
+                canal_depth_inches=canal_depth,
+                farm_size_acres=farm_acres,
+            )
+            st.session_state["farm"]["water_budget_mm"] = est_budget["total_water_budget_mm"]
+            st.success(
+                f"Calculated: **{est_budget['total_water_budget_mm']:.0f} mm** "
+                f"(Tubewell: {est_budget['tubewell_contribution_mm']:.0f} mm, Canal: {est_budget['canal_contribution_mm']:.0f} mm). "
+                f"Updated in form below — click 'Save farm profile' to record."
+            )
+            st.rerun()
 
     with st.form("farm_profile"):
         st.subheader("📍 Location and climate request")
@@ -1365,8 +1434,8 @@ def render_priorities() -> None:
         st.caption("The baseline plan uses historical NASA POWER context. Hypothetical stress tests are configured after baseline alternatives are generated.")
 
     st.info(
-        "Current catalogue evidence supports FAO-56 crop water balance and FAO EcoCrop thermal suitability. "
-        "Economic potential remains unavailable until credible local cost/price data is configured.",
+        "Current catalogue evidence supports FAO-56 crop water balance, FAO EcoCrop thermal suitability, "
+        "and indicative GoI MSP/PAU gross margin benchmarks.",
         icon="ℹ️",
     )
     if st.button("🔄 View rotation recommendations", type="primary"):
@@ -1378,12 +1447,90 @@ def _status_icon(status: str) -> str:
     return {"pass": "✅", "fail": "⛔", "unknown": "⚠️"}.get(status, "•")
 
 
+def _render_economics_tab(plan: Any) -> None:
+    """Render indicative economics based on GoI MSP and PAU benchmark costs."""
+    crops_dict = _rotation_engine().crops
+    plan_crops = [crops_dict[cid] for cid in plan.crop_ids]
+    wb = getattr(plan, "water_balance", None)
+    net_irr = wb.total_net_irrigation_mm if wb is not None and getattr(wb, "total_net_irrigation_mm", None) is not None else 600.0
+    rot_econ = compute_rotation_economics(plan_crops, plan.seasons, net_irrigation_mm=net_irr)
+    baseline_comp = compare_vs_rice_wheat_baseline(plan_crops, plan.seasons, net_irr)
+
+    st.markdown("#### 💰 Indicative Rotation Economics & MSP Benchmarks")
+    st.caption(
+        "Estimated gross margins calculated from Government of India Minimum Support Prices (MSP 2024-25) "
+        "and Punjab Agricultural University (PAU) benchmark production costs. Indicative only — not a revenue guarantee."
+    )
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        rev_str = f"₹{rot_econ.total_revenue_inr_ha:,.0f}/ha" if rot_econ.total_revenue_inr_ha is not None else "N/A"
+        st.metric("Total Gross Revenue", rev_str)
+    with col2:
+        st.metric("Benchmark Cost", f"₹{rot_econ.total_cost_inr_ha:,.0f}/ha")
+    with col3:
+        margin_str = f"₹{rot_econ.total_margin_inr_ha:,.0f}/ha" if rot_econ.total_margin_inr_ha is not None else "N/A"
+        st.metric("Indicative Gross Margin", margin_str)
+    with col4:
+        wp = rot_econ.water_productivity_inr_per_m3
+        st.metric("Water Productivity", f"₹{wp:.1f}/m³" if wp is not None else "N/A")
+
+    st.markdown(f"**Comparison vs Conventional Rice-Wheat:** {baseline_comp.headline_summary}")
+
+    rows = []
+    for ce in rot_econ.crop_economics:
+        c_meta = crops_dict.get(ce.crop_id, {})
+        bn = c_meta.get("bilingual_name", {})
+        bilingual = f"{bn.get('pa', '')} / {bn.get('hi', '')}" if bn else ""
+        price_str = f"₹{ce.msp_inr_per_q:,.0f}/q" if ce.msp_inr_per_q is not None else "N/A"
+        proc_str = "✅ Assured (MSP)" if ce.msp_procurement_assured else "⚠️ Market dependent"
+        rev_val = f"₹{ce.indicative_gross_revenue_inr_ha:,.0f}" if ce.indicative_gross_revenue_inr_ha is not None else "N/A"
+        margin_val = f"₹{ce.indicative_gross_margin_inr_ha:,.0f}" if ce.indicative_gross_margin_inr_ha is not None else "N/A"
+        rows.append({
+            "Crop": ce.crop_name,
+            "Regional Name": bilingual,
+            "Season": ce.season,
+            "Benchmark Yield (q/ha)": f"{ce.benchmark_yield_q_ha:.1f}" if ce.benchmark_yield_q_ha else "N/A",
+            "Price": price_str,
+            "Revenue (₹/ha)": rev_val,
+            "Cost (₹/ha)": f"₹{ce.benchmark_cost_inr_ha:,.0f}" if ce.benchmark_cost_inr_ha else "N/A",
+            "Gross Margin (₹/ha)": margin_val,
+            "Procurement": proc_str,
+        })
+    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+
+    with st.expander("Sources, assumptions & economic caveats"):
+        for disclaimer in ECONOMIC_DISCLAIMERS:
+            st.markdown(f"- {disclaimer}")
+        st.caption("Data Sources: Commission for Agricultural Costs and Prices (CACP) Price Policy Reports 2024-25; PAU Farm Management Guide (2024).")
+
+
 def _plan_view(plan: Any, index: int) -> None:
+    crops_dict = _rotation_engine().crops
     title = " → ".join(plan.crop_names)
     status_badge = {"feasible_with_known_constraints": "🟢", "conditionally_feasible": "🟡", "infeasible": "🔴"}.get(plan.status, "⚪")
     with st.expander(f"{status_badge} Alternative {index}: {title}", expanded=index == 1):
-        # Sequence table
-        sequence = pd.DataFrame({"Season": plan.seasons, "Crop": plan.crop_names, "Crop ID": plan.crop_ids})
+        # Plain-language explanation for farmers
+        plain_text = generate_plain_language_explanation(plan)
+        st.info(f"💡 {plain_text}")
+
+        # Sequence table with bilingual names
+        bilingual_names = []
+        for cid in plan.crop_ids:
+            c = crops_dict[cid]
+            bn = c.get("bilingual_name", {})
+            pa = bn.get("pa", "")
+            hi = bn.get("hi", "")
+            if pa and hi:
+                bilingual_names.append(f"{c['name']} ({pa} / {hi})")
+            else:
+                bilingual_names.append(c['name'])
+        sequence = pd.DataFrame({
+            "Season": plan.seasons,
+            "Crop (English)": plan.crop_names,
+            "ਖੇਤਰੀ ਨਾਮ / क्षेत्रीय नाम": bilingual_names,
+            "Crop ID": plan.crop_ids,
+        })
         st.dataframe(sequence, hide_index=True, use_container_width=True)
         st.caption("Planning seasons are crop-calendar slots, not dated harvest or planting predictions.")
 
@@ -1395,9 +1542,10 @@ def _plan_view(plan: Any, index: int) -> None:
         st.markdown(f"**Composite comparison score:** {'Unavailable' if plan.composite_score is None else f'{plan.composite_score:.2f}'} — preference-weighted comparison only, not a probability of success.")
 
         # Tabs for details
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9 = st.tabs([
             "Why these crops",
             "Feasibility checks",
+            "Economics (GoI MSP & PAU)",
             "Water balance (FAO-56)",
             "Climate suitability (EcoCrop)",
             "Score methods",
@@ -1407,11 +1555,12 @@ def _plan_view(plan: Any, index: int) -> None:
         ])
 
         with tab1:
-            crop_data = _rotation_engine().crops
             for crop_id, season_name in zip(plan.crop_ids, plan.seasons):
-                crop = crop_data[crop_id]
+                crop = crops_dict[crop_id]
+                bn = crop.get("bilingual_name", {})
+                bilingual_str = f" ({bn.get('pa', '')} | {bn.get('hi', '')})" if bn else ""
                 legume = " 🫘 Catalogued as a legume; this does not quantify nitrogen fixation." if crop["legume"] else ""
-                st.write(f"- **{crop['name']}** in {season_name}: {crop['intended_role']}.{legume}")
+                st.write(f"- **{crop['name']}**{bilingual_str} in {season_name}: {crop['intended_role']}.{legume}")
 
         with tab2:
             for check in plan.checks:
@@ -1419,12 +1568,15 @@ def _plan_view(plan: Any, index: int) -> None:
                 st.markdown(f"{_status_icon(check.status)} **{check.rule}:** {check.message} {sources}")
 
         with tab3:
-            _render_water_balance_tab(plan)
+            _render_economics_tab(plan)
 
         with tab4:
-            _render_climate_suitability_tab(plan)
+            _render_water_balance_tab(plan)
 
         with tab5:
+            _render_climate_suitability_tab(plan)
+
+        with tab6:
             details = pd.DataFrame({
                 "Metric": [METRIC_LABELS[m] for m in METRICS],
                 "Score": [plan.metrics[m].score for m in METRICS],
@@ -1433,17 +1585,17 @@ def _plan_view(plan: Any, index: int) -> None:
             })
             st.dataframe(details.style.format({"Score": "{:.2f}", "Effective weight": "{:.2f}"}, na_rep="N/A"), hide_index=True, use_container_width=True)
 
-        with tab6:
+        with tab7:
             for heading, items in (("✅ Positive factors", plan.positive_factors), ("⚖️ Trade-offs", plan.tradeoffs), ("⚠️ Missing information / uncertainty", plan.uncertainty_warnings)):
                 if items:
                     st.markdown(f"**{heading}**")
                     for item in items:
                         st.write(f"- {item}")
 
-        with tab7:
+        with tab8:
             _render_soil_state_tab(plan)
 
-        with tab8:
+        with tab9:
             _render_land_use_tab(plan)
 
         st.caption("Supporting URLs: " + " · ".join(plan.source_urls))
@@ -1688,6 +1840,31 @@ def render_recommendations() -> None:
         return
 
     st.success(f"🎉 {len(result.plans)} engine-generated alternative(s) shown below.")
+
+    # ── Top Alternative vs Conventional Rice-Wheat Baseline ──
+    top_plan = result.plans[0]
+    crops_dict = _rotation_engine().crops
+    top_crops = [crops_dict[cid] for cid in top_plan.crop_ids]
+    wb = getattr(top_plan, "water_balance", None)
+    top_irr = wb.total_net_irrigation_mm if wb is not None and getattr(wb, "total_net_irrigation_mm", None) is not None else 600.0
+    baseline_comp = compare_vs_rice_wheat_baseline(top_crops, top_plan.seasons, top_irr)
+    top_econ = compute_rotation_economics(top_crops, top_plan.seasons, top_irr)
+    with st.container(border=True):
+        st.markdown("### 🏆 Top Alternative vs Conventional Rice-Wheat Baseline")
+        st.markdown(f"**{baseline_comp.headline_summary}**")
+        b_c1, b_c2, b_c3, b_c4 = st.columns(4)
+        with b_c1:
+            st.metric("💧 Water Saved vs Rice-Wheat", f"{baseline_comp.water_saved_mm:.0f} mm", f"-{baseline_comp.water_saved_pct:.1f}%")
+        with b_c2:
+            margin_str = f"₹{top_econ.total_margin_inr_ha:,.0f}/ha" if top_econ.total_margin_inr_ha is not None else "N/A"
+            st.metric("💰 Indicative Gross Margin", margin_str)
+        with b_c3:
+            diff_str = f"{'+' if (baseline_comp.margin_diff_inr_ha or 0) >= 0 else ''}₹{baseline_comp.margin_diff_inr_ha:,.0f}/ha" if baseline_comp.margin_diff_inr_ha is not None else "N/A"
+            st.metric("📈 Margin vs Rice-Wheat", diff_str)
+        with b_c4:
+            st.metric("💧 Water Saved Volume", f"{baseline_comp.water_saved_m3_per_ha:,.0f} m³/ha")
+        st.caption("Baseline: Traditional flooded Rice (Kharif) → Wheat (Rabi) rotation (~1,750 mm irrigation demand, PAU benchmark yields). Economics based on GoI MSP 2024-25 & PAU costs.")
+
     for index, plan in enumerate(result.plans, 1):
         _plan_view(plan, index)
 
@@ -2116,6 +2293,30 @@ def render_comparison() -> None:
         pd.DataFrame(trade_rows).style.format({"Composite score": "{:.3f}", "Extra crop water for added season (mm)": "{:.0f}"}, na_rep="—"),
         hide_index=True, use_container_width=True,
     )
+
+    # ── Weight Sensitivity & Rank Stability Analysis ──
+    st.subheader("⚖️ Priority Weight Sensitivity & Rank Stability")
+    st.caption(
+        "Evaluates whether the #1 recommendation changes when farmer priority weights are varied by ±20%. "
+        "A stable recommendation gives confidence that minor weight uncertainties do not flip the top choice."
+    )
+    try:
+        stability = evaluate_rank_stability(result.plans, st.session_state["weights"], delta_fraction=0.20)
+        if stability:
+            badge = "🟢 Highly Stable" if stability.is_highly_stable else "🟡 Moderately Sensitive"
+            st.markdown(f"**Top Alternative Stability:** {stability.summary_message}")
+            st.markdown(f"Status: **{badge}** ({stability.stability_percentage:.0f}% of {stability.total_perturbations_tested} perturbation tests preserved Rank 1)")
+
+            sens_rows = []
+            for test in stability.perturbations[:10]:
+                sens_rows.append({
+                    "Top Plan Under Shift": " → ".join(test.top_plan_crop_names),
+                    "Composite Score": f"{test.top_plan_score:.3f}",
+                    "Rank 1 Preserved?": "✅ Yes" if test.is_same_top_as_baseline else "⚠️ Shifted",
+                })
+            st.dataframe(pd.DataFrame(sens_rows), hide_index=True, use_container_width=True)
+    except Exception as exc:
+        st.caption(f"Sensitivity evaluation: {exc}")
 
     st.info("**You retain full control** over the final choice. FieldShift shows all trade-offs but does not select a winner.", icon="ℹ️")
 

@@ -9,10 +9,11 @@
 ## Pre-Submission Verification
 
 ### Code & Deployment
-- [x] All 156 automated tests pass (155 pass, 1 skipped) (`python -m pytest`)
+- [x] All 251 automated tests pass (247 pass, 4 skipped) (`python -m pytest`)
 - [x] Application starts locally (`streamlit run app.py`)
 - [x] No hardcoded secrets, API keys, or credentials in source code
 - [x] `.env` and secrets files listed in `.gitignore`
+- [x] `LICENSE` file present (MIT License)
 - [x] `requirements.txt` lists all dependencies
 - [x] `.streamlit/config.toml` present for deployment
 - [x] Code pushed to GitHub (`main` branch)
@@ -73,8 +74,8 @@
 - [ ] **GitHub link:** https://github.com/sagar25446-prog/FieldShift-NASA
 - [ ] **Demo link:** https://fieldshift-nasa.streamlit.app
 - [ ] **Team members:** Add all team members
-- [ ] **NASA data used:** NASA POWER Daily API (T2M, T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN, RH2M, WS2M)
-- [ ] **Tools/technologies:** Python, Streamlit, pandas, NumPy, Plotly
+- [ ] **NASA data used:** NASA POWER Daily API (T2M, T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN), NASA NEX-GDDP-CMIP6 climate projections (5 models, SSP2-4.5 & SSP5-8.5), NASA MODIS MCD12Q2 land surface phenology (500m), NASA GRACE groundwater depletion context (Rodell et al. 2009 Nature), and NASA FIRMS active fire detection context (VIIRS 375m & MODIS 1km)
+- [ ] **Tools/technologies:** Python, Streamlit, pandas, NumPy, Plotly, pytest (MIT License)
 
 ### Check If Required
 - [ ] **Demo video** — Record if the form asks for one (90-second script below)

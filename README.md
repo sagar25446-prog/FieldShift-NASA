@@ -10,19 +10,22 @@ It combines **farmer-provided information**, historical **NASA POWER climate con
 
 ## ✨ Features
 
-- 🧑‍🌾 **Farm Profile** — Enter location, soil conditions, water budget, and rotation history
-- 🌤️ **NASA POWER Climate Data** — Retrieve real historical daily climate data (no API key needed) with clear live/offline mode indicators
-- 📦 **Live Judging Preset & Offline Snapshot** — Instant one-click judging demo with real, verified 2024 Ludhiana daily NASA POWER observations and network fallback
-- 📈 **Historical Climate Trends** — Multi-decadal OLS trend regression, decadal change rates, statistical significance ($p$-values), baseline comparisons, and consecutive dry-spell runs across regional growing seasons
-- ⚖️ **Farmer Priorities** — Set and adjust weights for water, climate, soil, diversity objectives
-- 🔄 **Rotation Engine** — Source-linked, deterministic crop-rotation alternatives powered by FAO-56 and EcoCrop
-- 🧪 **Hypothetical Stress Tests** — User-chosen what-if changes (drier, hotter, less irrigation water); not climate projections
-- 📊 **Pareto Comparison** — Multi-objective comparison with trade-off transparency
-- 🌍 **Future Climate (NASA NEX-GDDP-CMIP6)** — Compares the same rotation's water and climate suitability under each of 5 models' 2041–2060 SSP2-4.5 and SSP5-8.5 projections against the same model's 1995–2014 simulation, with the spread across models; kept separate from hypothetical stress tests ([method](docs/FUTURE_CLIMATE.md))
-- 🛰️ **Observed Land Use (NASA MODIS MCD12Q2)** — Shows which seasons were actually green at the farm's 500 m pixel over the last 10 years and flags plans that add a cropping season, with that season's extra crop water demand ([method](docs/OBSERVED_LAND_USE.md))
-- 🛰️ **Optional SoilGrids Soil Estimates** — One click retrieves ISRIC SoilGrids 250 m estimates (texture, organic carbon, pH, total N; quantiles and uncertainty), clearly labelled; farmer/laboratory values always override them ([details](docs/SOIL_DATA.md))
-- 🌱 **Soil-State Estimates** — Simplified N-balance and SOC direction using FAO/IPCC equations
-- 📖 **Full Transparency** — Every score, check, and uncertainty is explained with source links
+- 🧑‍🌾 **Farm Profile & Water Calculator** — Enter location, soil conditions, and water budget. Includes an interactive **Tubewell & Canal Water Calculator** that converts pump horsepower, weekly hours, and canal turns (warrabandi) into an equivalent seasonal budget in mm.
+- 🌤️ **NASA POWER Climate Data** — Retrieve real historical daily climate data (no API key needed) with clear live/offline mode indicators.
+- 📦 **Live Judging Preset & Offline Snapshot** — Instant one-click judging demo with real, verified 2024 Ludhiana daily NASA POWER observations and network fallback.
+- 📈 **Historical Climate Trends** — Multi-decadal OLS trend regression, decadal change rates, statistical significance ($p$-values), baseline comparisons, and consecutive dry-spell runs across regional growing seasons.
+- ⚖️ **Farmer Priorities** — Set and adjust weights for water, climate, soil, diversity objectives. Includes **Weight Sensitivity & Rank Stability Analysis** testing if the #1 plan remains robust to ±20% preference perturbations.
+- 🔄 **Rotation Engine** — Source-linked, deterministic crop-rotation alternatives powered by FAO-56 Penman–Monteith ET₀ × Kc and FAO EcoCrop thermal suitability.
+- 💰 **Indicative Economics & Water Savings** — Computes indicative gross margin (₹/ha) and irrigation water productivity (₹/m³) using Government of India Minimum Support Prices (MSP 2024-25) and PAU benchmark costs. Highlights the **Headline Water Savings** (e.g., ~1,480 mm / 59% water reduction) vs conventional flooded Rice–Wheat monoculture.
+- 🗣️ **Plain-Language Explainability & Bilingual Labels** — Farmer-focused "Why recommended" summaries and bilingual crop names in Punjabi (ਪੰਜਾਬੀ) and Hindi (हिंदी).
+- 🧪 **Hypothetical Stress Tests** — User-chosen what-if changes (drier, hotter, less irrigation water); kept strictly separate from climate projections.
+- 📊 **Pareto Comparison** — Multi-objective comparison with trade-off transparency ("unknown prevents false dominance").
+- 🌍 **Future Climate (NASA NEX-GDDP-CMIP6)** — Compares the same rotation's water and climate suitability under each of 5 models' 2041–2060 SSP2-4.5 and SSP5-8.5 projections against the same model's 1995–2014 simulation, with the spread across models ([method](docs/FUTURE_CLIMATE.md)).
+- 🛰️ **Observed Land Use (NASA MODIS MCD12Q2)** — Shows which seasons were actually green at the farm's 500 m pixel over the last 10 years and flags plans that add a cropping season, with that season's extra crop water demand ([method](docs/OBSERVED_LAND_USE.md)).
+- 🛰️ **Regional Earth Observations (NASA GRACE & NASA FIRMS)** — Surfaces the regional groundwater depletion emergency (NASA GRACE, Rodell et al. 2009 Nature) and seasonal paddy stubble fires (NASA FIRMS VIIRS/MODIS) motivating crop diversification away from water-guzzling summer paddy.
+- 🛰️ **Optional SoilGrids Soil Estimates** — One click retrieves ISRIC SoilGrids 250 m estimates (texture, organic carbon, pH, total N; quantiles and uncertainty), clearly labelled; farmer/laboratory values always override them ([details](docs/SOIL_DATA.md)).
+- 🌱 **Soil-State Estimates** — Simplified N-balance and SOC direction using FAO/IPCC equations.
+- 📖 **Full Transparency** — Every score, check, and uncertainty is explained with source links.
 
 ## 🖥️ Live Demo & Judging Preset
 
@@ -37,24 +40,25 @@ FieldShift features a **Live Judging Quick-Start** preset right on the home page
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    app.py (entry point)                      │
-│                         ↓                                    │
-│                  ui.py (9 pages)                             │
-│          ↙        ↓         ↓        ↘                      │
-│   nasa_power.py  rotation_engine.py  climate_trends.py       │
-│        ↓              ↓                 ↓                    │
-│   NASA POWER    crops.json +      soil_nutrient_model.py     │
-│   Daily API     rotation_rules.json                          │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          app.py (entry point)                           │
+│                                ↓                                        │
+│                         ui.py (10 pages)                                │
+│       ↙          ↓            ↓             ↓              ↘            │
+│  nasa_power.py  rotation_engine.py  climate_trends.py  economics.py      │
+│       ↓          ↓            ↓             ↓              ↓            │
+│  NASA POWER   crops.json +    future_       soil_nutrient  GoI MSP +    │
+│  Daily API    rules (19 edges) climate.py   model.py       PAU Guide    │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Data flow:**
-1. Farmer enters location, soil, water budget, priorities → `FarmProfile`
+1. Farmer enters location, soil, water budget (or estimates via tubewell calculator) → `FarmProfile`
 2. `nasa_power.py` retrieves historical climate from NASA POWER → `PowerDataset`
-3. `rotation_engine.py` searches documented crop-to-crop graph → `RotationPlan[]`
-4. `scenarios.py` transforms climate data and re-evaluates → robustness report
-5. `ui.py` renders everything with Plotly charts and source links
+3. `rotation_engine.py` searches documented 19-edge crop graph → `RotationPlan[]`
+4. `economics.py` calculates indicative MSP gross margins and water savings vs Rice–Wheat
+5. `scenarios.py` transforms climate data and re-evaluates → robustness report
+6. `ui.py` renders everything with Plotly charts, bilingual labels, and source links
 
 ## Technology Stack
 
@@ -66,40 +70,49 @@ FieldShift features a **Live Judging Quick-Start** preset right on the home page
 | [NumPy](https://numpy.org) | Numeric operations | BSD 3-Clause |
 | [Plotly](https://plotly.com) | Interactive charts | MIT |
 | [pytest](https://pytest.org) | Automated tests | MIT |
+| FieldShift | Decision support engine | MIT License |
 
 ## Project Layout
 
 ```text
 app.py                          Streamlit entry point
+LICENSE                         MIT License
 src/fieldshift/                 Application modules
   __init__.py                   Package version
   data_access.py                Data source contracts
   nasa_power.py                 NASA POWER client and provenance
   climate_features.py           Historical climate indicators
+  climate_trends.py             Historical trend regression (OLS)
   rotation_engine.py            Deterministic crop-rotation search
   scenarios.py                  Scenario stress tests and robustness
+  economics.py                  Indicative GoI MSP economics & water savings
+  satellite_context.py          NASA GRACE, FIRMS context & water calculator
+  sensitivity.py                Rank stability & plain-language explainability
   soil_data.py                  SoilGrids adapter and soil source precedence
   land_use_phenology.py         MODIS MCD12Q2 adapter and observed season use
   growing_season.py             Per-crop season windows shared by water and climate metrics
-  future_climate.py             NEX-GDDP-CMIP6 scenario extract, model-paired changes, plan comparison
+  future_climate.py             NEX-GDDP-CMIP6 scenario extract, model-paired changes
   soil_nutrient_model.py        Simplified N-balance and SOC model
   agronomy.py                   Agronomic rule contracts
   recommendations.py            Rotation comparison contracts
-  ui.py                         Streamlit interface (all 9 pages)
+  ui.py                         Streamlit interface (all 10 pages)
 data/                           Crop, rotation-rule and priority-weight config
-  crops.json                    Source-linked Punjab crop catalogue (10 crops)
-  rotation_rules.json           PAU-documented crop-to-crop relationships (19)
+  crops.json                    Source-linked Punjab crop catalogue (10 crops, MSP, PAU costs)
+  rotation_rules.json           PAU-documented crop-to-crop relationships (19 edges)
   demo_snapshot_ludhiana_2024.json Unmodified NASA POWER daily response for the demo farm, 2024 (366 days; saved 2026-10-13)
   priority_weights.json         Editable farmer priority profiles
 docs/                           Sources, assumptions, architecture, testing
-tests/                          227 automated checks (224 pass offline; 3 live-API tests skipped unless enabled)
+tests/                          251 automated checks (247 pass offline; 4 live-API tests skipped unless enabled)
   test_audit.py                 Comprehensive audit tests (32)
   test_climate_suitability.py   FAO EcoCrop thermal suitability & heat stress (17)
   test_climate_trends.py        Historical climate trends and OLS regression (12)
   test_crop_catalog.py          Catalogue schema validation (3)
   test_demo_workflow.py         Live judging preset and offline recovery (6)
+  test_economics.py             GoI MSP economics & water savings comparison (3)
+  test_satellite_and_sensitivity.py GRACE, FIRMS, water calculator, rank stability (4)
   test_fao56.py                 FAO-56 Penman-Monteith daily ET0, Kc, rain (17)
   test_foundation.py            Foundation contracts (4)
+  test_future_climate.py        NASA CMIP6 projections, model spread (13)
   test_nasa_data_dependency.py  Climate ranking inversion regression tests (5)
   test_nasa_power.py            POWER parsing and error handling (5)
   test_phase6.py                Scenarios, constraints, Pareto, soil-state (34)

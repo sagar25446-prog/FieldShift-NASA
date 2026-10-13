@@ -4,7 +4,7 @@
     "demonstration_region": "Ludhiana district, Punjab, India",
     "access_date": "2026-10-12",
     "purpose": "Evidence-linked planning catalogue; not a recommendation engine.",
-    "economic_data_status": "not_included"
+    "economic_data_status": "indicative_benchmarks_included"
   },
   "sources": {
     "pau_kharif_2026": {
@@ -35,6 +35,18 @@
       "title": "FAO EcoCrop Database — Crop Environmental Requirements",
       "publisher": "Food and Agriculture Organization of the United Nations (FAO), Rome",
       "url": "https://ecocrop.apps.fao.org/",
+      "access_date": "2026-10-13"
+    },
+    "cacp_msp_2024_25": {
+      "title": "Price Policy for Kharif & Rabi Crops 2024-25: Minimum Support Prices (MSP)",
+      "publisher": "Commission for Agricultural Costs and Prices (CACP), Ministry of Agriculture and Farmers Welfare, Government of India",
+      "url": "https://cacp.dacnet.nic.in/",
+      "access_date": "2026-10-13"
+    },
+    "pau_farm_management_guide": {
+      "title": "Cost of Cultivation and Farm Business Analysis in Punjab",
+      "publisher": "Department of Economics and Sociology, Punjab Agricultural University, Ludhiana",
+      "url": "https://pau.edu/",
       "access_date": "2026-10-13"
     }
   },
@@ -126,6 +138,22 @@
         "stage_days_late": 30,
         "source": "FAO-56 Table 12 (paddy rice, flooded)",
         "source_url": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+      },
+      "bilingual_name": {
+        "pa": "ਝੋਨਾ",
+        "hi": "धान / चावल"
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 2300.0,
+        "benchmark_yield_q_ha": 65.0,
+        "benchmark_cost_inr_ha": 50000.0,
+        "msp_procurement_assured": true,
+        "source_ids": [
+          "cacp_msp_2024_25",
+          "pau_farm_management_guide"
+        ],
+        "notes": "Government of India MSP 2024-25 (Rs 2300/q for Common paddy). High assured public procurement in Punjab."
       }
     },
     {
@@ -213,6 +241,22 @@
         "stage_days_late": 30,
         "source": "FAO-56 Table 12 (grain maize)",
         "source_url": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+      },
+      "bilingual_name": {
+        "pa": "ਮੱਕੀ",
+        "hi": "मक्का"
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 2225.0,
+        "benchmark_yield_q_ha": 50.0,
+        "benchmark_cost_inr_ha": 38000.0,
+        "msp_procurement_assured": true,
+        "source_ids": [
+          "cacp_msp_2024_25",
+          "pau_farm_management_guide"
+        ],
+        "notes": "GoI Kharif 2024-25 MSP. Core diversification alternative to paddy in Punjab crop zoning."
       }
     },
     {
@@ -243,12 +287,15 @@
         ]
       },
       "water_requirement": {
-        "status": "unknown",
-        "range_min": null,
-        "range_max": null,
+        "status": "documented_approximation",
+        "range_min": 500,
+        "range_max": 1100,
         "unit": "mm per crop period",
-        "source_ids": [],
-        "evidence_needed": "Punjab-relevant crop/method water range."
+        "method_context": "American/Bt cotton, surface furrow/basin irrigation; total water requirement from GoI Annexure AS110 & PAU Kharif.",
+        "source_ids": [
+          "goi_crop_water_annexure",
+          "pau_kharif_2026"
+        ]
       },
       "soil_constraints": {
         "status": "unknown",
@@ -295,6 +342,22 @@
         "stage_days_late": 45,
         "source": "FAO-56 Table 12 (cotton)",
         "source_url": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+      },
+      "bilingual_name": {
+        "pa": "ਨਰਮਾ / ਕਪਾਹ",
+        "hi": "कपास"
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 7121.0,
+        "benchmark_yield_q_ha": 20.0,
+        "benchmark_cost_inr_ha": 52000.0,
+        "msp_procurement_assured": true,
+        "source_ids": [
+          "cacp_msp_2024_25",
+          "pau_farm_management_guide"
+        ],
+        "notes": "GoI Kharif 2024-25 MSP for medium staple cotton. High gross revenue potential in south-western Punjab."
       }
     },
     {
@@ -383,6 +446,22 @@
         "stage_days_late": 10,
         "source": "FAO-56 Table 12 (beans, green/dry — proxy for mung bean)",
         "source_url": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+      },
+      "bilingual_name": {
+        "pa": "ਮੂੰਗ",
+        "hi": "मूँग"
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 8682.0,
+        "benchmark_yield_q_ha": 12.0,
+        "benchmark_cost_inr_ha": 24000.0,
+        "msp_procurement_assured": true,
+        "source_ids": [
+          "cacp_msp_2024_25",
+          "pau_farm_management_guide"
+        ],
+        "notes": "GoI Kharif/Summer 2024-25 MSP. Short 60-day duration, low operational cost, and biological nitrogen fixation."
       }
     },
     {
@@ -413,12 +492,15 @@
         ]
       },
       "water_requirement": {
-        "status": "unknown",
-        "range_min": null,
-        "range_max": null,
+        "status": "documented_approximation",
+        "range_min": 350,
+        "range_max": 650,
         "unit": "mm per crop period",
-        "source_ids": [],
-        "evidence_needed": "Punjab-relevant crop/method water range."
+        "method_context": "Soybean, surface irrigation; total water requirement from GoI Annexure AS110 & PAU Kharif.",
+        "source_ids": [
+          "goi_crop_water_annexure",
+          "pau_kharif_2026"
+        ]
       },
       "soil_constraints": {
         "status": "unknown",
@@ -463,6 +545,22 @@
         "stage_days_late": 25,
         "source": "FAO-56 Table 12 (soybean)",
         "source_url": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+      },
+      "bilingual_name": {
+        "pa": "ਸੋਇਆਬੀਨ",
+        "hi": "सोयाबीन"
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 4892.0,
+        "benchmark_yield_q_ha": 22.0,
+        "benchmark_cost_inr_ha": 32000.0,
+        "msp_procurement_assured": true,
+        "source_ids": [
+          "cacp_msp_2024_25",
+          "pau_farm_management_guide"
+        ],
+        "notes": "GoI Kharif 2024-25 MSP. Nitrogen-fixing legume cash crop with modest irrigation requirements."
       }
     },
     {
@@ -551,6 +649,22 @@
         "stage_days_late": 25,
         "source": "FAO-56 Table 12 (millet)",
         "source_url": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+      },
+      "bilingual_name": {
+        "pa": "ਬਾਜਰਾ",
+        "hi": "बाजरा"
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 2625.0,
+        "benchmark_yield_q_ha": 30.0,
+        "benchmark_cost_inr_ha": 24000.0,
+        "msp_procurement_assured": true,
+        "source_ids": [
+          "cacp_msp_2024_25",
+          "pau_farm_management_guide"
+        ],
+        "notes": "GoI Kharif 2024-25 MSP. Extremely drought-hardy C4 millet with minimal input requirements."
       }
     },
     {
@@ -638,6 +752,22 @@
         "stage_days_late": 40,
         "source": "FAO-56 Table 12 (winter wheat)",
         "source_url": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+      },
+      "bilingual_name": {
+        "pa": "ਕਣਕ",
+        "hi": "गेहूँ"
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 2275.0,
+        "benchmark_yield_q_ha": 50.0,
+        "benchmark_cost_inr_ha": 40000.0,
+        "msp_procurement_assured": true,
+        "source_ids": [
+          "cacp_msp_2024_25",
+          "pau_farm_management_guide"
+        ],
+        "notes": "GoI Rabi 2024-25 MSP (raised to Rs 2425 for 2025-26 marketing). Assured public procurement staple in Punjab."
       }
     },
     {
@@ -668,12 +798,15 @@
         ]
       },
       "water_requirement": {
-        "status": "unknown",
-        "range_min": null,
-        "range_max": null,
+        "status": "documented_approximation",
+        "range_min": 200,
+        "range_max": 350,
         "unit": "mm per crop period",
-        "source_ids": [],
-        "evidence_needed": "Punjab-relevant crop/method water range."
+        "method_context": "Desi/Kabuli gram, surface irrigation; total water requirement from GoI Annexure AS110 & PAU Rabi.",
+        "source_ids": [
+          "goi_crop_water_annexure",
+          "pau_rabi_2026"
+        ]
       },
       "soil_constraints": {
         "status": "unknown",
@@ -720,6 +853,22 @@
         "stage_days_late": 20,
         "source": "FAO-56 Table 12 (legumes — proxy for chickpea)",
         "source_url": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+      },
+      "bilingual_name": {
+        "pa": "ਛੋਲੇ / ਚਣਾ",
+        "hi": "चना"
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 5440.0,
+        "benchmark_yield_q_ha": 18.0,
+        "benchmark_cost_inr_ha": 28000.0,
+        "msp_procurement_assured": true,
+        "source_ids": [
+          "cacp_msp_2024_25",
+          "pau_farm_management_guide"
+        ],
+        "notes": "GoI Rabi 2024-25 MSP. Deep-rooted cool-season pulse saving significant irrigation water relative to wheat."
       }
     },
     {
@@ -808,6 +957,22 @@
         "stage_days_late": 25,
         "source": "FAO-56 Table 12 (rapeseed/canola)",
         "source_url": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+      },
+      "bilingual_name": {
+        "pa": "ਰਾਇਆ / ਸਰ੍ਹੋਂ",
+        "hi": "सरसों / राया"
+      },
+      "indicative_economics": {
+        "status": "documented_government_msp",
+        "msp_inr_per_q": 5650.0,
+        "benchmark_yield_q_ha": 18.0,
+        "benchmark_cost_inr_ha": 26000.0,
+        "msp_procurement_assured": true,
+        "source_ids": [
+          "cacp_msp_2024_25",
+          "pau_farm_management_guide"
+        ],
+        "notes": "GoI Rabi 2024-25 MSP. High-value oilseed with very low seasonal irrigation requirement (175-225 mm)."
       }
     },
     {
@@ -895,6 +1060,22 @@
         "stage_days_late": 30,
         "source": "FAO-56 Table 12 (potato)",
         "source_url": "https://www.fao.org/4/x0490e/x0490e0b.htm"
+      },
+      "bilingual_name": {
+        "pa": "ਆਲੂ",
+        "hi": "आलू"
+      },
+      "indicative_economics": {
+        "status": "market_price_reference",
+        "msp_inr_per_q": null,
+        "indicative_farmgate_price_inr_q": 1000.0,
+        "benchmark_yield_q_ha": 250.0,
+        "benchmark_cost_inr_ha": 105000.0,
+        "msp_procurement_assured": false,
+        "source_ids": [
+          "pau_farm_management_guide"
+        ],
+        "notes": "Commercial horticultural crop not covered under central MSP. High capital/seed cost and volatile farmgate prices."
       }
     }
   ]

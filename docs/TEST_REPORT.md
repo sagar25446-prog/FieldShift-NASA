@@ -1,7 +1,7 @@
 # FieldShift Test Report
 
 **Date:** 2026-10-13  
-**Status:** ✅ All 155 automated tests passing, 1 skipped (live API)  
+**Status:** ✅ All 247 automated tests passing, 4 skipped (live API)  
 **Python:** 3.13.12 | **pytest:** 9.1.1
 
 ---
@@ -24,7 +24,15 @@
 | `test_climate_trends.py` | 12 | ✅ All pass |
 | `test_rotation_graph.py` | 9 | ✅ All pass |
 | `test_demo_workflow.py` | 6 | ✅ All pass |
-| **Total** | **156** | **155 pass, 1 skip** |
+| `test_future_climate.py` | 13 | ✅ All pass |
+| `test_soil_data.py` | 39 | ✅ All pass |
+| `test_soilgrids_integration.py` | 1 | ⏭️ Skipped (live API) |
+| `test_land_use_phenology.py` | 17 | ✅ All pass |
+| `test_growing_season.py` | 12 | ✅ All pass |
+| `test_modis_integration.py` | 1 | ⏭️ Skipped (live API) |
+| `test_economics.py` | 3 | ✅ All pass |
+| `test_satellite_and_sensitivity.py` | 4 | ✅ All pass |
+| **Total** | **251** | **247 pass, 4 skip** |
 
 ---
 

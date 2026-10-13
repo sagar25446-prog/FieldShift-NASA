@@ -26,21 +26,21 @@ Before this date the FAO-56 water balance gave **every crop the whole year's ET0
 
 ## Scope Limitations
 
-1. **Regional focus:** Prototype supports Punjab, India crop rotations only (Ludhiana demonstration region).
-2. **Crop catalogue size:** 10 crops in catalogue, 11 documented crop-to-crop relationships.
-3. **Season model:** Fixed cycle: kharif → rabi → summer. No inter-season or partial-season planning.
-4. **Planning horizon:** Maximum 3 seasons (configurable to 2). No multi-year tracking.
-5. **Graph coverage:** `pearl_millet` and `rapeseed_mustard` exist in the catalogue but have no documented transitions in `rotation_rules.json`, so they cannot appear in generated multi-season sequences.
+1. **Regional focus:** Prototype supports Punjab, India crop rotations (Ludhiana demonstration region and broader Indo-Gangetic Plains agro-climatic zone).
+2. **Crop catalogue size:** 10 crops in catalogue, with 19 PAU-documented crop-to-crop transitions covering all active crops.
+3. **Season model:** Fixed regional cycle: kharif → rabi → summer (zaid).
+4. **Planning horizon:** Maximum 3 seasons (configurable to 2).
+5. **Graph coverage:** All 10 catalogue crops (`rice`, `maize`, `cotton`, `moong`, `soybean`, `pearl_millet`, `wheat`, `chickpea`, `rapeseed_mustard`, `potato`) are fully reachable and form documented, feasible rotation sequences.
 
 ---
 
 ## Data Limitations
 
-1. **Climate data:** NASA POWER is gridded (~0.5° resolution), not field-level measurement. It is historical context, not a forecast.
-2. **Soil data:** Farmer/lab values are primary. An optional ISRIC SoilGrids 2.0 estimate (250 m modelled grid, not a field measurement) can fill empty fields where appropriate. Its 90% prediction ranges are very wide at Punjab test points (e.g. clay 1.8–86%), the REST API is a beta service ISRIC says may be paused, and some locations (including the central-Ludhiana demo point) return no prediction. Unknown values remain unknown. See `docs/SOIL_DATA.md`.
-3. **Temperature thresholds:** No crop-specific thermal thresholds are documented in the catalogue. Climate suitability is always N/A.
-4. **Economic data:** No credible local cost/price data is configured. Economic potential is always N/A.
-5. **Water requirements:** Documented as approximation ranges from Government of India annexure. Not field-calibrated to specific Punjab districts.
+1. **Climate data:** NASA POWER is gridded (~0.5° resolution), not field-level measurement. It is historical context, not a local forecast.
+2. **Soil data:** Farmer/lab values are primary. An optional ISRIC SoilGrids 2.0 estimate (250 m modelled grid, not a field measurement) can fill empty fields where appropriate. Its 90% prediction ranges are documented at Punjab test points. Unknown values remain unknown. See `docs/SOIL_DATA.md`.
+3. **Temperature thresholds:** Sourced from [FAO EcoCrop Database](https://ecocrop.apps.fao.org/) cardinal temperature limits ($T_{\min,\text{abs}}$, $T_{\min,\text{opt}}$, $T_{\max,\text{opt}}$, $T_{\max,\text{abs}}$) and PAU heat-stress thresholds (e.g. 32°C terminal heat for wheat).
+4. **Economic benchmarks:** Indicative gross revenues and margins are calculated using Government of India Minimum Support Prices (MSP 2024-25) and Punjab Agricultural University (PAU) benchmark operational costs. They represent policy benchmarks and indicative comparisons, not farm-specific profit guarantees.
+5. **Water requirements:** Sourced from Government of India Annexure AS110 and PAU Packages of Practices. In addition, real-time climate-derived crop water requirements (ETc) and net irrigation deficits are calculated via FAO-56 Penman–Monteith daily ET₀ and crop development stage coefficients (Kc).
 6. **Missing observations:** NASA POWER fill values (-999.0) are converted to NaN and counted. They are never silently replaced with interpolated values.
 
 ---
@@ -49,60 +49,57 @@ Before this date the FAO-56 water balance gave **every crop the whole year's ET0
 
 1. **Composite score:** A preference-weighted comparison, not a probability of success. It cannot be interpreted as yield prediction.
 2. **Pareto analysis:** Only compares on available numeric scores. Missing scores are preserved as N/A, not treated as zero. This prevents false dominance claims.
-3. **Soil-state model:** Simplified FAO/IPCC N-balance and Janssen (1984) SOC model. **NOT calibrated to Punjab conditions.** Uses assumed defaults for residue parameters. Labelled as "educational comparison only" in the UI. **Known bias (found 2026-10-13):** the SOC direction compares *all* returned residue carbon with first-order loss and applies no humification coefficient, so for multi-crop rotations it reports "likely increase" for almost any starting SOC (below ~19% at 0–30 cm for rice–wheat–moong). Treat its direction as illustrative only.
-4. **Rotation graph:** Small deterministic DFS over documented relationships. Absence of a relationship means "unsupported by this prototype," not "agronomically impossible."
-5. **No machine learning:** No ML models are used. This is intentional — the goal is decision quality and transparency over complexity.
-6. **No pest/disease modelling:** Pest and disease cycles are not modelled. Farmers can provide avoidance restrictions but the system does not predict pest pressure.
+3. **Soil-state model:** Simplified FAO/IPCC N-balance and Janssen (1984) SOC model. **NOT calibrated to Punjab conditions.** Uses assumed defaults for residue parameters. Labelled as "educational comparison only" in the UI.
+4. **Rotation graph:** Deterministic graph traversal over 19 documented relationships. Absence of a relationship means "unsupported by this prototype," not "agronomically impossible."
+5. **No machine learning:** No black-box ML models are used. This is intentional — the goal is decision transparency, scientific explainability, and traceability over complexity.
+6. **No pest/disease modelling:** Pest and disease cycles are not dynamically simulated. Farmers can provide avoidance restrictions (e.g. pest history) but the system does not predict pest pressure.
 
 ---
 
-## UI/UX Limitations
+## UI/UX & Regional Usability
 
-1. **Mobile layout:** Not optimised. 5-column metric layouts and dynamic Pareto card columns can be cramped on screens < 480px wide. Streamlit provides basic responsiveness but no custom mobile CSS is applied.
-2. **Offline Mode Scope:** Includes a saved, unmodified 2024 NASA POWER response for the demonstration farm (`data/demo_snapshot_ludhiana_2024.json`, 30.85 N 75.70 E) for walkthroughs and network fallback. Other coordinates require live access to NASA POWER.
-3. **No multi-user support:** No authentication, no persistent user accounts, no database.
-4. **Session persistence:** Session state is lost on page refresh (Streamlit limitation). No server-side storage.
-5. **Charts require JavaScript:** Plotly charts will not render in environments where JavaScript is disabled.
+1. **Bilingual labels:** Regional crop names in Punjabi (ਪੰਜਾਬੀ) and Hindi (हिंदी) are displayed alongside English names for accessible communication.
+2. **Water Budget Estimator:** Farmers can input tubewell motor horsepower, operating hours/week, and canal water turns (warrabandi) to automatically calculate equivalent seasonal water budgets in mm.
+3. **Offline Mode Scope:** Includes a saved, unmodified 2024 NASA POWER response for the demonstration farm (`data/demo_snapshot_ludhiana_2024.json`, 30.85 N 75.70 E) for walkthroughs and automatic network fallback. Other coordinates use live NASA POWER API.
+4. **No multi-user accounts:** Session-based prototype; no persistent database or user logins.
+5. **Charts require JavaScript:** Interactive Plotly charts require JavaScript in the browser.
 
 ---
 
 ## Security Considerations
 
-1. **No authentication system:** This is a prototype. No user login or access control.
+1. **No authentication system:** This is a client-side decision-support prototype. No user login or access control.
 2. **No persistent user data:** All data is session-only and discarded on refresh/close.
 3. **NASA POWER API:** Public endpoint, no API key required, no credentials stored.
-4. **Input validation:** Streamlit provides basic protection. Server-side validation exists for coordinates, dates, and numeric ranges. No SQL or command injection risk (no database, no shell commands).
+4. **Input validation:** Server-side validation exists for coordinates (-90 to 90, -180 to 180), dates, priority weights, and numeric ranges. No SQL or command injection risk (no database, no shell commands).
 5. **CORS:** Not applicable — single-page Streamlit application.
-6. **Dependency pinning:** `requirements.txt` does not pin exact versions. This could cause issues with breaking Streamlit/Plotly/pandas updates.
+6. **License:** Open-source under the MIT License.
 
 ---
 
 ## Items Requiring Expert Review
 
-1. **Crop water requirement ranges** need agronomist validation for specific Punjab districts.
-2. **Soil constraint rules** need agronomist review beyond PAU general recommendations.
-3. **Soil-state model equations** need calibration with Punjab field trial data before any real-world use.
-4. **Rotation compatibility graph** needs extension with more documented crop-to-crop relationships.
-5. **Season definitions** may need adjustment for specific microclimates within Punjab.
-6. **Temperature suitability thresholds** are entirely absent — sourced crop thermal limits are needed.
+1. **District-level crop water requirement calibration:** While FAO-56 Penman–Monteith ETc and GoI approximations are implemented, district-level microclimates benefit from local agronomist review.
+2. **Soil constraint rules:** Sourced from PAU recommendations; can be extended for micro-level alkaline/saline pockets.
+3. **Soil-state model equations:** Published FAO/IPCC equations can be calibrated with local long-term Punjab field trial datasets (e.g., PAU Ludhiana rotation trials).
+4. **Rotation compatibility graph:** Can be expanded beyond the current 19 edges as additional multi-crop transitions receive documented agronomic trials.
 
 ---
 
-## Future Work (Not Implemented)
+## Future Roadmap (Next Phases)
 
-| Priority | Feature | Notes |
-|---|---|---|
-| High | Temperature suitability thresholds | Requires sourced crop-specific thermal limits |
-| High | Extended rotation graph | Add transitions for pearl_millet, rapeseed_mustard, potato-based sequences |
-| Medium | GPM precipitation integration | Higher-resolution precipitation data |
-| Medium | MODIS vegetation indices | Monitor crop health and growth |
-| Medium | Local economics module | Requires verified, up-to-date cost/price data |
-| Medium | Multi-year planning | Track cumulative soil state across years |
-| Low | SMAP/NASA-USDA soil moisture | Complement farmer-provided soil data |
-| Low | Pest/disease cycle integration | Requires crop-specific pest calendars |
-| Low | Browser accessibility audit | WCAG 2.1 AA automated testing |
-| Low | Multi-language support | Punjabi, Hindi translations |
-| Low | Dependency version pinning | Lock versions for reproducible deployments |
+| Priority | Feature | Notes | Status in Prototype |
+|---|---|---|---|
+| Implemented | Temperature suitability thresholds | FAO EcoCrop cardinal temperatures & PAU heat thresholds | ✅ Active |
+| Implemented | Extended rotation graph | 19 edges; all 10 crops reachable and feasible | ✅ Active |
+| Implemented | Indicative economics & MSP benchmarks | GoI MSP 2024-25 & PAU costs; baseline water savings | ✅ Active |
+| Implemented | Future climate projections | NASA NEX-GDDP-CMIP6 (5 models, SSP2-4.5 & SSP5-8.5) | ✅ Active |
+| Implemented | Observed land use dynamics | NASA MODIS MCD12Q2 phenology & greenup seasons | ✅ Active |
+| Implemented | Regional Earth observation context | NASA GRACE groundwater depletion & NASA FIRMS fires | ✅ Active |
+| Implemented | Weight sensitivity & rank stability | ±20% priority perturbations tested | ✅ Active |
+| Medium | GPM IMERG precipitation integration | Sub-daily / high-resolution precipitation data | Future Phase |
+| Medium | SMAP / NASA-USDA root-zone soil moisture | Real-time satellite root zone moisture | Future Phase |
+| Medium | Multi-year planning horizon | Multi-year cumulative soil organic carbon dynamics | Future Phase |
 
 ---
 

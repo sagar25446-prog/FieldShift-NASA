@@ -113,8 +113,8 @@ class TestCropGraphReachability:
         rice_res = engine.generate(_favourable_profile(start_season="kharif", number_of_seasons=3, water_budget=2600.0), max_plans=30)
         assert any("rice" in p.crop_ids and p.status != "infeasible" for p in rice_res.plans)
 
-        # 4. Soybean when single-legume competitors are blocked
-        soy_res = engine.generate(_favourable_profile(start_season="kharif", number_of_seasons=3, blocked_crop_ids=frozenset({"cotton", "maize"})), max_plans=30)
+        # 4. Soybean when other kharif competitors are blocked
+        soy_res = engine.generate(_favourable_profile(start_season="kharif", number_of_seasons=3, blocked_crop_ids=frozenset({"cotton", "maize", "pearl_millet"})), max_plans=30)
         assert any("soybean" in p.crop_ids and p.status != "infeasible" for p in soy_res.plans)
 
         # 5. Assess all 10 crops in valid 3-season sequences

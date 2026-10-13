@@ -45,7 +45,8 @@ def test_missing_soil_data_is_conditional_not_rejection_and_results_are_repeatab
     input_profile = profile(soil=SoilInformation())
     first, second = ENGINE.generate(input_profile), ENGINE.generate(input_profile)
     assert first.plans and first.plans == second.plans
-    wheat_plan = next(plan for plan in first.plans if "wheat" in plan.crop_ids)
+    assert all(plan.status == "conditionally_feasible" for plan in first.plans)
+    wheat_plan = ENGINE.assess_sequence(("maize", "wheat", "moong"), input_profile)
     assert wheat_plan.status == "conditionally_feasible"
     assert any(check.rule == "documented_wheat_soil_constraint" and check.status == "unknown" for check in wheat_plan.checks)
 
