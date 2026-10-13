@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "scope": "Supported Punjab crop-to-crop relationships only; absence means unsupported by this MVP, not agronomically impossible.",
+  "season_cycle": ["kharif", "rabi", "summer"],
+  "relationships": [
+    {"from": "rice", "to": "wheat", "source_ids": ["pau_rabi_2026"]},
+    {"from": "rice", "to": "chickpea", "source_ids": ["pau_kharif_2026"]},
+    {"from": "rice", "to": "potato", "source_ids": ["pau_kharif_2026", "pau_rabi_2026"]},
+    {"from": "maize", "to": "wheat", "source_ids": ["pau_kharif_2026", "pau_rabi_2026"]},
+    {"from": "maize", "to": "potato", "source_ids": ["pau_kharif_2026", "pau_rabi_2026"]},
+    {"from": "cotton", "to": "wheat", "source_ids": ["pau_rabi_2026"]},
+    {"from": "soybean", "to": "wheat", "source_ids": ["pau_kharif_2026", "pau_rabi_2026"]},
+    {"from": "wheat", "to": "moong", "source_ids": ["pau_kharif_2026", "pau_rabi_2026"]},
+    {"from": "chickpea", "to": "moong", "source_ids": ["pau_kharif_2026"]},
+    {"from": "potato", "to": "moong", "source_ids": ["pau_kharif_2026", "pau_rabi_2026"]},
+    {"from": "moong", "to": "rice", "source_ids": ["pau_kharif_2026"]}
+  ],
+  "notes": "No catalogue-supported family-wide or pest-history exclusion is configured. A farmer can provide a crop/family avoidance restriction when a local advisor identifies one."
+}

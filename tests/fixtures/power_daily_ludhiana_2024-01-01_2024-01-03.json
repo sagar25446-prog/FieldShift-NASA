@@ -1,0 +1,10 @@
+{
+  "fixture_note": "Saved from a live NASA POWER Daily API response for Ludhiana on 2026-10-12. PRECTOTCORR for 2024-01-02 is deliberately set to the API fill value (-999.0) to test missing-observation handling; it is not a real observation.",
+  "type": "Feature",
+  "geometry": {"type": "Point", "coordinates": [75.857, 30.901, 240.26]},
+  "properties": {"parameter": {"T2M": {"20240101": 10.82, "20240102": 10.77, "20240103": 10.76}, "T2M_MAX": {"20240101": 19.4, "20240102": 18.99, "20240103": 19.68}, "T2M_MIN": {"20240101": 4.58, "20240102": 3.88, "20240103": 5.49}, "PRECTOTCORR": {"20240101": 0.0, "20240102": -999.0, "20240103": 2.5}, "ALLSKY_SFC_SW_DWN": {"20240101": 2.74, "20240102": 4.74, "20240103": 5.86}}},
+  "header": {"title": "NASA/POWER Source Native Resolution Daily Data", "api": {"version": "v2.10.0", "name": "POWER Daily API"}, "sources": ["SYN1DEG", "MERRA2", "POWER"], "fill_value": -999.0, "time_standard": "UTC", "start": "20240101", "end": "20240103"},
+  "messages": [],
+  "parameters": {"T2M": {"units": "C", "longname": "Temperature at 2 Meters"}, "T2M_MAX": {"units": "C", "longname": "Temperature at 2 Meters Maximum"}, "T2M_MIN": {"units": "C", "longname": "Temperature at 2 Meters Minimum"}, "PRECTOTCORR": {"units": "mm/day", "longname": "Precipitation Corrected"}, "ALLSKY_SFC_SW_DWN": {"units": "MJ/m^2/day", "longname": "All Sky Surface Shortwave Downward Irradiance"}},
+  "times": {"data": 0.441, "process": 0.02}
+}

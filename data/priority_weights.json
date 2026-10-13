@@ -1,0 +1,10 @@
+{
+  "schema_version": "1.0",
+  "metrics": ["water_suitability", "climate_suitability", "soil_related_potential", "rotation_diversity", "economic_potential"],
+  "profiles": {
+    "balanced": {"water_suitability": 0.35, "climate_suitability": 0.20, "soil_related_potential": 0.25, "rotation_diversity": 0.20, "economic_potential": 0.0},
+    "water_conscious": {"water_suitability": 0.60, "climate_suitability": 0.10, "soil_related_potential": 0.15, "rotation_diversity": 0.15, "economic_potential": 0.0},
+    "soil_focused": {"water_suitability": 0.15, "climate_suitability": 0.10, "soil_related_potential": 0.60, "rotation_diversity": 0.15, "economic_potential": 0.0}
+  },
+  "notes": "Weights are preference weights, not probabilities. Economic potential remains zero until a traceable local cost/price source is integrated."
+}
