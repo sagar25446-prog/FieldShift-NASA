@@ -1,7 +1,7 @@
 # FieldShift Test Report
 
 **Date:** 2026-10-13  
-**Status:** ✅ All 128 automated tests passing, 1 skipped (live API)  
+**Status:** ✅ All 140 automated tests passing, 1 skipped (live API)  
 **Python:** 3.13.12 | **pytest:** 9.1.1
 
 ---
@@ -21,7 +21,8 @@
 | `test_fao56.py` | 17 | ✅ All pass |
 | `test_nasa_data_dependency.py` | 5 | ✅ All pass |
 | `test_climate_suitability.py` | 17 | ✅ All pass |
-| **Total** | **129** | **128 pass, 1 skip** |
+| `test_climate_trends.py` | 12 | ✅ All pass |
+| **Total** | **141** | **140 pass, 1 skip** |
 
 ---
 
@@ -137,7 +138,15 @@
 - ✅ Absence of thresholds degrades cleanly to `status="unavailable"` without inventing arbitrary numbers
 - ✅ Incomplete daily temperature series (NaNs) produce data coverage warnings
 - ✅ Controlled test confirms ranking inversion under heatwave: heat-tolerant rotation (`pearl_millet-chickpea-moong`) overtakes heat-sensitive rotation (`maize-wheat-moong`) in climate score and composite ranking
-- ✅ Climate suitability kept strictly separated from water suitability (no double counting of precipitation)
+### 16. Observed Historical Climate Trends & Decadal Rates of Change
+- ✅ Parameter date coverage, observation counts, and completeness percentage audited for all variables
+- ✅ Missing observations correctly identified (e.g. 16 missing days in 2012 test fixture)
+- ✅ Regional growing seasons (Kharif, Rabi, Summer, Annual) accurately aggregated
+- ✅ Cross-calendar-year Rabi cycle properly pairs Nov–Dec of year $Y$ with Jan–Apr of year $Y+1$
+- ✅ Incomplete growing seasons (< 75% valid days) excluded from trend regression to prevent sampling distortion
+- ✅ OLS linear regression calculates exact decadal slope (+0.30 °C/decade), $R^2$, and $p$-value ($p < 0.01$) on 25-year benchmark
+- ✅ Baseline period vs. recent period comparison computes mean shift ($\Delta = +0.70^\circ\text{C}$) and percentage change
+- ✅ Descriptive historical trends strictly separated from causal yield claims; no linear extrapolation into future forecasts
 
 ---
 
@@ -145,7 +154,7 @@
 
 | # | Check | Result |
 |---|---|---|
-| 1 | Application starts and renders all 8 pages | ✅ |
+| 1 | Application starts and renders all 9 pages (including Climate Trends) | ✅ |
 | 2 | Ludhiana example loads with illustrative-only labels | ✅ |
 | 3 | NASA POWER request succeeds for Ludhiana coordinates | ✅ |
 | 4 | Climate charts render (temperature line, precipitation bar) | ✅ |

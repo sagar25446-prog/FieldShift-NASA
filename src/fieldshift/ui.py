@@ -13,8 +13,15 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from .climate_features import FeatureValidationError, seasonal_precipitation_total, temperature_summary
+from .climate_trends import (
+    REGIONAL_SEASONS,
+    SeasonDefinition,
+    audit_variable_coverage,
+    calculate_linear_trend,
+    compute_annual_season_summaries,
+)
 from .data_access import source_statuses
-from .nasa_power import PowerClient, PowerDataset, PowerError, PowerRequest
+from .nasa_power import PowerClient, PowerDataset, PowerError, PowerRequest, parse_power_daily_response
 from .rotation_engine import (
     METRICS,
     ClimateContext,
@@ -34,6 +41,7 @@ PAGES = (
     "Home / Overview",
     "Farm Profile",
     "Climate Insights",
+    "Climate Trends",
     "Farmer Priorities",
     "Rotation Recommendations",
     "Scenario stress tests",
@@ -79,6 +87,24 @@ def _rotation_engine() -> RotationEngine:
 def _weight_profiles() -> dict[str, dict[str, float]]:
     raw = json.loads((DATA_DIR / "priority_weights.json").read_text(encoding="utf-8"))
     return {name: normalize_weights(values) for name, values in raw["profiles"].items()}
+
+
+@st.cache_data
+def _load_historical_fixture_dataset() -> PowerDataset:
+    fixture_path = PROJECT_ROOT / "tests" / "fixtures" / "power_daily_ludhiana_historical_2000_2024.json"
+    raw = json.loads(fixture_path.read_text(encoding="utf-8"))
+    req = PowerRequest(
+        latitude=30.9010,
+        longitude=75.8573,
+        start_date=date(2000, 1, 1),
+        end_date=date(2024, 12, 31),
+        parameters=tuple(raw["properties"]["parameter"].keys()),
+    )
+    return parse_power_daily_response(
+        raw,
+        req,
+        source_url="https://power.larc.nasa.gov/api/temporal/daily/point?start=20000101&end=20241231&latitude=30.9010&longitude=75.8573&community=AG&parameters=T2M,T2M_MAX,T2M_MIN,PRECTOTCORR,ALLSKY_SFC_SW_DWN,RH2M,WS2M&format=JSON",
+    )
 
 
 # ─────────────────────────────── session state ─────────────────────────────
@@ -341,6 +367,7 @@ def _sidebar() -> None:
             "Home / Overview": "🏠",
             "Farm Profile": "🧑‍🌾",
             "Climate Insights": "🌤️",
+            "Climate Trends": "📈",
             "Farmer Priorities": "⚖️",
             "Rotation Recommendations": "🔄",
             "Scenario stress tests": "🧪",
@@ -595,11 +622,260 @@ def render_climate() -> None:
         st.dataframe(temp.style.format("{:.2f}"), use_container_width=True)
     except FeatureValidationError as error:
         st.warning(f"A climate indicator could not be calculated: {error}")
-    st.info("Historical anomalies are not displayed because no explicit multi-year, same-season baseline was selected. FieldShift will not invent one.")
+    col_tr1, col_tr2 = st.columns([2, 1])
+    with col_tr1:
+        st.info("Long-term historical anomalies, decadal trends, and statistical significance across growing seasons (Kharif, Rabi, Summer) are analyzed in Climate Trends.")
+    with col_tr2:
+        if st.button("📈 Explore Climate Trends", use_container_width=True):
+            _go("Climate Trends")
     with st.expander("📋 Retrieved daily values and missing observations"):
         st.dataframe(frame, use_container_width=True)
     if st.button("➡️ Continue to priorities", type="primary"):
         _go("Farmer Priorities")
+    _footer()
+
+
+def render_climate_trends() -> None:
+    st.title("📈 Historical climate trends")
+    st.caption(
+        "Empirical long-term growing-season climate trends derived from NASA POWER daily observations. "
+        "Calculates rates of change per decade, statistical significance, and shifts against historical baselines."
+    )
+
+    # 1. Dataset Selection
+    session_dataset: PowerDataset | None = st.session_state.get("power_dataset")
+    session_span_years = 0
+    if session_dataset and not session_dataset.data.empty:
+        session_span_years = (session_dataset.data.index.max().year - session_dataset.data.index.min().year) + 1
+
+    use_fixture = True
+    if session_dataset and session_span_years >= 3:
+        source_choice = st.radio(
+            "Select climate record for trend analysis",
+            [
+                f"Current farm profile dataset ({session_dataset.provenance.start_date} to {session_dataset.provenance.end_date}, {session_span_years} years)",
+                "25-Year NASA POWER Ludhiana benchmark (2000–2024, 9,132 daily observations)",
+            ],
+            index=0,
+            help="At least 3 complete annual seasons are required to estimate a linear trend.",
+        )
+        use_fixture = "25-Year" in source_choice
+    else:
+        if session_dataset:
+            st.info(
+                f"The current session climate request covers {session_dataset.provenance.start_date} to {session_dataset.provenance.end_date} "
+                f"({session_span_years} year{'s' if session_span_years > 1 else ''}). Long-term trend analysis requires multi-year seasonal records (minimum 3 years). "
+                "Displaying the verified 25-Year NASA POWER historical record (2000–2024) for the Ludhiana demonstration region."
+            )
+        else:
+            st.info(
+                "No custom multi-year farm climate record is loaded. "
+                "Displaying the verified 25-Year NASA POWER historical record (2000–2024) for the Ludhiana demonstration region."
+            )
+
+    active_dataset = _load_historical_fixture_dataset() if use_fixture else session_dataset
+    if not active_dataset or active_dataset.data.empty:
+        st.error("No climate observations available for trend analysis.")
+        _footer()
+        return
+
+    frame = active_dataset.data
+    provenance = active_dataset.provenance
+
+    # 2. Season Definition
+    st.subheader("1. Growing-season definition")
+    col_s1, col_s2 = st.columns([1, 2])
+    with col_s1:
+        season_keys = list(REGIONAL_SEASONS.keys())
+        selected_season_key = st.selectbox(
+            "Crop season",
+            season_keys,
+            index=0,
+            format_func=lambda k: REGIONAL_SEASONS[k].name,
+            help="Select the regional growing season to aggregate annual historical metrics.",
+        )
+        season_def = REGIONAL_SEASONS[selected_season_key]
+    with col_s2:
+        st.markdown(f"**Season window:** {season_def.description}")
+        if season_def.is_cross_year:
+            st.caption("ℹ️ Rabi is a cross-calendar-year season spanning Nov 1 of year Y to Apr 30 of year Y+1. Seasons missing terminal months are excluded from trend calculations to prevent sampling bias.")
+
+    with st.expander("⚙️ Inspect / customize season date thresholds"):
+        st.write({
+            "season_id": season_def.id,
+            "name": season_def.name,
+            "start_date_window": f"{season_def.start_month:02d}-{season_def.start_day:02d}",
+            "end_date_window": f"{season_def.end_month:02d}-{season_def.end_day:02d}",
+            "cross_calendar_year": season_def.is_cross_year,
+            "source": "Punjab Agricultural University (PAU) Package of Practices & Agro-ecological calendar",
+        })
+
+    # 3. Variable Coverage Audit
+    st.subheader("2. NASA POWER variable coverage & completeness audit")
+    coverage_dict = audit_variable_coverage(frame)
+    if coverage_dict:
+        audit_rows = []
+        for param, cov in coverage_dict.items():
+            audit_rows.append({
+                "Parameter": param,
+                "Description": cov.display_name,
+                "Unit": cov.unit,
+                "Coverage": f"{cov.first_date} to {cov.last_date}",
+                "Valid Days": cov.valid_observations,
+                "Missing Days": cov.missing_observations,
+                "Completeness": f"{cov.completeness_percent:.1f}%",
+                "Trend Suitability": "Sufficient (≥80%)" if cov.is_sufficient_for_trends else "Insufficient (<80%)",
+            })
+        st.dataframe(pd.DataFrame(audit_rows), use_container_width=True)
+
+    # 4. Annual Summaries & Trend Computation
+    summaries = compute_annual_season_summaries(frame, season=season_def)
+    valid_summaries = [s for s in summaries if s.is_valid]
+    incomplete_count = len(summaries) - len(valid_summaries)
+
+    if incomplete_count > 0:
+        st.caption(f"⚠️ {incomplete_count} season(s) had <75% valid daily observations (e.g. boundary years or incomplete records) and were excluded from the trend calculation.")
+
+    if len(valid_summaries) < 3:
+        st.warning("Fewer than 3 complete annual seasons found for the selected season window. A statistical linear trend cannot be calculated.")
+        _footer()
+        return
+
+    years = [s.year for s in valid_summaries]
+
+    # Variable selection for trend plot
+    st.subheader("3. Historical trend estimation & baseline comparison")
+    var_options = {
+        "mean_temp": ("Mean Temperature", "°C", [s.mean_temp_c for s in valid_summaries]),
+        "max_temp": ("Average Maximum Temperature", "°C", [s.mean_tmax_c for s in valid_summaries]),
+        "min_temp": ("Average Minimum Temperature", "°C", [s.mean_tmin_c for s in valid_summaries]),
+        "precipitation": ("Seasonal Precipitation Total", "mm", [s.total_precip_mm for s in valid_summaries]),
+        "dry_spell": ("Longest Consecutive Dry Spell (≤1 mm/day)", "days", [float(s.dry_spell_max_days) if s.dry_spell_max_days is not None else None for s in valid_summaries]),
+    }
+
+    selected_var_key = st.selectbox(
+        "Select climate indicator",
+        list(var_options.keys()),
+        format_func=lambda k: f"{var_options[k][0]} ({var_options[k][1]})",
+    )
+    v_name, v_unit, v_series = var_options[selected_var_key]
+
+    trend = calculate_linear_trend(
+        years=years,
+        values=v_series,
+        variable_name=selected_var_key,
+        display_name=v_name,
+        unit=v_unit,
+        season_name=season_def.name,
+    )
+
+    # Metric Cards Row
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        rate_val = f"{trend.change_per_decade:+.2f} {v_unit}/decade" if trend.change_per_decade is not None else "N/A"
+        st.metric("Rate of change", rate_val)
+    with m2:
+        tot_val = f"{trend.total_change:+.2f} {v_unit}" if trend.total_change is not None else "N/A"
+        st.metric(f"Net change ({trend.start_year}–{trend.end_year})", tot_val)
+    with m3:
+        if trend.delta_vs_baseline is not None and trend.baseline_mean is not None and trend.recent_mean is not None:
+            pct_str = f" ({trend.delta_percent:+.1f}%)" if trend.delta_percent is not None else ""
+            delta_str = f"{trend.delta_vs_baseline:+.2f} {v_unit}{pct_str}"
+            st.metric(
+                "Baseline vs recent",
+                delta_str,
+                help=f"Baseline ({trend.baseline_period}): {trend.baseline_mean:.2f} {v_unit} vs Recent ({trend.recent_period}): {trend.recent_mean:.2f} {v_unit}",
+            )
+        else:
+            st.metric("Baseline vs recent", "N/A")
+    with m4:
+        p_str = f"p = {trend.p_value:.4f}" if trend.p_value is not None else "N/A"
+        sig_label = "Statistically significant (p < 0.05)" if trend.is_significant else "Not statistically significant"
+        st.metric("Statistical significance", p_str, help=f"OLS t-test: {sig_label}. R² = {trend.r_squared:.3f}")
+
+    # Plotly Trend Chart
+    if trend.annual_data:
+        chart_df = pd.DataFrame(trend.annual_data)
+        fig = go.Figure()
+        # Observed markers and line
+        fig.add_trace(go.Scatter(
+            x=chart_df["year"],
+            y=chart_df["observed"],
+            mode="lines+markers",
+            name=f"Observed annual {v_name}",
+            line=dict(color=BRAND_GREEN, width=2),
+            marker=dict(size=7, color=BRAND_GREEN),
+        ))
+        # OLS Trend line
+        fig.add_trace(go.Scatter(
+            x=chart_df["year"],
+            y=chart_df["trend_fitted"],
+            mode="lines",
+            name=f"Linear trend ({trend.change_per_decade:+.2f} {v_unit}/decade)",
+            line=dict(color=ACCENT_RED, width=2.5, dash="dash"),
+        ))
+        # Baseline mean horizontal segment
+        if trend.baseline_mean is not None:
+            base_end_yr = int(trend.baseline_period.split("–")[-1])
+            fig.add_trace(go.Scatter(
+                x=[trend.start_year, base_end_yr],
+                y=[trend.baseline_mean, trend.baseline_mean],
+                mode="lines",
+                name=f"Baseline mean ({trend.baseline_period}): {trend.baseline_mean:.2f} {v_unit}",
+                line=dict(color=ACCENT_BLUE, width=1.5, dash="dot"),
+            ))
+        # Recent mean horizontal segment
+        if trend.recent_mean is not None:
+            rec_start_yr = int(trend.recent_period.split("–")[0])
+            fig.add_trace(go.Scatter(
+                x=[rec_start_yr, trend.end_year],
+                y=[trend.recent_mean, trend.recent_mean],
+                mode="lines",
+                name=f"Recent mean ({trend.recent_period}): {trend.recent_mean:.2f} {v_unit}",
+                line=dict(color=ACCENT_AMBER, width=1.5, dash="dot"),
+            ))
+
+        fig.update_layout(
+            title=f"Historical {season_def.name} {v_name} ({trend.start_year}–{trend.end_year})",
+            xaxis_title="Year",
+            yaxis_title=f"{v_name} ({v_unit})",
+            template="plotly_white",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown(f"**Methodology notes:** {trend.method_notes}")
+
+    # 5. Underlying Annual Data Inspector
+    with st.expander("📋 Inspect underlying annual season data & anomalies"):
+        if trend.annual_data:
+            summary_table_df = pd.DataFrame(trend.annual_data)
+            st.dataframe(
+                summary_table_df.style.format({
+                    "observed": "{:.2f}",
+                    "trend_fitted": "{:.2f}",
+                    "anomaly_from_mean": "{:+.2f}",
+                }),
+                use_container_width=True,
+            )
+
+    # 6. Scientific Boundary Disclosures
+    st.info(
+        "🛡️ **Scientific & Interpretive Boundaries:**\n"
+        "- **Descriptive, not causal:** Observed meteorological warming or rainfall trends describe historical atmospheric conditions. They do not prove that crop yield, farm profits, or soil health changed proportionally.\n"
+        "- **No linear extrapolation:** Historical trends represent past observations and must not be extrapolated linearly as future climate forecasts.\n"
+        "- **Gridded resolution:** NASA POWER observations are derived from NASA GEOS/MERRA-2 gridded models (~0.5° latitude × 0.625° longitude), not direct on-farm microclimate sensors."
+    )
+
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("⬅️ Back to climate insights", use_container_width=True):
+            _go("Climate Insights")
+    with col_btn2:
+        if st.button("➡️ Continue to farmer priorities", type="primary", use_container_width=True):
+            _go("Farmer Priorities")
+
     _footer()
 
 
@@ -1255,6 +1531,7 @@ The simplified soil-state module (Feature E) uses published FAO/IPCC relationshi
     st.subheader("Documented methods")
     st.markdown(
         "- `docs/NASA_POWER_DATA.md` — API parameters, units, resolution, quality handling, limitations.\n"
+        "- `docs/CLIMATE_TRENDS_METHODOLOGY.md` — growing-season aggregations, OLS trend regression, baseline comparisons, and disclosures.\n"
         "- `docs/ROTATION_ENGINE.md` — rule checks, scoring and safeguards.\n"
         "- `docs/AGRONOMIC_ASSUMPTIONS.md` — catalogue evidence and items requiring expert review.\n"
         "- `docs/SCENARIOS_AND_UNCERTAINTY.md` — scenario definitions, transforms, and uncertainty categories.\n"
@@ -1284,10 +1561,11 @@ def render_application() -> None:
         PAGES[0]: render_home,
         PAGES[1]: render_farm_profile,
         PAGES[2]: render_climate,
-        PAGES[3]: render_priorities,
-        PAGES[4]: render_recommendations,
-        PAGES[5]: render_scenarios,
-        PAGES[6]: render_comparison,
-        PAGES[7]: render_methods,
+        PAGES[3]: render_climate_trends,
+        PAGES[4]: render_priorities,
+        PAGES[5]: render_recommendations,
+        PAGES[6]: render_scenarios,
+        PAGES[7]: render_comparison,
+        PAGES[8]: render_methods,
     }
     dispatch[st.session_state["page"]]()

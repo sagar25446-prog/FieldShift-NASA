@@ -42,9 +42,9 @@ POWER parameters are based on satellite-derived solar radiation and meteorologic
 - **Selected-range precipitation total:** sum of available `PRECTOTCORR` daily values, reported in mm and warned when days are missing.
 - **Monthly temperature summary:** mean `T2M`, minimum `T2M_MIN`, and maximum `T2M_MAX` by calendar month.
 - **Historical anomaly:** current indicator minus the mean of a caller-supplied, same-definition historical baseline. The baseline label and values are required; the code does not select one silently.
-- **Consecutive dry periods:** contiguous days at or below a caller-declared `dry_day_max_mm`. This is an analytical definition, not a crop threshold; missing dates end a run.
+- **Historical Climate Trends:** Ordinary Least Squares (OLS) multi-year linear trends, decadal rates of change, statistical significance ($p$-values), baseline comparisons, and consecutive dry-spell runs across regional Kharif, Rabi, and Summer crop windows.
 
-See [`docs/WATER_BALANCE_METHODOLOGY.md`](WATER_BALANCE_METHODOLOGY.md) for water balance formulas and [`docs/CLIMATE_SUITABILITY_METHODOLOGY.md`](CLIMATE_SUITABILITY_METHODOLOGY.md) for thermal suitability equations.
+See [`docs/WATER_BALANCE_METHODOLOGY.md`](WATER_BALANCE_METHODOLOGY.md) for water balance formulas, [`docs/CLIMATE_SUITABILITY_METHODOLOGY.md`](CLIMATE_SUITABILITY_METHODOLOGY.md) for thermal suitability equations, and [`docs/CLIMATE_TRENDS_METHODOLOGY.md`](CLIMATE_TRENDS_METHODOLOGY.md) for long-term climate trend statistics.
 
 ## Error, retry and cache policy
 

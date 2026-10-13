@@ -12,8 +12,9 @@ It combines **farmer-provided information**, historical **NASA POWER climate con
 
 - 🧑‍🌾 **Farm Profile** — Enter location, soil conditions, water budget, and rotation history
 - 🌤️ **NASA POWER Climate Data** — Retrieve real historical daily climate data (no API key needed)
-- ⚖️ **Farmer Priorities** — Set and adjust weights for water, soil, diversity objectives
-- 🔄 **Rotation Engine** — Source-linked, deterministic crop-rotation alternatives
+- 📈 **Historical Climate Trends** — Multi-decadal OLS trend regression, decadal change rates, statistical significance ($p$-values), baseline comparisons, and consecutive dry-spell runs across regional growing seasons
+- ⚖️ **Farmer Priorities** — Set and adjust weights for water, climate, soil, diversity objectives
+- 🔄 **Rotation Engine** — Source-linked, deterministic crop-rotation alternatives powered by FAO-56 and EcoCrop
 - 🧪 **Scenario Stress Tests** — Compare rotations under dry, hot, and reduced-water scenarios
 - 📊 **Pareto Comparison** — Multi-objective comparison with trade-off transparency
 - 🌱 **Soil-State Estimates** — Simplified N-balance and SOC direction using FAO/IPCC equations
@@ -29,9 +30,9 @@ It combines **farmer-provided information**, historical **NASA POWER climate con
 ┌─────────────────────────────────────────────────────────────┐
 │                    app.py (entry point)                      │
 │                         ↓                                    │
-│                  ui.py (8 pages)                             │
+│                  ui.py (9 pages)                             │
 │          ↙        ↓         ↓        ↘                      │
-│   nasa_power.py  rotation_engine.py  scenarios.py            │
+│   nasa_power.py  rotation_engine.py  climate_trends.py       │
 │        ↓              ↓                 ↓                    │
 │   NASA POWER    crops.json +      soil_nutrient_model.py     │
 │   Daily API     rotation_rules.json                          │
