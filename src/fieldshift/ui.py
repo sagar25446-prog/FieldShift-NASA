@@ -472,7 +472,11 @@ def render_farm_profile() -> None:
             field_size = st.text_input("Field size (ha; optional)", value="" if farm["field_size_ha"] is None else str(farm["field_size_ha"]), key="farm_size")
             previous = st.selectbox("Previous crop (if known)", ("Unknown", *[labels[x] for x in sorted(labels)]), index=0 if not farm["previous_crop_id"] else 1 + sorted(labels).index(farm["previous_crop_id"]), key="farm_previous")
         with j:
-            season = st.selectbox("First planning season", ("kharif", "rabi", "zaid"), index=("kharif", "rabi", "zaid").index(farm["start_season"]), key="farm_season")
+            _season_options = {"Kharif": "kharif", "Rabi": "rabi", "Summer (zaid)": "summer"}
+            _season_reverse = {v: k for k, v in _season_options.items()}
+            _season_display = _season_reverse.get(farm["start_season"], "Kharif")
+            _season_label = st.selectbox("First planning season", tuple(_season_options.keys()), index=list(_season_options.keys()).index(_season_display), key="farm_season")
+            season = _season_options[_season_label]
             blocked_names = st.multiselect("Avoid crops (farmer/pest reason)", options=[labels[x] for x in sorted(labels)], default=[labels[x] for x in farm["blocked_crop_ids"]], key="block_crops")
         submitted = st.form_submit_button("💾 Save farm profile", type="primary")
 
