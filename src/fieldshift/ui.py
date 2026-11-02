@@ -422,138 +422,13 @@ def _load_ludhiana_example() -> None:
 # ────────────────────────────────── theme ──────────────────────────────────
 
 def _theme() -> None:
-    """Apply FieldShift's custom CSS for a polished agricultural look."""
+    """Add only small layout refinements; colours and type live in config.toml."""
     st.markdown("""
     <style>
-    /* ── Global ── */
-    .stApp {
-        background: linear-gradient(180deg, #f0f7f0 0%, #ffffff 30%);
-    }
-
-    /* ── Sidebar ── */
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #1b5e20 0%, #2e7d32 100%);
-        color: white;
-    }
-    section[data-testid="stSidebar"] .stMarkdown,
-    section[data-testid="stSidebar"] label,
-    section[data-testid="stSidebar"] .stRadio label span {
-        color: white !important;
-    }
-    section[data-testid="stSidebar"] .stRadio div[role="radiogroup"] label[data-selected="true"] {
-        background-color: rgba(255,255,255,0.18) !important;
-        border-radius: 8px;
-    }
-    section[data-testid="stSidebar"] hr {
-        border-color: rgba(255,255,255,0.2);
-    }
-
-    /* ── Cards ── */
-    div[data-testid="stExpander"] {
-        background: white;
-        border: 1px solid #c8e6c9;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        margin-bottom: 12px;
-    }
-    div.stContainer[data-testid="stVerticalBlockBorderWrapper"] {
-        border-radius: 12px !important;
-    }
-
-    /* ── Metrics ── */
-    div[data-testid="stMetric"] {
-        background: white;
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 12px 16px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    }
-    div[data-testid="stMetric"] label {
-        font-size: 0.8rem !important;
-        color: #616161 !important;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
-        font-size: 1.6rem !important;
-        font-weight: 700 !important;
-        color: #2e7d32 !important;
-    }
-
-    /* ── Buttons ── */
-    button[kind="primary"] {
-        background: linear-gradient(135deg, #2e7d32, #43a047) !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        transition: transform 0.15s ease, box-shadow 0.15s ease !important;
-    }
-    button[kind="primary"]:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(46,125,50,0.3) !important;
-    }
-
-    /* ── Headers ── */
-    h1 {
-        color: #1b5e20 !important;
-        font-weight: 800 !important;
-    }
-    h2, h3 {
-        color: #2e7d32 !important;
-    }
-
-    /* ── DataFrames ── */
-    .stDataFrame {
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    /* ── Tabs ── */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 4px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 8px 8px 0 0;
-        font-weight: 600;
-    }
-
-    /* ── Info boxes ── */
-    div[data-testid="stAlert"] {
-        border-radius: 10px !important;
-    }
-
-    /* ── Footer ── */
-    .fieldshift-footer {
-        text-align: center;
-        padding: 2rem 0 1rem;
-        color: #9e9e9e;
-        font-size: 0.8rem;
-        border-top: 1px solid #e0e0e0;
-        margin-top: 3rem;
-    }
-
-    /* ── Mobile Layout Optimization ── */
-    @media (max-width: 768px) {
-        .stApp {
-            padding: 0.25rem !important;
-        }
-        div[data-testid="stMetric"] {
-            padding: 8px 12px !important;
-            margin-bottom: 8px !important;
-        }
-        div[data-testid="stMetric"] div[data-testid="stMetricValue"] {
-            font-size: 1.3rem !important;
-        }
-        div[data-testid="column"] {
-            width: 100% !important;
-            flex: 1 1 100% !important;
-            min-width: 100% !important;
-            margin-bottom: 12px !important;
-        }
-        .stButton button {
-            width: 100% !important;
-        }
-    }
+    .block-container { max-width: 1240px; padding-top: 2.25rem; padding-bottom: 3rem; }
+    .fieldshift-footer { text-align: center; padding: 2rem 0 0.5rem; color: var(--text-color); opacity: .68; font-size: .85rem; }
+    [data-testid="stMetric"] { padding: .65rem 0; }
+    [data-testid="stSidebar"] [data-testid="stAlert"] { background: rgba(255,255,255,.08); }
     </style>
     """, unsafe_allow_html=True)
 
@@ -562,153 +437,139 @@ def _theme() -> None:
 
 def _sidebar() -> None:
     with st.sidebar:
-        st.markdown("### 🌾 FieldShift")
-        st.caption("A transparent crop-rotation planning prototype")
-        st.divider()
-
-        st.markdown("**🌍 Agro-Ecological Region**")
-        region_options = {
-            "punjab": "🇮🇳 Punjab, India (Indo-Gangetic)",
-            "us_corn_belt": "🇺🇸 US Corn Belt (Iowa, USA)",
-            "mediterranean": "🇪🇸 Mediterranean (Spain)",
-            "semi_arid_tropics": "🇮🇳 Semi-Arid Tropics (Deccan)",
-        }
-        curr_region = st.session_state.get("selected_region_id", "punjab")
-        selected_region = st.selectbox(
-            "Active Region",
-            options=list(region_options.keys()),
-            format_func=lambda k: region_options[k],
-            index=list(region_options.keys()).index(curr_region) if curr_region in region_options else 0,
-            key="sidebar_region_select",
-            label_visibility="collapsed",
-        )
-        if selected_region != curr_region:
-            st.session_state["selected_region_id"] = selected_region
-            reg_def = get_region(selected_region)
-            st.session_state["farm"]["latitude"] = reg_def.latitude
-            st.session_state["farm"]["longitude"] = reg_def.longitude
-            st.session_state["farm"]["start_season"] = reg_def.default_start_season
-            for sk, sv in reg_def.soil_defaults.items():
-                st.session_state["farm"][sk] = sv
-            st.toast(f"Switched region to {reg_def.name}", icon="🌍")
-            st.rerun()
-
-        st.markdown("**🌐 Language / ਭਾਸ਼ਾ / भाषा**")
-        ui_languages = ["English", "ਪੰਜਾਬੀ (Punjabi)", "हिंदी (Hindi)"]
-        current_lang = st.session_state.get("ui_language", "English")
-        selected_lang = st.selectbox(
-            "Interface Language",
-            options=ui_languages,
-            index=ui_languages.index(current_lang) if current_lang in ui_languages else 0,
-            key="sidebar_language_select",
-            label_visibility="collapsed",
-        )
-        if selected_lang != current_lang:
-            st.session_state["ui_language"] = selected_lang
-            st.rerun()
-
-        st.divider()
+        st.title("FieldShift", icon=":material/agriculture:")
+        st.caption("Crop-rotation decisions with transparent NASA data context")
         current = st.session_state["page"]
-        page_icons = {
-            "Home / Overview": "🏠",
-            "Farm Profile": "🧑‍🌾",
-            "Climate Insights": "🌤️",
-            "Climate Trends": "📈",
-            "Farmer Priorities": "⚖️",
-            "Rotation Recommendations": "🔄",
-            "Hypothetical stress tests": "🧪",
-            "Future climate (NASA CMIP6)": "🌍",
-            "Comparison View": "📊",
-            "Data and Methods": "📖",
-            "Pitch & Presentation": "🏆",
+        main_pages = ("Home / Overview", "Farm Profile", "Climate Insights", "Farmer Priorities", "Rotation Recommendations")
+        research_pages = tuple(page for page in PAGES if page not in main_pages)
+        labels = {
+            "Home / Overview": "Home",
+            "Farm Profile": "1. Farm profile",
+            "Climate Insights": "2. Climate context",
+            "Farmer Priorities": "3. Your priorities",
+            "Rotation Recommendations": "4. Rotation options",
         }
-        selected = st.radio(
-            "Navigate",
-            PAGES,
-            index=PAGES.index(current),
-            format_func=lambda p: f"{page_icons.get(p, '•')} {p}",
+        st.markdown("**Plan your rotation**")
+        main_selected = st.radio(
+            "Primary workflow",
+            main_pages,
+            index=main_pages.index(current) if current in main_pages else 0,
+            format_func=lambda page: labels[page],
+            label_visibility="collapsed",
+            key="primary_navigation",
         )
-        if selected != current:
-            st.session_state["page"] = selected
-            st.rerun()
-        st.divider()
+        if current in main_pages and main_selected != current:
+            _go(main_selected)
+
+        with st.expander("Explore data & research tools", expanded=current in research_pages):
+            research_selected = st.selectbox(
+                "Research tools",
+                ("Choose a tool", *research_pages),
+                index=(1 + research_pages.index(current)) if current in research_pages else 0,
+                label_visibility="collapsed",
+                key="research_navigation",
+            )
+            if research_selected != "Choose a tool" and research_selected != current:
+                _go(research_selected)
+
+        with st.expander("Region & language", expanded=False):
+            region_options = {
+                "punjab": "Punjab, India (Indo-Gangetic)",
+                "us_corn_belt": "US Corn Belt (Iowa, USA)",
+                "mediterranean": "Mediterranean (Spain)",
+                "semi_arid_tropics": "Semi-Arid Tropics (Deccan)",
+            }
+            curr_region = st.session_state.get("selected_region_id", "punjab")
+            selected_region = st.selectbox("Active region", options=list(region_options), format_func=lambda key: region_options[key], index=list(region_options).index(curr_region) if curr_region in region_options else 0, key="sidebar_region_select")
+            if selected_region != curr_region:
+                st.session_state["selected_region_id"] = selected_region
+                reg_def = get_region(selected_region)
+                st.session_state["farm"].update({"latitude": reg_def.latitude, "longitude": reg_def.longitude, "start_season": reg_def.default_start_season})
+                st.session_state["farm"].update(reg_def.soil_defaults)
+                st.toast(f"Region changed to {reg_def.name}. Review farm values before using plans.", icon=":material/location_on:")
+                st.rerun()
+            ui_languages = ["English", "ਪੰਜਾਬੀ (Punjabi)", "हिंदी (Hindi)"]
+            current_lang = st.session_state.get("ui_language", "English")
+            selected_lang = st.selectbox("Interface language", ui_languages, index=ui_languages.index(current_lang) if current_lang in ui_languages else 0, key="sidebar_language_select")
+            if selected_lang != current_lang:
+                st.session_state["ui_language"] = selected_lang
+                st.rerun()
+
         if _farm_is_ready():
             farm = st.session_state["farm"]
-            st.success(f"📍 Farm: {farm['latitude']:.4f}, {farm['longitude']:.4f}")
+            st.badge(f"Farm: {farm['latitude']:.4f}, {farm['longitude']:.4f}", icon=":material/location_on:", color="green")
             if st.session_state.get("power_dataset"):
                 mode = st.session_state.get("power_mode", "live")
                 if mode == "offline_snapshot":
-                    st.info("📦 Mode: Offline snapshot")
+                    st.caption("Climate context: saved NASA snapshot")
                 else:
-                    st.success("🌐 Mode: Live NASA API")
+                    st.caption("Climate context: live NASA POWER")
             else:
-                st.caption("🌤️ Climate data: Not retrieved")
+                st.caption("Climate context: not retrieved")
         else:
-            st.info("No farm location saved yet.")
-        if st.button("🔄 Reset farm profile", use_container_width=True):
+            st.caption("No farm location saved yet.")
+        if st.button("Reset workspace", icon=":material/restart_alt:", width="stretch"):
             _reset()
 
 
 # ─────────────────────────────── page renderers ────────────────────────────
 
 def render_home() -> None:
-    st.title("🌾 FieldShift")
-    st.markdown("#### Plan resilient crop rotations with evidence and transparency")
+    st.title("Plan rotations with evidence", icon=":material/agriculture:")
+    st.subheader("Turn farm information and NASA climate context into transparent crop-rotation choices.")
     st.warning(
-        "**Decision-support prototype** — not a guarantee of crop yield, income, "
-        "pest control, or soil improvement. Confirm choices with local agronomic "
-        "advice and soil or laboratory evidence.",
-        icon="⚠️",
+        "Decision-support prototype — not a guarantee of crop yield, income, pest control, or soil improvement. Confirm choices with local agronomic advice and soil or laboratory evidence.",
+        icon=":material/warning:",
     )
 
-    col1, col2 = st.columns((2, 1), gap="large")
-    with col1:
-        st.markdown(
-            "FieldShift combines **farmer-provided information**, historical "
-            "**NASA POWER climate context**, and a source-linked crop catalogue. "
-            "It compares documented crop sequences; it does not predict yields "
-            "or invent unknown soil values."
-        )
-        st.markdown("##### ✨ What you can do")
-        st.markdown("""
-- 🧑‍🌾 **Enter your farm profile** — location, soil, water budget
-- 🌤️ **Retrieve real NASA POWER climate data** — no API key needed
-- ⚖️ **Set your priorities** — water, soil, diversity
-- 🔄 **Generate rotation alternatives** — source-linked, transparent
-- 🧪 **Stress-test under scenarios** — dry, hot, reduced water
-- 📊 **Compare plans** — Pareto analysis, trade-offs visible
-- 🌱 **Soil-state estimates** — simplified N-balance and SOC direction
-        """)
-        if st.button("🚀 Start planning", type="primary", use_container_width=True):
+    intro, demo = st.columns((3, 2), gap="large")
+    with intro:
+        st.markdown("FieldShift brings together **farmer-entered information**, historical **NASA POWER climate context**, and a source-linked crop catalogue. It compares documented choices, explains each check, and keeps missing evidence visible.")
+        if st.button("Set up my farm", type="primary", icon=":material/arrow_forward:"):
             _go("Farm Profile")
-
-    with col2:
+        st.caption("New here? Start with your location, soil information and water context. You can leave values unknown.")
+    with demo:
         with st.container(border=True):
-            st.markdown("##### 🌟 Live Judging Quick-Start")
-            st.write("**Ludhiana demonstration preset**")
-            st.caption("Pre-configured illustrative farm with a saved, unmodified 2024 NASA POWER response.")
-            if st.button("🚀 Load demo & view plans", type="primary", use_container_width=True):
+            st.markdown("**See the full workflow**", help="Loads clearly labelled illustrative—not farmer—inputs.")
+            st.write("Ludhiana demonstration preset")
+            st.caption("Illustrative profile with a saved, unmodified NASA POWER 2024 response. No API call is needed.")
+            if st.button("Open demonstration", type="primary", icon=":material/play_circle:", width="stretch"):
                 _load_complete_demo_workflow(with_cached_climate=True)
                 _go("Rotation Recommendations")
-            if st.button("▶️ Load demo farm profile", use_container_width=True):
+            if st.button("Review demo inputs first", icon=":material/visibility:", width="stretch"):
                 _load_complete_demo_workflow(with_cached_climate=True)
                 _go("Farm Profile")
 
-    st.divider()
-    st.markdown("#### 📡 Data readiness")
-    cols = st.columns(3)
+    st.header("Your simple planning path", icon=":material/route:")
+    steps = st.columns(4, gap="medium")
+    step_cards = (
+        ("1", "Describe your farm", "Location, soil, water and past crops.", "Farm Profile", ":material/agriculture:"),
+        ("2", "Check climate context", "Retrieve or inspect NASA POWER history.", "Climate Insights", ":material/cloudy:"),
+        ("3", "Choose what matters", "Set water, soil, diversity and economics priorities.", "Farmer Priorities", ":material/tune:"),
+        ("4", "Compare options", "Review checks, trade-offs and stress tests.", "Rotation Recommendations", ":material/compare_arrows:"),
+    )
+    for column, (number, title, description, destination, icon) in zip(steps, step_cards):
+        with column:
+            with st.container(border=True):
+                st.badge(f"Step {number}", color="blue")
+                st.markdown(f"**{title}**")
+                st.caption(description)
+                if st.button("Open", key=f"home_{destination}", icon=icon, width="stretch"):
+                    _go(destination)
+
+    st.header("Data readiness", icon=":material/dataset:")
+    cols = st.columns(3, gap="medium")
     for i, status in enumerate(source_statuses()):
         with cols[i]:
             with st.container(border=True):
-                icon = "✅" if status.available else "⏳"
-                st.markdown(f"**{icon} {status.name}**")
+                st.badge("Ready" if status.available else "Not connected", color="green" if status.available else "orange")
+                st.markdown(f"**{status.name}**")
                 st.caption(status.message)
     st.caption(
-        "Also used: NASA MODIS land-cover dynamics (observed cropping seasons), NASA NEX-GDDP-CMIP6 climate projections "
-        "(demo farm grid cell) and optional ISRIC SoilGrids estimates. GPM IMERG and SMAP are not integrated (see docs/DATA_SOURCES.md)."
+        "Explore data and research tools in the sidebar for climate trends, scenario stress tests, future climate projections, and methods. Optional datasets are never silently substituted for farm measurements."
     )
 
-    with st.expander("🛰️ Comprehensive NASA Earth Observation Suite: GRACE, FIRMS, SMAP, GPM & MODIS", expanded=False):
+    with st.expander("NASA Earth-observation context", icon=":material/satellite_alt:"):
         sat_t1, sat_t2, sat_t3, sat_t4, sat_t5 = st.tabs([
             "🌊 GRACE (Aquifers)",
             "🔥 FIRMS (Fires)",
@@ -764,7 +625,7 @@ def render_home() -> None:
 
 
 def render_farm_profile() -> None:
-    st.title("🧑‍🌾 Farm profile")
+    st.title("Farm profile", icon=":material/agriculture:")
     st.caption("Enter what you know. Leave a value unknown if it has not been measured; the planner will explain the effect.")
 
     col_demo_a, col_demo_b = st.columns(2)
@@ -1259,7 +1120,7 @@ def _climate_provenance(dataset: PowerDataset) -> None:
 
 
 def render_climate() -> None:
-    st.title("🌤️ Climate insights")
+    st.title("Climate context", icon=":material/cloudy:")
     if not _farm_is_ready():
         st.info("Save a farm location and historical date range before making a NASA POWER request.")
         if st.button("Set up farm profile"):
@@ -1336,7 +1197,7 @@ def render_climate() -> None:
 
 
 def render_climate_trends() -> None:
-    st.title("📈 Historical climate trends")
+    st.title("Historical climate trends", icon=":material/monitoring:")
     st.caption(
         "Empirical long-term growing-season climate trends derived from NASA POWER daily observations. "
         "Calculates rates of change per decade, statistical significance, and shifts against historical baselines."
@@ -1580,7 +1441,7 @@ def render_climate_trends() -> None:
 
 
 def render_priorities() -> None:
-    st.title("⚖️ Farmer priorities")
+    st.title("Your priorities", icon=":material/tune:")
     st.caption("Weights describe what matters most for comparing plans. They are normalized to sum to one and are not probabilities of success.")
 
     profiles = _weight_profiles()
@@ -2076,7 +1937,7 @@ def _render_soil_state_tab(plan: Any) -> None:
 
 
 def render_recommendations() -> None:
-    st.title("🔄 Rotation recommendations")
+    st.title("Rotation options", icon=":material/autorenew:")
     if not _farm_is_ready():
         st.info("Save a farm profile before generating source-linked rotations.")
         _footer()
@@ -2158,7 +2019,7 @@ def render_recommendations() -> None:
 
 
 def render_scenarios() -> None:
-    st.title("🧪 Hypothetical stress tests")
+    st.title("Hypothetical stress tests", icon=":material/science:")
     st.info(
         "This page applies **simple what-if changes you choose** (less rain, hotter days, less irrigation water) to the "
         "observed NASA POWER record. These are not NASA climate projections; projections are on the "
@@ -2340,7 +2201,8 @@ def _plan_projection(plan: Any, extract: ProjectionExtract) -> Any:
 
 
 def render_future_climate() -> None:
-    st.title("🌍 Future climate projections (NASA NEX-GDDP-CMIP6)")
+    st.title("Future climate projections", icon=":material/public:")
+    st.caption("NASA NEX-GDDP-CMIP6 context")
     st.warning(
         "**Climate projections are not weather forecasts.** Each projection describes a plausible 20-year climate under an "
         "emissions pathway, as simulated by one climate model. Models disagree, so FieldShift shows the middle value "
@@ -2472,7 +2334,7 @@ def render_future_climate() -> None:
 
 
 def render_comparison() -> None:
-    st.title("📊 Compare alternatives")
+    st.title("Compare alternatives", icon=":material/compare_arrows:")
     result = _plans()
     if not result or not result.plans:
         st.info("Set up a valid farm profile and generate alternatives first.")
@@ -2610,7 +2472,7 @@ def render_comparison() -> None:
 
 
 def render_methods() -> None:
-    st.title("📖 Data and methods")
+    st.title("Data and methods", icon=":material/menu_book:")
     st.warning("FieldShift is an explainable decision-support prototype. It does not measure soil chemistry from space, forecast weather, predict profit/yield, or guarantee soil improvement.")
 
     st.subheader("Information types")
@@ -2687,7 +2549,7 @@ The simplified soil-state module (Feature E) uses published FAO/IPCC relationshi
 
 
 def render_pitch_deck() -> None:
-    st.title("🏆 Pitch & Competition Presentation")
+    st.title("Pitch and competition presentation", icon=":material/emoji_events:")
     st.caption("NASA International Space Apps Challenge — Presentation Deck & Demonstration Video Script")
 
     tab_deck, tab_video, tab_expert = st.tabs([

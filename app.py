@@ -15,7 +15,12 @@ from fieldshift.ui import render_application  # noqa: E402
 
 def main() -> None:
     """Render the guided FieldShift planning workflow."""
-    st.set_page_config(page_title="FieldShift", page_icon="🌾", layout="wide", initial_sidebar_state="expanded")
+    st.set_page_config(
+        page_title="FieldShift | Farm planning",
+        page_icon=":material/agriculture:",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
     render_application()
 
 
