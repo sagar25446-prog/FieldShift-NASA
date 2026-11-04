@@ -14,15 +14,13 @@ It combines **farmer-provided field data**, **6 core NASA Earth Observation sate
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://fieldshift-nasa.streamlit.app)
 
-**Live Demo URL:** [https://fieldshift-nasa.streamlit.app](https://fieldshift-nasa.streamlit.app)  
-*(Note: If the application has been idle on Streamlit Community Cloud, please click **"Yes, get this app back up!"** — it will wake within 15–30 seconds).*
+Start on Home and choose a route.
 
-### 🌟 30-Second Demonstration Workflow for Judges:
-1. **Open the Live App:** Load [fieldshift-nasa.streamlit.app](https://fieldshift-nasa.streamlit.app).
-2. **One-Click Demo Farm:** Click **"🌟 Load complete demo farm & cached climate data"** on the home page.
-3. **Explore Multi-Region Switching:** Use the sidebar dropdown to switch between **Punjab (India)**, **US Corn Belt (Iowa)**, **Mediterranean (Spain)**, and **Semi-Arid Tropics (Deccan)**.
-4. **View Recommendations:** Navigate to **"Rotation Recommendations"** to see Pareto-optimal multi-season alternatives, physical water savings vs. continuous rice-wheat (1,000+ mm saved), FAO-56 net irrigation deficits, and 3–5 year multi-year trajectory graphs.
-5. **Print Farmer Summary Card:** Expand **"Export 1-Page Printable Farmer Summary Card"** to see the clean, high-contrast, print-optimized summary ready for field distribution.
+- **Explore your location.** Click or tap the world map, then choose **Open climate insights**. Request NASA POWER history for that point. Zoom in to refine the selection, use the arrow keys on the map, or type precise coordinates in Farm Profile.
+- **Plan a rotation.** Select a green pilot marker, then **Open farm profile**. Soil and water start unknown. Enter what you know, review the climate record, set priorities and choose **Compare plans**. A nearby free selection can use a pilot catalogue when the farmer confirms its growing calendar applies.
+- **Try the demonstration.** Choose **Load demo & view plans** to explore Ludhiana with illustrative farm inputs and its saved 2024 NASA POWER record.
+
+The map runs locally from bundled [Natural Earth 1:110m land outlines](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_land.geojson). The cover image is an illustration. Live climate retrieval requires an internet connection.
 
 ---
 

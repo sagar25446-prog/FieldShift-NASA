@@ -1,30 +1,30 @@
 [theme]
 base = "light"
-primaryColor = "#245B3A"
-backgroundColor = "#F8F7F2"
-secondaryBackgroundColor = "#EDF2EA"
-codeBackgroundColor = "#E5ECE2"
-textColor = "#1E2A23"
-linkColor = "#176B87"
-borderColor = "#D5E0D1"
-font = "DM Sans:https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
-headingFont = "DM Serif Display:https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap"
+primaryColor = "#123F34"
+backgroundColor = "#F3F7F3"
+secondaryBackgroundColor = "#E1ECE4"
+codeBackgroundColor = "#DCE9E0"
+textColor = "#102B24"
+linkColor = "#0D7188"
+borderColor = "#C8D9CE"
+font = "Manrope:https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
+headingFont = "Bricolage Grotesque:https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@10..48,75..100,400..800&display=swap"
 baseFontSize = 16
-headingFontSizes = ["42px", "30px", "23px", "18px", "16px", "14px"]
-headingFontWeights = [400, 400, 500, 600, 600, 600]
-baseRadius = "medium"
-buttonRadius = "medium"
+headingFontSizes = ["48px", "32px", "24px", "18px", "16px", "14px"]
+headingFontWeights = [600, 600, 600, 650, 650, 650]
+baseRadius = "large"
+buttonRadius = "large"
 showWidgetBorder = true
 showSidebarBorder = false
 linkUnderline = false
-chartCategoricalColors = ["#245B3A", "#176B87", "#C57735", "#7867A7", "#B4473F", "#7D9060"]
+chartCategoricalColors = ["#123F34", "#0D7188", "#C66A43", "#7867A7", "#A2BC58", "#C9A043"]
 
 [theme.sidebar]
-backgroundColor = "#173B2A"
-secondaryBackgroundColor = "#214B35"
-textColor = "#F5F4EE"
-primaryColor = "#D3B76B"
-borderColor = "#356148"
+backgroundColor = "#0E3028"
+secondaryBackgroundColor = "#19483A"
+textColor = "#F0F7F2"
+primaryColor = "#B9D66D"
+borderColor = "#315E4E"
 
 [server]
 headless = true

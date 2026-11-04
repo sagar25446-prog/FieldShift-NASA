@@ -92,12 +92,11 @@ from .satellite_context import (
     SMAP_PUNJAB_CONTEXT,
     calculate_water_budget_from_farm_inputs,
 )
+from .world_map import world_picker
 from .regions import (
     REGIONS,
-    RegionDefinition,
-    detect_region_from_coordinates,
     get_region,
-    list_regions,
+    pilot_candidate,
 )
 from .multi_year_simulation import simulate_multi_year_rotation
 from .export_import import (
@@ -119,6 +118,7 @@ from .sensitivity import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / "data"
+HERO_IMAGE_PATH = PROJECT_ROOT / "assets" / "fieldshift-hero.png"
 PAGES = (
     "Home / Overview",
     "Farm Profile",
@@ -265,6 +265,7 @@ def _reset() -> None:
             "soilgrids_estimate", "soilgrids_error",
             "phenology_record", "phenology_error",
             "dry_reduction_pct", "hot_increase_c", "irrigation_reduction_pct",
+            "selected_region_id",
         }:
             del st.session_state[key]
     _init_state()
@@ -356,6 +357,9 @@ def _plans() -> Any:
     """Generate rotation plans from the current farm profile."""
     if not _farm_is_ready():
         return None
+    if st.session_state.get("selected_region_id") not in REGIONS:
+        st.info("This point has climate coverage only. Choose a pilot marker on the Home map to compare rotations with a regional catalogue.")
+        return None
     try:
         profile = _profile_from_state()
         return _rotation_engine().generate(profile)
@@ -374,6 +378,7 @@ def _scenario_definitions() -> tuple[Any, ...]:
 
 def _load_complete_demo_workflow(with_cached_climate: bool = True) -> None:
     """Load complete, verified demonstration workflow (Ludhiana profile + 2024 NASA snapshot)."""
+    st.session_state["selected_region_id"] = "punjab"
     st.session_state["farm"] = {
         **_fresh_farm(),
         "latitude": DEMO_LATITUDE,
@@ -419,18 +424,76 @@ def _load_ludhiana_example() -> None:
     _load_complete_demo_workflow(with_cached_climate=True)
 
 
+def _use_location(latitude: float, longitude: float, region_id: str) -> None:
+    """Start a new field only when the user applies a different location."""
+    farm = st.session_state["farm"]
+    if (latitude, longitude, region_id) == (
+        farm["latitude"], farm["longitude"], st.session_state["selected_region_id"]
+    ):
+        return
+    region = REGIONS.get(region_id)
+    for key in list(st.session_state):
+        if key.startswith(("farm_", "block_")) and key != "farm_atlas":
+            del st.session_state[key]
+    st.session_state["farm"] = {
+        **_fresh_farm(), "latitude": latitude, "longitude": longitude,
+        "start_season": region.default_start_season if region else None,
+        "start_date": farm["start_date"], "end_date": farm["end_date"],
+    }
+    st.session_state["selected_region_id"] = region_id
+    st.session_state.pop("projection_cache", None)
+    for key in ("power_dataset", "power_mode", "power_error", "soilgrids_estimate",
+                "soilgrids_error", "phenology_record", "phenology_error"):
+        st.session_state[key] = None
+
+
 # ────────────────────────────────── theme ──────────────────────────────────
 
 def _theme() -> None:
-    """Add only small layout refinements; colours and type live in config.toml."""
+    """Apply a compact, distinctive visual layer above the Streamlit theme."""
     st.markdown("""
     <style>
-    .block-container { max-width: 1240px; padding-top: 2.25rem; padding-bottom: 3rem; }
-    .fieldshift-footer { text-align: center; padding: 2rem 0 0.5rem; color: var(--text-color); opacity: .68; font-size: .85rem; }
-    [data-testid="stMetric"] { padding: .65rem 0; }
+    .block-container { max-width: 1240px; padding-top: 2.6rem; padding-bottom: 3.5rem; }
+    .fieldshift-footer { text-align: center; padding: 2.25rem 0 .5rem; color: var(--text-color); opacity: .68; font-size: .85rem; }
+    [data-testid="stMetric"] { padding: .7rem 0; }
     [data-testid="stSidebar"] [data-testid="stAlert"] { background: rgba(255,255,255,.08); }
+    [data-testid="stSidebar"] [data-testid="stRadio"] label { border-radius: 12px; }
+    .st-key-primary_navigation [role="radiogroup"] { gap:.1rem; }
+    .st-key-primary_navigation label { padding:.4rem .65rem; margin:0; }
+    .st-key-primary_navigation label:has(input:checked) { background:#284f41; }
+    .st-key-primary_navigation label:hover { background:#244738; }
+    .st-key-atlas_cover { position:relative; isolation:isolate; overflow:hidden; background:#173b30;
+        border-radius:22px; padding:clamp(1.25rem,4vw,3.6rem); }
+    .st-key-atlas_cover [data-testid="stElementContainer"]:has([data-testid="stImage"]) {
+        position:absolute; inset:0; z-index:-1; height:100%; pointer-events:none; }
+    .st-key-atlas_cover [data-testid="stImage"], .st-key-atlas_cover [data-testid="stImage"] img {
+        width:100%; height:100%; object-fit:cover; }
+    .st-key-atlas_cover:after { content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
+        background:linear-gradient(90deg,rgba(6,33,26,.90),rgba(8,40,27,.68) 48%,transparent 85%); }
+    .st-key-atlas_cover h1 { font-size:clamp(2.3rem,5.4vw,4.65rem); line-height:1.03;
+        color:#fff; letter-spacing:-.045em; margin:0 0 .65rem; padding:0; max-width:13ch; text-wrap:balance; }
+    .fieldshift-lead { max-width:40ch; font-size:1.05rem; line-height:1.5; color:#f2f7ed; }
+    .st-key-atlas_cover a { display:inline-block; background:#f1f7d6; color:#153c2f; border-radius:9px;
+        padding:.55rem 1rem; font-weight:700; text-decoration:none; }
+    .st-key-atlas_cover a:focus-visible { outline:3px solid #f7b536; outline-offset:3px; }
+    @media(max-width:650px) {
+      .block-container { padding:2.75rem 1rem 2rem; }
+      .st-key-atlas_cover:after { background:rgba(7,32,24,.68); }
+    }
     </style>
     """, unsafe_allow_html=True)
+
+
+def _open_map_selection(point: dict) -> None:
+    pilot = REGIONS.get(point.get("pilot"))
+    if pilot:
+        _use_location(pilot.latitude, pilot.longitude, pilot.id)
+        _go("Farm Profile")
+    lat, lon = float(point["lat"]), float(point["lon"])
+    if -90 <= lat <= 90 and -180 <= lon <= 180:
+        _use_location(lat, lon, "global")
+        _go("Climate Insights")
+
 
 
 # ────────────────────────────────── sidebar ─────────────────────────────────
@@ -440,7 +503,7 @@ def _sidebar() -> None:
         st.title("FieldShift", icon=":material/agriculture:")
         st.caption("Crop-rotation decisions with transparent NASA data context")
         current = st.session_state["page"]
-        main_pages = ("Home / Overview", "Farm Profile", "Climate Insights", "Farmer Priorities", "Rotation Recommendations")
+        main_pages = ("Home / Overview", "Farm Profile", "Climate Insights", "Farmer Priorities", "Rotation Recommendations", "Comparison View")
         research_pages = tuple(page for page in PAGES if page not in main_pages)
         labels = {
             "Home / Overview": "Home",
@@ -448,29 +511,30 @@ def _sidebar() -> None:
             "Climate Insights": "2. Climate context",
             "Farmer Priorities": "3. Your priorities",
             "Rotation Recommendations": "4. Rotation options",
+            "Comparison View": "5. Compare plans",
         }
         st.markdown("**Plan your rotation**")
-        main_selected = st.radio(
+        st.session_state["primary_navigation"] = current if current in main_pages else None
+        st.radio(
             "Primary workflow",
             main_pages,
-            index=main_pages.index(current) if current in main_pages else 0,
+            index=None,
             format_func=lambda page: labels[page],
             label_visibility="collapsed",
             key="primary_navigation",
+            on_change=lambda: st.session_state.update(page=st.session_state.primary_navigation),
         )
-        if current in main_pages and main_selected != current:
-            _go(main_selected)
 
         with st.expander("Explore data & research tools", expanded=current in research_pages):
-            research_selected = st.selectbox(
+            st.session_state["research_navigation"] = current if current in research_pages else "Choose a tool"
+            st.selectbox(
                 "Research tools",
                 ("Choose a tool", *research_pages),
-                index=(1 + research_pages.index(current)) if current in research_pages else 0,
                 label_visibility="collapsed",
                 key="research_navigation",
+                on_change=lambda: st.session_state.update(page=st.session_state.research_navigation)
+                if st.session_state.research_navigation in research_pages else None,
             )
-            if research_selected != "Choose a tool" and research_selected != current:
-                _go(research_selected)
 
         with st.expander("Region & language", expanded=False):
             region_options = {
@@ -480,14 +544,13 @@ def _sidebar() -> None:
                 "semi_arid_tropics": "Semi-Arid Tropics (Deccan)",
             }
             curr_region = st.session_state.get("selected_region_id", "punjab")
-            selected_region = st.selectbox("Active region", options=list(region_options), format_func=lambda key: region_options[key], index=list(region_options).index(curr_region) if curr_region in region_options else 0, key="sidebar_region_select")
-            if selected_region != curr_region:
-                st.session_state["selected_region_id"] = selected_region
-                reg_def = get_region(selected_region)
-                st.session_state["farm"].update({"latitude": reg_def.latitude, "longitude": reg_def.longitude, "start_season": reg_def.default_start_season})
-                st.session_state["farm"].update(reg_def.soil_defaults)
-                st.toast(f"Region changed to {reg_def.name}. Review farm values before using plans.", icon=":material/location_on:")
-                st.rerun()
+            st.session_state["sidebar_region_select"] = curr_region if curr_region in REGIONS else None
+            def switch_pilot() -> None:
+                pilot = REGIONS[st.session_state.sidebar_region_select]
+                _use_location(pilot.latitude, pilot.longitude, pilot.id)
+            st.selectbox("Pilot catalogue", options=list(region_options), format_func=region_options.get,
+                         index=None, placeholder="Global climate location", key="sidebar_region_select",
+                         on_change=switch_pilot)
             ui_languages = ["English", "ਪੰਜਾਬੀ (Punjabi)", "हिंदी (Hindi)"]
             current_lang = st.session_state.get("ui_language", "English")
             selected_lang = st.selectbox("Interface language", ui_languages, index=ui_languages.index(current_lang) if current_lang in ui_languages else 0, key="sidebar_language_select")
@@ -515,32 +578,40 @@ def _sidebar() -> None:
 # ─────────────────────────────── page renderers ────────────────────────────
 
 def render_home() -> None:
-    st.title("Plan rotations with evidence", icon=":material/agriculture:")
-    st.subheader("Turn farm information and NASA climate context into transparent crop-rotation choices.")
-    st.warning(
-        "Decision-support prototype — not a guarantee of crop yield, income, pest control, or soil improvement. Confirm choices with local agronomic advice and soil or laboratory evidence.",
-        icon=":material/warning:",
-    )
+    with st.container(key="atlas_cover"):
+        if HERO_IMAGE_PATH.is_file():
+            st.image(HERO_IMAGE_PATH, width="stretch", alt="")
+        st.html("""
+            <h1>What will you grow next?</h1>
+            <p class="fieldshift-lead">Find your field, explore its climate history and compare crops for the seasons ahead.</p>
+            <a href="#field-atlas" target="_self">Find my field ↓</a>
+        """)
 
-    intro, demo = st.columns((3, 2), gap="large")
-    with intro:
-        st.markdown("FieldShift brings together **farmer-entered information**, historical **NASA POWER climate context**, and a source-linked crop catalogue. It compares documented choices, explains each check, and keeps missing evidence visible.")
-        if st.button("Set up my farm", type="primary", icon=":material/arrow_forward:"):
-            _go("Farm Profile")
-        st.caption("New here? Start with your location, soil information and water context. You can leave values unknown.")
-    with demo:
+    st.header("Field atlas", anchor="field-atlas")
+    st.write("Tap the map to explore the climate at a location. The four green markers also open a regional crop planner.")
+    atlas, guide = st.columns((2.35, 1), gap="medium")
+    with atlas:
+        if _farm_is_ready():
+            st.caption("Opening a different location starts a fresh field. Your current field stays active while you explore.")
+        point = world_picker()
+        if point:
+            _open_map_selection(point)
+        st.caption("Map outlines by Natural Earth. Refine the location in Farm Profile for a precise NASA request.")
+    with guide:
         with st.container(border=True):
-            st.markdown("**See the full workflow**", help="Loads clearly labelled illustrative—not farmer—inputs.")
-            st.write("Ludhiana demonstration preset")
-            st.caption("Illustrative profile with a saved, unmodified NASA POWER 2024 response. No API call is needed.")
-            if st.button("Open demonstration", type="primary", icon=":material/play_circle:", width="stretch"):
+            st.subheader("Try a farm in Punjab")
+            st.write("Walk through a Ludhiana example using a saved year of NASA climate data and illustrative soil and water inputs.")
+            if st.button("Load demo & view plans", type="primary", icon=":material/play_arrow:", width="stretch"):
                 _load_complete_demo_workflow(with_cached_climate=True)
                 _go("Rotation Recommendations")
-            if st.button("Review demo inputs first", icon=":material/visibility:", width="stretch"):
+            if st.button("Review demo inputs first", icon=":material/list_alt:", width="stretch"):
                 _load_complete_demo_workflow(with_cached_climate=True)
                 _go("Farm Profile")
+        if st.button("Enter farm coordinates", icon=":material/edit_location_alt:", width="stretch"):
+            _go("Farm Profile")
 
-    st.header("Your simple planning path", icon=":material/route:")
+    st.info("Decision-support prototype. Crop yield, income and soil improvement are not guaranteed. Review plans with a local adviser.", icon=":material/info:")
+    st.header("Plan a rotation")
     steps = st.columns(4, gap="medium")
     step_cards = (
         ("1", "Describe your farm", "Location, soil, water and past crops.", "Farm Profile", ":material/agriculture:"),
@@ -628,22 +699,24 @@ def render_farm_profile() -> None:
     st.title("Farm profile", icon=":material/agriculture:")
     st.caption("Enter what you know. Leave a value unknown if it has not been measured; the planner will explain the effect.")
 
-    col_demo_a, col_demo_b = st.columns(2)
-    with col_demo_a:
-        if st.button("🌟 Load complete demo farm & cached climate data", type="primary", use_container_width=True):
-            _load_complete_demo_workflow(with_cached_climate=True)
-            st.rerun()
-    with col_demo_b:
-        if st.button("▶️ Load demo farm inputs only", use_container_width=True):
-            _load_complete_demo_workflow(with_cached_climate=False)
-            st.rerun()
-    st.caption("The demonstration profile is an illustrative benchmark (Ludhiana, Punjab) — replace every value with farm or laboratory evidence before real-world use.")
+    with st.expander("Use the Ludhiana example", icon=":material/play_circle:"):
+        st.caption("This replaces the current field with illustrative farm inputs. You can include the saved 2024 climate record.")
+        col_demo_a, col_demo_b = st.columns(2)
+        with col_demo_a:
+            if st.button("Load example with climate", width="stretch"):
+                _load_complete_demo_workflow(with_cached_climate=True)
+                st.rerun()
+        with col_demo_b:
+            if st.button("Load example inputs only", width="stretch"):
+                _load_complete_demo_workflow(with_cached_climate=False)
+                st.rerun()
 
     farm = st.session_state["farm"]
-    crops = _rotation_engine().crops
+    active_reg = REGIONS.get(st.session_state["selected_region_id"])
+    crops = _rotation_engine().crops if active_reg else {}
     labels = {crop_id: crop["name"] for crop_id, crop in crops.items()}
 
-    with st.expander("🧮 Water Budget Helper: Estimate from Tubewell & Canal Turns (for farmers)", expanded=False):
+    with st.expander("Estimate my irrigation budget", icon=":material/water_drop:"):
         st.markdown(
             "Converts local irrigation practices (tubewell motor HP, weekly pumping hours, canal water turns) "
             "into an equivalent seasonal crop-water budget in mm."
@@ -676,7 +749,7 @@ def render_farm_profile() -> None:
             )
             st.rerun()
 
-    with st.expander("💾 Farm Profile Persistence (Export & Import JSON)", expanded=False):
+    with st.expander("Save or restore a farm profile", icon=":material/folder_open:"):
         exp_col, imp_col = st.columns(2)
         with exp_col:
             st.markdown("##### ⬇️ Save Current Profile")
@@ -694,12 +767,16 @@ def render_farm_profile() -> None:
             st.markdown("##### ⬆️ Restore Saved Profile")
             st.caption("Upload a previously saved FieldShift farm profile to restore your state.")
             uploaded_json = st.file_uploader("Upload JSON Profile", type=["json"], key="profile_json_upload")
-            if uploaded_json is not None:
+            if uploaded_json is not None and st.button("Restore this profile"):
                 try:
                     raw_str = uploaded_json.read().decode("utf-8")
                     imported_dict = import_farm_profile_from_json(raw_str)
-                    st.session_state["selected_region_id"] = imported_dict["region_id"]
-                    st.session_state["farm"] = imported_dict["farm"]
+                    restored = imported_dict["farm"]
+                    region_id = imported_dict["region_id"]
+                    if region_id not in REGIONS:
+                        region_id = "global"
+                    _use_location(restored["latitude"], restored["longitude"], region_id)
+                    st.session_state["farm"] = {**_fresh_farm(), **restored}
                     st.session_state["weights"] = imported_dict["weights"]
                     st.session_state["planning_horizon"] = imported_dict["planning_horizon"]
                     st.success("✅ Profile successfully restored!")
@@ -707,7 +784,7 @@ def render_farm_profile() -> None:
                 except Exception as ex:
                     st.error(f"Could not load profile: {ex}")
 
-    with st.expander("📜 Soil Health Card (SHC) Quick Entry (for Indian farmers)", expanded=False):
+    with st.expander("Enter an Indian Soil Health Card", icon=":material/lab_profile:"):
         st.markdown(
             "Indian farmers holding a Government of India **Soil Health Card (SHC)** can enter laboratory card results directly. "
             "Values populate the form and map to physical units automatically."
@@ -736,8 +813,8 @@ def render_farm_profile() -> None:
     with st.form("farm_profile"):
         st.subheader("📍 Location and climate request")
         if farm["latitude"] is not None and farm["longitude"] is not None:
-            detected_reg = detect_region_from_coordinates(farm["latitude"], farm["longitude"])
-            st.caption(f"🌍 Detected Agro-Ecological Archetype: **{detected_reg.name}** ({detected_reg.climate_zone})")
+            st.caption(f"Regional planning catalogue: {active_reg.name}" if active_reg else
+                       "Global climate location. Historical climate is available at these coordinates.")
 
         a, b = st.columns(2)
         with a:
@@ -792,10 +869,8 @@ def render_farm_profile() -> None:
             field_size = st.text_input("Field size (ha; optional)", value="" if farm["field_size_ha"] is None else str(farm["field_size_ha"]), key="farm_size")
             previous = st.selectbox("Previous crop (if known)", ("Unknown", *[labels[x] for x in sorted(labels)]), index=0 if not farm["previous_crop_id"] else 1 + sorted(labels).index(farm["previous_crop_id"]), key="farm_previous")
         with j:
-            active_reg = get_region(st.session_state.get("selected_region_id", "punjab"))
-            _season_options = {active_reg.season_display_names.get(s, s.capitalize()): s for s in active_reg.season_cycle}
-            if not _season_options:
-                _season_options = {"Kharif": "kharif", "Rabi": "rabi", "Summer (zaid)": "summer"}
+            _season_options = ({label: season for season, label in active_reg.season_display_names.items()}
+                               if active_reg else {"Climate only": None})
             _season_reverse = {v: k for k, v in _season_options.items()}
             _default_display = _season_reverse.get(farm["start_season"], list(_season_options.keys())[0])
             _season_label = st.selectbox("First planning season", tuple(_season_options.keys()), index=list(_season_options.keys()).index(_default_display), key="farm_season")
@@ -815,6 +890,10 @@ def render_farm_profile() -> None:
                 raise ValueError("Soil values, water budget, and field size cannot be negative.")
             reverse = {name: crop_id for crop_id, name in labels.items()}
             if (farm["latitude"], farm["longitude"]) != (lat, lon):
+                candidate = pilot_candidate(lat, lon)
+                if active_reg != candidate:
+                    st.session_state["selected_region_id"] = "global"
+                    previous, blocked_names, season = "Unknown", [], None
                 # An estimate belongs to the coordinates it was retrieved for.
                 st.session_state["soilgrids_estimate"] = None
                 st.session_state["soilgrids_error"] = None
@@ -1090,7 +1169,7 @@ def _climate_provenance(dataset: PowerDataset) -> None:
     else:
         st.success(
             f"🌐 **Mode: Live NASA POWER API Data**\n\n"
-            f"Retrieved at **{p.retrieved_at_utc} UTC** · Location: **{p.latitude_requested:.4f}°N, {p.longitude_requested:.4f}°E** · "
+            f"Retrieved at **{p.retrieved_at_utc} UTC** · Latitude **{p.latitude_requested:.4f}°**, longitude **{p.longitude_requested:.4f}°** · "
             f"Date range: **{p.start_date} to {p.end_date}** ({len(dataset.data)} daily observations)."
         )
     st.caption("Retrieved values are gridded NASA POWER context, not direct field or soil measurements, and not a future forecast.")
@@ -1103,7 +1182,7 @@ def _climate_provenance(dataset: PowerDataset) -> None:
                 _request_climate(force_refresh=True)
                 st.rerun()
         else:
-            if st.button("📦 Switch to Offline Snapshot", use_container_width=True):
+            if _demo_request_matches() and st.button("📦 Switch to Offline Snapshot", width="stretch"):
                 st.session_state["power_dataset"] = load_offline_demo_snapshot()
                 st.session_state["power_mode"] = "offline_snapshot"
                 st.session_state["power_error"] = None
@@ -1119,6 +1198,13 @@ def _climate_provenance(dataset: PowerDataset) -> None:
         })
 
 
+def _demo_request_matches() -> bool:
+    farm = st.session_state["farm"]
+    return (farm["latitude"], farm["longitude"], farm["start_date"], farm["end_date"]) == (
+        DEMO_LATITUDE, DEMO_LONGITUDE, date(2024, 1, 1), date(2024, 12, 31)
+    )
+
+
 def render_climate() -> None:
     st.title("Climate context", icon=":material/cloudy:")
     if not _farm_is_ready():
@@ -1128,6 +1214,14 @@ def render_climate() -> None:
         return
     farm = st.session_state["farm"]
     st.caption(f"Request: {farm['latitude']:.4f}, {farm['longitude']:.4f}; {farm['start_date']} to {farm['end_date']}. No NASA API key is used.")
+    if st.session_state["selected_region_id"] == "global":
+        nearby = pilot_candidate(farm["latitude"], farm["longitude"])
+        if nearby:
+            st.write(f"FieldShift has a catalogue for **{nearby.name}**. Use it only if your farm follows that region’s growing calendar.")
+            if st.button("My farm uses this calendar", icon=":material/agriculture:"):
+                st.session_state["selected_region_id"] = nearby.id
+                farm["start_season"] = nearby.default_start_season
+                _go("Farm Profile")
     left, right = st.columns(2)
     with left:
         if st.button("☁️ Retrieve NASA POWER data", type="primary", use_container_width=True):
@@ -1137,16 +1231,11 @@ def render_climate() -> None:
             _request_climate(force_refresh=True)
     if st.session_state["power_error"]:
         st.error(f"⚠️ NASA POWER live request failed: {st.session_state['power_error']}")
-        st.warning("NASA POWER is currently unreachable or slow. You can load the saved 2024 NASA POWER response for the demonstration farm to continue.")
-        if st.button("📦 Load Saved Offline Snapshot for Ludhiana", type="primary", use_container_width=True):
-            st.session_state["power_dataset"] = load_offline_demo_snapshot()
-            st.session_state["power_mode"] = "offline_snapshot"
-            st.session_state["power_error"] = None
-            st.rerun()
+        st.caption("Retry the request above, or adjust the historical dates in Farm Profile.")
     dataset: PowerDataset | None = st.session_state["power_dataset"]
     if not dataset:
-        st.info("No climate dataset is currently active. Retrieve live data above or load the saved offline snapshot.")
-        if st.button("📦 Load saved NASA POWER response (2024, demo farm)"):
+        st.info("Retrieve the historical NASA POWER record for the selected location above.")
+        if _demo_request_matches() and st.button("📦 Load saved NASA POWER response (2024, demo farm)"):
             st.session_state["power_dataset"] = load_offline_demo_snapshot()
             st.session_state["power_mode"] = "offline_snapshot"
             st.session_state["power_error"] = None
@@ -1191,7 +1280,7 @@ def render_climate() -> None:
             _go("Climate Trends")
     with st.expander("📋 Retrieved daily values and missing observations"):
         st.dataframe(frame, use_container_width=True)
-    if st.button("➡️ Continue to priorities", type="primary"):
+    if st.session_state["selected_region_id"] in REGIONS and st.button("➡️ Continue to priorities", type="primary"):
         _go("Farmer Priorities")
     _footer()
 
@@ -1502,10 +1591,16 @@ def _status_icon(status: str) -> str:
 
 def _render_economics_tab(plan: Any) -> None:
     """Render indicative economics based on GoI MSP and PAU benchmark costs."""
+    if st.session_state["selected_region_id"] != "punjab" or plan.water_balance is None:
+        st.info("The Punjab economic comparison requires a Punjab farm and its calculated water balance.")
+        return
     crops_dict = _rotation_engine().crops
     plan_crops = [crops_dict[cid] for cid in plan.crop_ids]
     wb = getattr(plan, "water_balance", None)
-    net_irr = wb.total_net_irrigation_mm if wb is not None and getattr(wb, "total_net_irrigation_mm", None) is not None else 600.0
+    net_irr = wb.total_net_irrigation_mm
+    if net_irr is None:
+        st.info("Irrigation demand is unknown for this rotation.")
+        return
     rot_econ = compute_rotation_economics(plan_crops, plan.seasons, net_irrigation_mm=net_irr)
     baseline_comp = compare_vs_rice_wheat_baseline(plan_crops, plan.seasons, net_irr)
 
@@ -1936,36 +2031,9 @@ def _render_soil_state_tab(plan: Any) -> None:
             st.write(f"- {lim}")
 
 
-def render_recommendations() -> None:
-    st.title("Rotation options", icon=":material/autorenew:")
-    if not _farm_is_ready():
-        st.info("Save a farm profile before generating source-linked rotations.")
-        _footer()
-        return
-    if not st.session_state["power_dataset"]:
-        st.warning("No real NASA POWER request is attached yet. The engine can still check catalogue and farmer-input rules, but climate context is absent. Retrieve it in Climate Insights for the complete intended workflow.")
-
-    result = _plans()
-    if not result:
-        _footer()
-        return
-    st.write(result.message)
-    if not result.plans:
-        st.error("No valid documented rotation can be generated with these inputs.")
-        for item in result.exclusions[:12]:
-            st.write(f"- {_status_icon(item.status)} {item.message}")
-        st.info("Review the selected starting season, previous crop, crop avoidance list, known hard soil constraints, water budget, and supported relationship coverage.")
-        _footer()
-        return
-
-    st.success(f"🎉 {len(result.plans)} engine-generated alternative(s) shown below.")
-
-    # ── Top Alternative vs Conventional Rice-Wheat Baseline ──
-    top_plan = result.plans[0]
+def _render_punjab_benchmark(top_plan: Any, top_irr: float) -> None:
     crops_dict = _rotation_engine().crops
     top_crops = [crops_dict[cid] for cid in top_plan.crop_ids]
-    wb = getattr(top_plan, "water_balance", None)
-    top_irr = wb.total_net_irrigation_mm if wb is not None and getattr(wb, "total_net_irrigation_mm", None) is not None else 600.0
     baseline_comp = compare_vs_rice_wheat_baseline(top_crops, top_plan.seasons, top_irr)
     top_econ = compute_rotation_economics(top_crops, top_plan.seasons, top_irr)
     with st.container(border=True):
@@ -1992,7 +2060,7 @@ def render_recommendations() -> None:
             plan_seasons=top_plan.seasons,
             water_saved_mm=baseline_comp.water_saved_mm,
             water_saved_m3_ha=baseline_comp.water_saved_m3_per_ha,
-            gross_margin_text=f"₹{top_econ.total_margin_inr_ha:,.0f}/ha" if top_econ.total_margin_inr_ha is not None else "Positive",
+            gross_margin_text=f"₹{top_econ.total_margin_inr_ha:,.0f}/ha" if top_econ.total_margin_inr_ha is not None else "Unavailable",
             composite_score=top_plan.composite_score,
             region_name=reg.name,
         )
@@ -2004,6 +2072,39 @@ def render_recommendations() -> None:
             use_container_width=True,
         )
         st.components.v1.html(card_html, height=450, scrolling=True)
+
+
+def render_recommendations() -> None:
+    st.title("Rotation options", icon=":material/autorenew:")
+    if not _farm_is_ready():
+        st.info("Save a farm profile before generating source-linked rotations.")
+        _footer()
+        return
+    if not st.session_state["power_dataset"]:
+        st.warning("No real NASA POWER request is attached yet. The engine can still check catalogue and farmer-input rules, but climate context is absent. Retrieve it in Climate Insights for the complete intended workflow.")
+
+    result = _plans()
+    if not result:
+        _footer()
+        return
+    st.write(result.message)
+    if not result.plans:
+        st.error("No valid documented rotation can be generated with these inputs.")
+        for item in result.exclusions[:12]:
+            st.write(f"- {_status_icon(item.status)} {item.message}")
+        st.info("Review the selected starting season, previous crop, crop avoidance list, known hard soil constraints, water budget, and supported relationship coverage.")
+        _footer()
+        return
+
+    st.success(f"🎉 {len(result.plans)} engine-generated alternative(s) shown below.")
+
+    if st.session_state["selected_region_id"] == "punjab":
+        top_plan = result.plans[0]
+        wb = top_plan.water_balance
+        if wb is not None and wb.total_net_irrigation_mm is not None:
+            _render_punjab_benchmark(top_plan, wb.total_net_irrigation_mm)
+        else:
+            st.caption("Retrieve climate data to compare irrigation demand with the Punjab rice–wheat benchmark.")
 
     for index, plan in enumerate(result.plans, 1):
         _plan_view(plan, index)

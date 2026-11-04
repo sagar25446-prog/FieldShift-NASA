@@ -19,7 +19,7 @@ def main() -> None:
         page_title="FieldShift | Farm planning",
         page_icon=":material/agriculture:",
         layout="wide",
-        initial_sidebar_state="expanded",
+        initial_sidebar_state="auto",
     )
     render_application()
 

@@ -239,11 +239,8 @@ def get_region(region_id: str) -> RegionDefinition:
     return REGIONS.get(region_id, REGIONS["punjab"])
 
 
-def detect_region_from_coordinates(latitude: float, longitude: float) -> RegionDefinition:
-    """Infer the most representative agricultural archetype from global coordinates.
-
-    Uses geographic bounding heuristics first, then spherical distance to region centers.
-    """
+def pilot_candidate(latitude: float, longitude: float) -> RegionDefinition | None:
+    """Broad search windows for offering a catalogue for farmer confirmation."""
     # North America: temperate corn belt archetype
     if 24.0 <= latitude <= 52.0 and -130.0 <= longitude <= -65.0:
         return REGIONS["us_corn_belt"]
@@ -259,8 +256,14 @@ def detect_region_from_coordinates(latitude: float, longitude: float) -> RegionD
     # Peninsular India / Semi-arid tropics:
     if 8.0 <= latitude <= 25.0 and 70.0 <= longitude <= 85.0:
         return REGIONS["semi_arid_tropics"]
+    return None
 
-    # Fallback: Spherical distance to regional archetypes
+
+def detect_region_from_coordinates(latitude: float, longitude: float) -> RegionDefinition:
+    """Legacy archetype lookup. A nearest archetype does not establish coverage."""
+    candidate = pilot_candidate(latitude, longitude)
+    if candidate:
+        return candidate
     def _distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         # Haversine approximation
         phi1, phi2 = math.radians(lat1), math.radians(lat2)

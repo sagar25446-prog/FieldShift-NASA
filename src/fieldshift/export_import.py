@@ -85,7 +85,7 @@ def import_farm_profile_from_json(json_content: str) -> dict[str, Any]:
         "farm": {
             "latitude": float(lat) if lat is not None else None,
             "longitude": float(lon) if lon is not None else None,
-            "texture": str(farm_in.get("texture", "medium")),
+            "texture": farm_in.get("texture") or None,
             "ph": float(ph) if ph is not None else None,
             "organic_carbon_percent": float(farm_in["organic_carbon_percent"]) if farm_in.get("organic_carbon_percent") is not None else None,
             "electrical_conductivity_ds_m": float(farm_in["electrical_conductivity_ds_m"]) if farm_in.get("electrical_conductivity_ds_m") is not None else None,
@@ -96,7 +96,7 @@ def import_farm_profile_from_json(json_content: str) -> dict[str, Any]:
             "soil_basis": str(farm_in.get("soil_basis", "imported")),
             "irrigation": str(farm_in.get("irrigation", "Irrigated")),
             "water_budget_mm": float(wb) if wb is not None else None,
-            "field_size_ha": float(farm_in.get("field_size_ha", 2.5)),
+            "field_size_ha": float(farm_in["field_size_ha"]) if farm_in.get("field_size_ha") is not None else None,
             "start_season": str(farm_in.get("start_season", "kharif")),
             "previous_crop_id": farm_in.get("previous_crop_id"),
             "blocked_crop_ids": list(farm_in.get("blocked_crop_ids", [])),
