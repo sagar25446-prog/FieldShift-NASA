@@ -12,7 +12,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from .climate_features import FeatureValidationError, seasonal_precipitation_total, temperature_summary
+from .climate_features import FeatureValidationError, consecutive_dry_periods, seasonal_precipitation_total, temperature_summary
 from .climate_trends import (
     REGIONAL_SEASONS,
     SeasonDefinition,
@@ -93,6 +93,8 @@ from .satellite_context import (
     calculate_water_budget_from_farm_inputs,
 )
 from .world_map import world_picker
+from . import global_calendar as atlas_calendar
+from . import calendar_workspace
 from .regions import (
     REGIONS,
     get_region,
@@ -265,7 +267,8 @@ def _reset() -> None:
             "soilgrids_estimate", "soilgrids_error",
             "phenology_record", "phenology_error",
             "dry_reduction_pct", "hot_increase_c", "irrigation_reduction_pct",
-            "selected_region_id",
+            "selected_region_id", "atlas_inspection", "atlas_climate", "atlas_error", "atlas_request",
+            "farmer_calendars", "calendar_preferences",
         }:
             del st.session_state[key]
     _init_state()
@@ -358,7 +361,7 @@ def _plans() -> Any:
     if not _farm_is_ready():
         return None
     if st.session_state.get("selected_region_id") not in REGIONS:
-        st.info("This point has climate coverage only. Choose a pilot marker on the Home map to compare rotations with a regional catalogue.")
+        st.info("This tool uses pilot agronomy rules. Open Rotations to explore historical crop calendars for this field.")
         return None
     try:
         profile = _profile_from_state()
@@ -456,12 +459,15 @@ def _theme() -> None:
     .block-container { max-width: 1240px; padding-top: 2.6rem; padding-bottom: 3.5rem; }
     .fieldshift-footer { text-align: center; padding: 2.25rem 0 .5rem; color: var(--text-color); opacity: .68; font-size: .85rem; }
     [data-testid="stMetric"] { padding: .7rem 0; }
-    [data-testid="stSidebar"] [data-testid="stAlert"] { background: rgba(255,255,255,.08); }
-    [data-testid="stSidebar"] [data-testid="stRadio"] label { border-radius: 12px; }
-    .st-key-primary_navigation [role="radiogroup"] { gap:.1rem; }
-    .st-key-primary_navigation label { padding:.4rem .65rem; margin:0; }
-    .st-key-primary_navigation label:has(input:checked) { background:#284f41; }
-    .st-key-primary_navigation label:hover { background:#244738; }
+    .st-key-masthead { justify-content:space-between; border-bottom:1px solid #bdd1c4;
+        padding:.3rem 0 .8rem; margin-bottom:.45rem; flex-wrap:nowrap; }
+    .fs-brand { display:flex; align-items:center; gap:.52rem; font-size:1.45rem;
+        font-weight:800; letter-spacing:-.06em; color:#163f30; }
+    .st-key-top_routes { padding:.18rem; border-radius:18px; background:#e3ede3; }
+    .st-key-top_routes button { padding:.35rem .88rem; border-radius:14px; min-height:40px; }
+    .st-key-top_routes button:focus-visible { outline:3px solid #99621f; }
+    .st-key-location_brief { background:#e9f1e8; border-radius:16px; padding:1.1rem; }
+    @media(max-width:940px) { .st-key-top_routes { display:none !important; } }
     .st-key-atlas_cover { position:relative; isolation:isolate; overflow:hidden; background:#173b30;
         border-radius:22px; padding:clamp(1.25rem,4vw,3.6rem); }
     .st-key-atlas_cover [data-testid="stElementContainer"]:has([data-testid="stImage"]) {
@@ -486,96 +492,102 @@ def _theme() -> None:
 
 def _open_map_selection(point: dict) -> None:
     pilot = REGIONS.get(point.get("pilot"))
-    if pilot:
-        _use_location(pilot.latitude, pilot.longitude, pilot.id)
-        _go("Farm Profile")
-    lat, lon = float(point["lat"]), float(point["lon"])
+    lat, lon = (pilot.latitude, pilot.longitude) if pilot else (float(point["lat"]), float(point["lon"]))
     if -90 <= lat <= 90 and -180 <= lon <= 180:
-        _use_location(lat, lon, "global")
-        _go("Climate Insights")
+        _use_location(lat, lon, pilot.id if pilot else "global")
+        dataset = st.session_state.get("atlas_climate")
+        farm = st.session_state["farm"]
+        if dataset:
+            p = dataset.provenance
+            if (p.latitude_requested, p.longitude_requested, p.start_date, p.end_date) == (
+                lat, lon, str(farm["start_date"]), str(farm["end_date"])
+            ):
+                st.session_state.update(power_dataset=dataset, power_mode="live", power_error=None)
+        _go("Farm Profile" if pilot else "Rotation Recommendations")
 
 
 
 # ────────────────────────────────── sidebar ─────────────────────────────────
 
-def _sidebar() -> None:
-    with st.sidebar:
-        st.title("FieldShift", icon=":material/agriculture:")
-        st.caption("Crop-rotation decisions with transparent NASA data context")
-        current = st.session_state["page"]
-        main_pages = ("Home / Overview", "Farm Profile", "Climate Insights", "Farmer Priorities", "Rotation Recommendations", "Comparison View")
-        research_pages = tuple(page for page in PAGES if page not in main_pages)
-        labels = {
-            "Home / Overview": "Home",
-            "Farm Profile": "1. Farm profile",
-            "Climate Insights": "2. Climate context",
-            "Farmer Priorities": "3. Your priorities",
-            "Rotation Recommendations": "4. Rotation options",
-            "Comparison View": "5. Compare plans",
-        }
-        st.markdown("**Plan your rotation**")
-        st.session_state["primary_navigation"] = current if current in main_pages else None
-        st.radio(
-            "Primary workflow",
-            main_pages,
-            index=None,
-            format_func=lambda page: labels[page],
-            label_visibility="collapsed",
-            key="primary_navigation",
-            on_change=lambda: st.session_state.update(page=st.session_state.primary_navigation),
-        )
-
-        with st.expander("Explore data & research tools", expanded=current in research_pages):
-            st.session_state["research_navigation"] = current if current in research_pages else "Choose a tool"
-            st.selectbox(
-                "Research tools",
-                ("Choose a tool", *research_pages),
-                label_visibility="collapsed",
-                key="research_navigation",
-                on_change=lambda: st.session_state.update(page=st.session_state.research_navigation)
-                if st.session_state.research_navigation in research_pages else None,
-            )
-
-        with st.expander("Region & language", expanded=False):
-            region_options = {
-                "punjab": "Punjab, India (Indo-Gangetic)",
-                "us_corn_belt": "US Corn Belt (Iowa, USA)",
-                "mediterranean": "Mediterranean (Spain)",
-                "semi_arid_tropics": "Semi-Arid Tropics (Deccan)",
-            }
-            curr_region = st.session_state.get("selected_region_id", "punjab")
-            st.session_state["sidebar_region_select"] = curr_region if curr_region in REGIONS else None
-            def switch_pilot() -> None:
-                pilot = REGIONS[st.session_state.sidebar_region_select]
+def _navigation() -> None:
+    current = st.session_state["page"]
+    primary = {"Home / Overview":"Atlas", "Farm Profile":"My field", "Climate Insights":"Climate",
+               "Farmer Priorities":"Priorities", "Rotation Recommendations":"Rotations", "Comparison View":"Compare"}
+    with st.container(key="masthead", horizontal=True, vertical_alignment="center", gap="small"):
+        st.html("""<div class="fs-brand"><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="9" fill="#244d3d"/><path d="m5 17 10-9 12 3-10 9z
+            M5 21l12 3 10-9 M5 25l12 3 10-9" fill="none" stroke="#cce2a8" stroke-width="1.8"
+            stroke-linejoin="round"/></svg><span>FieldShift</span></div>""", width="content")
+        with st.container(key="top_routes", horizontal=True, wrap=False, width="content", gap=None):
+            for page, label in primary.items():
+                if st.button(label, key=f"nav_{page}", type="primary" if current == page else "tertiary"):
+                    _go(page)
+        with st.popover("Menu", icon=":material/menu:", key="field_menu"):
+            st.caption("Go to a page")
+            st.selectbox("Pages", PAGES, index=PAGES.index(current), placeholder="Find a page",
+                         key=f"jump_{current}", format_func=lambda p: primary.get(p, p),
+                         on_change=lambda: st.session_state.update(page=st.session_state[f"jump_{current}"]))
+            st.divider()
+            if _farm_is_ready():
+                farm = st.session_state["farm"]
+                st.caption(f"Active field · {farm['latitude']:.4f}°, {farm['longitude']:.4f}°")
+            catalogue = st.selectbox("Open a pilot farm", tuple(REGIONS), index=None,
+                                     format_func=lambda k: REGIONS[k].name, key="menu_catalogue")
+            if catalogue and st.button("Use this pilot", icon=":material/location_on:"):
+                pilot = REGIONS[catalogue]
                 _use_location(pilot.latitude, pilot.longitude, pilot.id)
-            st.selectbox("Pilot catalogue", options=list(region_options), format_func=region_options.get,
-                         index=None, placeholder="Global climate location", key="sidebar_region_select",
-                         on_change=switch_pilot)
-            ui_languages = ["English", "ਪੰਜਾਬੀ (Punjabi)", "हिंदी (Hindi)"]
-            current_lang = st.session_state.get("ui_language", "English")
-            selected_lang = st.selectbox("Interface language", ui_languages, index=ui_languages.index(current_lang) if current_lang in ui_languages else 0, key="sidebar_language_select")
-            if selected_lang != current_lang:
-                st.session_state["ui_language"] = selected_lang
-                st.rerun()
+                _go("Farm Profile")
+            if st.button("Reset workspace", icon=":material/restart_alt:"):
+                _reset()
+                _go("Home / Overview")
 
-        if _farm_is_ready():
-            farm = st.session_state["farm"]
-            st.badge(f"Farm: {farm['latitude']:.4f}, {farm['longitude']:.4f}", icon=":material/location_on:", color="green")
-            if st.session_state.get("power_dataset"):
-                mode = st.session_state.get("power_mode", "live")
-                if mode == "offline_snapshot":
-                    st.caption("Climate context: saved NASA snapshot")
-                else:
-                    st.caption("Climate context: live NASA POWER")
-            else:
-                st.caption("Climate context: not retrieved")
-        else:
-            st.caption("No farm location saved yet.")
-        if st.button("Reset workspace", icon=":material/restart_alt:", width="stretch"):
-            _reset()
 
 
 # ─────────────────────────────── page renderers ────────────────────────────
+
+def _location_brief(point: dict) -> None:
+    latitude, longitude = point["lat"], point["lon"]
+    farm = st.session_state["farm"]
+    request = PowerRequest(latitude, longitude, farm["start_date"], farm["end_date"])
+    calendars = atlas_calendar.at_point(latitude, longitude)
+    with st.container(key="location_brief"):
+        st.subheader("Location report", anchor=False)
+        st.write(f"{abs(latitude):.3f}° {'S' if latitude < 0 else 'N'}  ·  "
+                 f"{abs(longitude):.3f}° {'W' if longitude < 0 else 'E'}")
+        if calendars:
+            first = ", ".join(c.name for c in calendars[:4])
+            more = f" and {len(calendars)-4} more" if len(calendars) > 4 else ""
+            st.write(f"**Recorded crop calendars** · {first}{more}")
+            example = calendars[0]
+            st.caption(f"{example.name} · typical planting in {atlas_calendar.month_name(example.plant)}, harvest in {atlas_calendar.month_name(example.harvest)}.")
+        else:
+            st.write("The global atlas has no crop calendar for this grid cell.")
+        st.caption(f"NASA POWER · {request.start_date} to {request.end_date}")
+        retry = bool(st.session_state.get("atlas_error")) and st.button("Retry location weather")
+        if st.session_state.get("atlas_request") != request or retry:
+            st.session_state.update(atlas_request=request, atlas_climate=None, atlas_error=None)
+            with st.spinner("Reading this location’s climate history…"):
+                try:
+                    st.session_state.atlas_climate = _power_client().fetch_daily(request, force_refresh=retry)
+                except PowerError as error:
+                    st.session_state.atlas_error = str(error)
+                    st.rerun()
+        if st.session_state.get("atlas_error"):
+            st.warning(st.session_state.atlas_error)
+        dataset = st.session_state.get("atlas_climate")
+        if dataset:
+            frame = dataset.data
+            rain, temp = frame["PRECTOTCORR"].dropna(), frame["T2M"].dropna()
+            runs = consecutive_dry_periods(frame, 1.0)
+            longest = int(runs["days"].max()) if not runs.empty else 0
+            st.metric("Recorded rainfall", f"{rain.sum():.0f} mm" if len(rain) else "Unknown")
+            st.write(f"Mean temperature **{temp.mean():.1f} °C**" if len(temp) else "Mean temperature unknown")
+            if len(rain):
+                st.write(f"Longest observed dry spell **{longest} days**")
+            st.caption(f"Calculated over {len(frame)} days with {len(rain)} rainfall and {len(temp)} temperature values. "
+                       "Dry spells count consecutive days with at most 1 mm. Missing days break the count.")
+            st.markdown(f"[NASA request]({dataset.provenance.source_url}) · [Crop calendar source]({atlas_calendar.SOURCE})")
+
 
 def render_home() -> None:
     with st.container(key="atlas_cover"):
@@ -588,15 +600,19 @@ def render_home() -> None:
         """)
 
     st.header("Field atlas", anchor="field-atlas")
-    st.write("Tap the map to explore the climate at a location. The four green markers also open a regional crop planner.")
+    st.write("Tap a location to see its rainfall, temperature and recorded crop calendars. Green markers open the four regional planners.")
     atlas, guide = st.columns((2.35, 1), gap="medium")
     with atlas:
         if _farm_is_ready():
             st.caption("Opening a different location starts a fresh field. Your current field stays active while you explore.")
-        point = world_picker()
-        if point:
-            _open_map_selection(point)
+        event = world_picker(st.session_state.get("atlas_inspection"))
+        if event.inspected:
+            st.session_state["atlas_inspection"] = dict(event.inspected)
+        if event.chosen:
+            _open_map_selection(event.chosen)
         st.caption("Map outlines by Natural Earth. Refine the location in Farm Profile for a precise NASA request.")
+        if st.session_state.get("atlas_inspection"):
+            _location_brief(st.session_state.atlas_inspection)
     with guide:
         with st.container(border=True):
             st.subheader("Try a farm in Punjab")
@@ -637,7 +653,7 @@ def render_home() -> None:
                 st.markdown(f"**{status.name}**")
                 st.caption(status.message)
     st.caption(
-        "Explore data and research tools in the sidebar for climate trends, scenario stress tests, future climate projections, and methods. Optional datasets are never silently substituted for farm measurements."
+        "Open Menu for climate trends, scenario stress tests, climate projections and methods."
     )
 
     with st.expander("NASA Earth-observation context", icon=":material/satellite_alt:"):
@@ -2752,7 +2768,15 @@ def _footer() -> None:
 def render_application() -> None:
     _init_state()
     _theme()
-    _sidebar()
+    _navigation()
+    page = st.session_state["page"]
+    if (_farm_is_ready() and st.session_state["selected_region_id"] == "global"
+            and page in {"Rotation Recommendations", "Farmer Priorities", "Comparison View"}):
+        destination = calendar_workspace.render(page)
+        if destination:
+            _go(destination)
+        _footer()
+        return
     dispatch = {
         PAGES[0]: render_home,
         PAGES[1]: render_farm_profile,

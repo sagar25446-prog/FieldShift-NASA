@@ -16,11 +16,15 @@ It combines **farmer-provided field data**, **6 core NASA Earth Observation sate
 
 Start on Home and choose a route.
 
-- **Explore your location.** Click or tap the world map, then choose **Open climate insights**. Request NASA POWER history for that point. Zoom in to refine the selection, use the arrow keys on the map, or type precise coordinates in Farm Profile.
+- **Explore your location.** Click or tap the world map, then choose **Explore this location**. FieldShift retrieves NASA POWER climate history and looks up any recorded crop calendars for that grid cell. Zoom in to refine the selection, use the arrow keys on the map, or type precise coordinates in Farm Profile.
 - **Plan a rotation.** Select a green pilot marker, then **Open farm profile**. Soil and water start unknown. Enter what you know, review the climate record, set priorities and choose **Compare plans**. A nearby free selection can use a pilot catalogue when the farmer confirms its growing calendar applies.
 - **Try the demonstration.** Choose **Load demo & view plans** to explore Ludhiana with illustrative farm inputs and its saved 2024 NASA POWER record.
 
 The map runs locally from bundled [Natural Earth 1:110m land outlines](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_land.geojson). The cover image is an illustration. Live climate retrieval requires an internet connection.
+
+### What happens at an arbitrary map point
+
+Any valid latitude and longitude can be explored with NASA POWER; this does not mean every point has a locally validated crop planner. Where a cell has a published record in the **unfilled Sacks et al. crop-calendar atlas**, FieldShift can compare crop sequences by their recorded planting and harvest timing. This is a historical, coarse-grid timing check only. If the cell has no calendar record, users can enter timing from their own records. Neither path establishes crop suitability, pest compatibility, soil fit, yield, or a planting recommendation for that specific field. The global calendar source and its limitations are described in [data provenance](data/README.md).
 
 ---
 

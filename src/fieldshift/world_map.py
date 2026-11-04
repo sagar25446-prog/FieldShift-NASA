@@ -88,10 +88,10 @@ _appearance = dict(
       for (const pilot of data.pilots) list.add(new Option(pilot.label, pilot.id));
       list.onchange = () => {
         const pilot = data.pilots.find(p => p.id === list.value);
-        if (pilot) { select(pilot.lat, pilot.lon, pilot); changeZoom(1); }
+        if (pilot) { select(pilot.lat, pilot.lon, pilot, true); changeZoom(1); }
       };
       let cursor = {lat:0, lon:0};
-      let zoom = 1;
+      let zoom = 720 / svg.viewBox.baseVal.width;
       function changeZoom(factor) {
         zoom = Math.max(1, Math.min(16, zoom * factor));
         const width = 720/zoom, height = 360/zoom;
@@ -108,10 +108,11 @@ _appearance = dict(
         for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
         return node;
       }
-      function select(lat, lon, pilot) {
+      function select(lat, lon, pilot, inspect=false) {
         const point = {lat, lon, pilot:pilot?.id ?? null};
         list.value = point.pilot ?? "";
         cursor = point;
+        svg.fieldPoint = point;
         lock.setAttribute("transform", "translate(" + (lon+180)*2 + " " + (90-lat)*2 + ")");
         lock.setAttribute("visibility", "visible");
         const reticle = lock.querySelector(".reticle");
@@ -122,8 +123,9 @@ _appearance = dict(
           Math.abs(lat).toFixed(4) + "°" + (lat < 0 ? "S" : "N") + "  " +
           Math.abs(lon).toFixed(4) + "°" + (lon < 0 ? "W" : "E");
         button.disabled = false;
-        button.textContent = pilot ? "Open farm profile" : "Open climate insights";
+        button.textContent = pilot ? "Open farm profile" : "Explore this location";
         button.onclick = () => setTriggerValue("chosen", point);
+        if (inspect) setTriggerValue("inspected", point);
       }
       pilots.replaceChildren();
       for (const pilot of data.pilots) {
@@ -136,13 +138,16 @@ _appearance = dict(
         const label = element("text", {class:"name", x:8, y:3});
         label.textContent = pilot.short;
         group.append(label);
-        group.onclick = event => { event.stopPropagation(); select(pilot.lat, pilot.lon, pilot); };
+        group.onclick = event => { event.stopPropagation(); select(pilot.lat, pilot.lon, pilot, true); };
         group.onkeydown = event => { if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault(); select(pilot.lat, pilot.lon, pilot);
+          event.preventDefault(); select(pilot.lat, pilot.lon, pilot, true);
         }};
         pilots.append(group);
       }
       svg.onkeydown = event => {
+        if (event.target === svg && event.key === "Enter") {
+          event.preventDefault(); select(cursor.lat, cursor.lon, null, true); return;
+        }
         if (event.target !== svg || !["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(event.key)) return;
         event.preventDefault();
         const step = 1 / zoom;
@@ -155,14 +160,16 @@ _appearance = dict(
         const point = new DOMPoint(event.clientX,event.clientY).matrixTransform(svg.getScreenCTM().inverse());
         const lat = Math.max(-90, Math.min(90, 90-point.y/2));
         const lon = Math.max(-180, Math.min(180, point.x/2-180));
-        select(+lat.toFixed(4), +lon.toFixed(4), null);
+        select(+lat.toFixed(4), +lon.toFixed(4), null, true);
       };
+      const saved = svg.fieldPoint ?? data.selected;
+      if (saved) select(saved.lat, saved.lon, data.pilots.find(p => p.id === saved.pilot));
     }
     """,
 )
 
 
-def world_picker():
+def world_picker(selected=None):
     # Register in the active runtime, including fresh AppTest sessions.
     picker = st.components.v2.component("fieldshift_world_picker", **_appearance)
     names = {"punjab":"Punjab", "semi_arid_tropics":"Deccan", "us_corn_belt":"Iowa", "mediterranean":"Andalusia"}
@@ -170,5 +177,5 @@ def world_picker():
         {"id": r.id, "label": r.name, "short": names.get(r.id, r.country), "lat": r.latitude, "lon": r.longitude}
         for r in REGIONS.values()
     ]
-    return picker(data={"land": _land_path(), "pilots": pilots}, key="farm_atlas",
-                  on_chosen_change=lambda: None).chosen
+    return picker(data={"land": _land_path(), "pilots": pilots, "selected": selected},
+                  key="farm_atlas", on_chosen_change=lambda: None, on_inspected_change=lambda: None)
