@@ -581,6 +581,9 @@ def _location_brief(point: dict) -> None:
                     st.rerun()
         if st.session_state.get("atlas_error"):
             st.warning(st.session_state.atlas_error)
+            if st.button("Retry NASA POWER", key="atlas_retry", icon=":material/refresh:"):
+                st.session_state["atlas_request"] = None
+                st.rerun()
         dataset = st.session_state.get("atlas_climate")
         if dataset:
             frame = dataset.data
@@ -591,8 +594,46 @@ def _location_brief(point: dict) -> None:
             st.write(f"Mean temperature **{temp.mean():.1f} °C**" if len(temp) else "Mean temperature unknown")
             if len(rain):
                 st.write(f"Longest observed dry spell **{longest} days**")
-            st.caption(f"Calculated over {len(frame)} days with {len(rain)} rainfall and {len(temp)} temperature values. "
-                       "Dry spells count consecutive days with at most 1 mm. Missing days break the count.")
+            monthly = frame.assign(month=frame.index.to_period("M").astype(str)).groupby("month").agg(
+                rainfall_mm=("PRECTOTCORR", "sum"), mean_temp_c=("T2M", "mean")
+            ).reset_index()
+            chart = go.Figure()
+            chart.add_trace(go.Bar(x=monthly["month"], y=monthly["rainfall_mm"], name="Rainfall (mm)",
+                                   marker_color="#0d7188", opacity=.72))
+            chart.add_trace(go.Scatter(x=monthly["month"], y=monthly["mean_temp_c"], name="Mean temperature (°C)",
+                                       mode="lines+markers", line={"color":"#d17a3f", "width":2.5},
+                                       yaxis="y2"))
+            chart.update_layout(height=230, margin={"l":0,"r":0,"t":12,"b":0},
+                                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                                legend={"orientation":"h","y":1.15,"x":0},
+                                yaxis={"title":"mm","gridcolor":"rgba(60,90,75,.12)"},
+                                yaxis2={"title":"°C","overlaying":"y","side":"right","showgrid":False},
+                                xaxis={"tickangle":-35}, hovermode="x unified")
+            st.plotly_chart(chart, width="stretch", config={"displayModeBar":False})
+            st.caption(f"Monthly summaries from NASA POWER daily gridded estimates · {len(rain)}/{len(frame)} rainfall days and {len(temp)}/{len(frame)} temperature days available. Dry spells use ≤1 mm/day; missing days break a run.")
+            st.download_button("Download climate data (CSV)", frame.to_csv(index_label="date").encode("utf-8"),
+                               file_name=f"fieldshift-power-{latitude:.3f}-{longitude:.3f}.csv",
+                               mime="text/csv", icon=":material/download:", width="stretch")
+            st.caption(f"[NASA POWER request]({dataset.provenance.source_url}) · [Documentation]({dataset.provenance.documentation_url}) · Retrieved {dataset.provenance.retrieved_at_utc} · Crop calendars: [Sacks dataset]({atlas_calendar.SOURCE})")
+        st.divider()
+        with st.expander("Use exact farm coordinates"):
+            a, b = st.columns(2)
+            lat = a.number_input("Latitude", min_value=-90.0, max_value=90.0, value=float(latitude), step=.01, format="%.4f", key="atlas_exact_lat")
+            lon = b.number_input("Longitude", min_value=-180.0, max_value=180.0, value=float(longitude), step=.01, format="%.4f", key="atlas_exact_lon")
+            point = {"lat":lat, "lon":lon}
+            if st.button("Explore these coordinates", key="atlas_exact_apply", type="primary", width="stretch"):
+                st.session_state["atlas_inspection"] = point
+                st.session_state["farm"] = {**_fresh_farm(), "latitude":lat, "longitude":lon,
+                                             "start_date":farm["start_date"], "end_date":farm["end_date"]}
+                st.session_state["selected_region_id"] = "global"
+                st.session_state["atlas_request"] = None
+                st.rerun()
+            if st.button("Use this place for planning", key="atlas_make_farm", icon=":material/agriculture:", width="stretch"):
+                _open_map_selection(point)
+            if st.button("Open climate analysis", key="atlas_climate_page", icon=":material/partly_cloudy_day:", width="stretch"):
+                _open_map_selection(point)
+                st.session_state["page"] = "Climate Insights"
+                st.rerun()
             st.markdown(f"[NASA request]({dataset.provenance.source_url}) · [Crop calendar source]({atlas_calendar.SOURCE})")
 
 

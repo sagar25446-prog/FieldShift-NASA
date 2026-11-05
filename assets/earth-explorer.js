@@ -51,10 +51,12 @@ export default function({parentElement:root,data,setTriggerValue}) {
   list.onchange=()=>{const p=data.pilots.find(p=>p.id===list.value);if(p)select(p.lat,p.lon,p);};
   root.querySelector('.globe-mode').onclick=()=>{state.flat=false;draw();};
   root.querySelector('.flat-mode').onclick=()=>{state.flat=true;draw();};
-  function zoom(factor) { if(state.flat) {state.flat=false;} state.zoom=Math.max(.75,Math.min(3,state.zoom*factor));draw(); }
+  function zoom(factor) { state.zoom=Math.max(.75,Math.min(3,state.zoom*factor));draw(); }
   root.querySelector('.zoomIn').onclick=()=>zoom(1.25);
   root.querySelector('.zoomOut').onclick=()=>zoom(.8);
   root.querySelector('.reset').onclick=()=>{state.rotation=[-55,-18,0];state.zoom=1;draw();};
+  root.querySelector('.centre').onclick=()=>{if(state.selected){state.rotation=[-state.selected.lon,-state.selected.lat,0];if(!state.flat)draw();}};
+  svg.onwheel=e=>{e.preventDefault();state.zoom=Math.max(.75,Math.min(3,state.zoom*(e.deltaY<0?1.08:.92)));draw();};
   svg.onpointerdown=e=>{if(e.target.closest('[data-pilot]'))return;down={x:e.clientX,y:e.clientY,rotation:[...state.rotation],moved:false};svg.setPointerCapture(e.pointerId);};
   svg.onpointermove=e=>{if(!down||state.flat)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.hypot(dx,dy)>5)down.moved=true;state.rotation=[down.rotation[0]+dx*.35/state.zoom,Math.max(-85,Math.min(85,down.rotation[1]-dy*.35/state.zoom)),0];draw();};
   svg.onpointerup=e=>{if(!down)return;const dragged=down.moved;down=null;if(dragged)return;const p=position(e);if(!state.flat&&Math.hypot(p.x-360,p.y-240)>projection.scale())return;const ll=projection.invert([p.x,p.y]);if(ll&&ll.every(Number.isFinite)&&Math.abs(ll[1])<=90)select(ll[1],Math.max(-180,Math.min(180,ll[0])),null);};
