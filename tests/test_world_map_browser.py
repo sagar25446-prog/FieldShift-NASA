@@ -44,9 +44,19 @@ def test_map_selects_climate_points_and_pilot_farms():
             atlas = page.get_by_role("group", name="World location picker")
             page.get_by_role("link", name="Find my field").click()
             atlas.scroll_into_view_if_needed()
+            expect(page.get_by_role("button", name="Globe", exact=True)).to_have_attribute("aria-pressed", "true")
+            original_land = page.locator(".land").get_attribute("d")
             page.get_by_role("button", name="Zoom in", exact=True).click()
-            expect(atlas).to_have_attribute("viewBox", "180 90 360 180")
+            assert page.locator(".land").get_attribute("d") != original_land
             page.get_by_role("button", name="Zoom out", exact=True).click()
+            size = atlas.bounding_box()
+            page.mouse.move(size['x'] + size['width'] / 2, size['y'] + size['height'] / 2)
+            page.mouse.down()
+            page.mouse.move(size['x'] + size['width'] / 2 + 100, size['y'] + size['height'] / 2, steps=8)
+            page.mouse.up()
+            assert page.locator(".land").get_attribute("d") != original_land
+            expect(page.get_by_role("heading", name="Location report")).to_have_count(0)
+            page.get_by_role("button", name="Flat map", exact=True).click()
             expect(atlas).to_have_attribute("viewBox", "0 0 720 360")
             size = atlas.bounding_box()
             # A free point near 21 S, 50 W in Brazil, outside the pilot catalogues.
@@ -73,6 +83,7 @@ def test_map_selects_climate_points_and_pilot_farms():
             for pilot_id, lat in (("punjab", "30.901"), ("us_corn_belt", "41.878"),
                                   ("mediterranean", "37.3891"), ("semi_arid_tropics", "19.076")):
                 page.get_by_role("button", name="Atlas", exact=True).click()
+                page.get_by_role("button", name="Flat map", exact=True).click()
                 page.locator(f'[data-pilot="{pilot_id}"]').focus()
                 page.keyboard.press("Enter")
                 page.get_by_role("button", name="Open farm profile", exact=True).click()
@@ -96,7 +107,7 @@ def test_map_selects_climate_points_and_pilot_farms():
                 page.screenshot(path=previews / "atlas-desktop.png")
             mobile.get_by_role("button", name="Open farm profile", exact=True).click()
             expect(mobile.get_by_label("Latitude (degrees)", exact=True)).to_have_value("37.3891")
-            mobile.get_by_role("button", name="Menu", exact=True).click()
+            mobile.locator('.st-key-field_menu button').click()
             expect(mobile.get_by_role("combobox", name="Pages")).to_be_visible()
             browser.close()
     finally:

@@ -456,7 +456,14 @@ def _theme() -> None:
     """Apply a compact, distinctive visual layer above the Streamlit theme."""
     st.markdown("""
     <style>
-    .block-container { max-width: 1240px; padding-top: 2.6rem; padding-bottom: 3.5rem; }
+    .block-container { max-width: 1440px; padding-top: 2.6rem; padding-bottom: 3.5rem; }
+    .fs-intro { display:grid; grid-template-columns:1.1fr 1fr; align-items:center; gap:3rem; padding:1rem 0; }
+    .fs-intro h1 { font-size:clamp(2.2rem,3.8vw,3.5rem); line-height:1.05; letter-spacing:-.045em; max-width:17ch; padding:0; margin:0; }
+    .fs-intro p { color:#46616c; max-width:50ch; font-size:1rem; line-height:1.65; margin:0 0 .5rem; }
+    .fs-intro a { color:#245b4e; font-weight:650; text-underline-offset:4px; }
+    @media(max-width:650px) { .fs-intro { grid-template-columns:1fr; gap:1rem; } }
+    .st-key-field_guide { background:#e6eee9; border-radius:20px; padding:1.5rem; }
+    .st-key-field_guide h3 { font-size:1.55rem; }
     .fieldshift-footer { text-align: center; padding: 2.25rem 0 .5rem; color: var(--text-color); opacity: .68; font-size: .85rem; }
     [data-testid="stMetric"] { padding: .7rem 0; }
     .st-key-masthead { justify-content:space-between; border-bottom:1px solid #bdd1c4;
@@ -590,18 +597,16 @@ def _location_brief(point: dict) -> None:
 
 
 def render_home() -> None:
-    with st.container(key="atlas_cover"):
-        if HERO_IMAGE_PATH.is_file():
-            st.image(HERO_IMAGE_PATH, width="stretch", alt="")
+    with st.container(key="explorer_intro"):
         st.html("""
-            <h1>What will you grow next?</h1>
-            <p class="fieldshift-lead">Find your field, explore its climate history and compare crops for the seasons ahead.</p>
-            <a href="#field-atlas" target="_self">Find my field ↓</a>
+            <div class="fs-intro"><h1>What will you grow next?</h1><div>
+            <p>A world of growing conditions. One field that's yours. Explore its climate,
+            understand the seasons and compare what you could grow next.</p>
+            <a href="#field-atlas" target="_self">Find my field</a></div></div>
         """)
 
-    st.header("Field atlas", anchor="field-atlas")
-    st.write("Tap a location to see its rainfall, temperature and recorded crop calendars. Green markers open the four regional planners.")
-    atlas, guide = st.columns((2.35, 1), gap="medium")
+    st.html('<div id="field-atlas"></div>')
+    atlas, guide = st.columns((2.5, 1), gap="large")
     with atlas:
         if _farm_is_ready():
             st.caption("Opening a different location starts a fresh field. Your current field stays active while you explore.")
@@ -610,22 +615,25 @@ def render_home() -> None:
             st.session_state["atlas_inspection"] = dict(event.inspected)
         if event.chosen:
             _open_map_selection(event.chosen)
-        st.caption("Map outlines by Natural Earth. Refine the location in Farm Profile for a precise NASA request.")
+        st.caption("Geographic illustration, not a satellite image or live weather layer. NASA climate data loads for the point you select.")
+    with guide:
         if st.session_state.get("atlas_inspection"):
             _location_brief(st.session_state.atlas_inspection)
-    with guide:
-        with st.container(border=True):
-            st.subheader("Try a farm in Punjab")
-            st.write("Walk through a Ludhiana example using a saved year of NASA climate data and illustrative soil and water inputs.")
+        else:
+            with st.container(key="field_guide"):
+                st.subheader("Your field starts here")
+                st.write("Turn the globe and choose a location. Your climate history and available crop calendars will appear here.")
+                st.markdown("**Anywhere on Earth**\n\nExplore historical NASA POWER climate data.\n\n**Four regional planners**\n\nGreen markers open crop catalogues with regional rotation rules.")
+        if st.button("Enter farm coordinates", icon=":material/edit_location_alt:", width="stretch"):
+            _go("Farm Profile")
+        with st.expander("Try a farm in Punjab", expanded=not bool(st.session_state.get("atlas_inspection"))):
+            st.caption("A guided example with saved NASA climate data and illustrative farm inputs.")
             if st.button("Load demo & view plans", type="primary", icon=":material/play_arrow:", width="stretch"):
                 _load_complete_demo_workflow(with_cached_climate=True)
                 _go("Rotation Recommendations")
             if st.button("Review demo inputs first", icon=":material/list_alt:", width="stretch"):
                 _load_complete_demo_workflow(with_cached_climate=True)
                 _go("Farm Profile")
-        if st.button("Enter farm coordinates", icon=":material/edit_location_alt:", width="stretch"):
-            _go("Farm Profile")
-
     st.info("Decision-support prototype. Crop yield, income and soil improvement are not guaranteed. Review plans with a local adviser.", icon=":material/info:")
     st.header("Plan a rotation")
     steps = st.columns(4, gap="medium")

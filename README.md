@@ -16,6 +16,8 @@ It combines **farmer-provided field data**, **6 core NASA Earth Observation sate
 
 Start on Home and choose a route.
 
+The home page now opens with a rotatable Earth explorer inspired by NASA Eyes on the Earth. Drag the globe, switch to Flat map, or choose a regional planner by name. A point selection opens its climate and crop-calendar report. The globe is a geographic illustration; the climate values are retrieved separately from NASA POWER. See [Earth explorer design and controls](docs/EARTH_EXPLORER.md).
+
 - **Explore your location.** Click or tap the world map, then choose **Explore this location**. FieldShift retrieves NASA POWER climate history and looks up any recorded crop calendars for that grid cell. Zoom in to refine the selection, use the arrow keys on the map, or type precise coordinates in Farm Profile.
 - **Plan a rotation.** Select a green pilot marker, then **Open farm profile**. Soil and water start unknown. Enter what you know, review the climate record, set priorities and choose **Compare plans**. A nearby free selection can use a pilot catalogue when the farmer confirms its growing calendar applies.
 - **Try the demonstration.** Choose **Load demo & view plans** to explore Ludhiana with illustrative farm inputs and its saved 2024 NASA POWER record.

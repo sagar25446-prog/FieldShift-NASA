@@ -1,0 +1,23 @@
+<section class="explorer">
+  <div class="explorer-bar"><span>Explore your growing world</span><div role="group" aria-label="Map projection"><button class="globe-mode" aria-pressed="true">Globe</button><button class="flat-mode" aria-pressed="false">Flat map</button></div></div>
+  <div class="viewport">
+    <div class="map-note">Find a place.<br>See what shapes its seasons.</div>
+    <svg viewBox="0 0 720 480" role="group" aria-label="World location picker" tabindex="0" aria-description="Drag to rotate the globe. Click to select a location. Arrow keys move the cursor; Enter selects. Use Flat map to see all regions.">
+      <defs>
+        <radialGradient id="ocean"><stop stop-color="#245f7c"/><stop offset=".8" stop-color="#10344e"/><stop offset="1" stop-color="#071e32"/></radialGradient>
+        <radialGradient id="light" cx="30%" cy="25%" r="80%"><stop stop-color="#bee5dc" stop-opacity=".16"/><stop offset=".65" stop-color="#071727" stop-opacity="0"/><stop offset="1" stop-color="#020a17" stop-opacity=".65"/></radialGradient>
+      </defs>
+      <path class="sphere" fill="url(#ocean)" stroke="#487e96" stroke-width="1.5"/>
+      <path class="land" fill="#669b8d" stroke="#91bbac" stroke-width=".45"/>
+      <path class="graticule" fill="none" stroke="#8ed1df" stroke-opacity=".15" stroke-width=".6" pointer-events="none"/>
+      <path class="shade" fill="url(#light)" pointer-events="none"/>
+      <g class="pilots"></g>
+      <g class="lock" visibility="hidden" pointer-events="none"><circle class="pulse" r="20" fill="none" stroke="#f7cf81"/><g class="reticle"><path d="M-12 -6v-6h6M6 -12h6v6M12 6v6H6M-6 12h-6V6" fill="none" stroke="#ffdb9a" stroke-width="2"/></g><circle r="3" fill="#ffdb9a"/></g>
+    </svg>
+    <nav aria-label="Map zoom"><button class="zoomIn" aria-label="Zoom in">+</button><button class="zoomOut" aria-label="Zoom out">−</button><button class="reset" aria-label="Reset map view">↺</button></nav>
+    <span class="map-help">Drag to turn · click to choose</span>
+    <span class="map-credit">Natural Earth geography</span>
+  </div>
+  <footer><div><small>Selected location</small><output aria-live="polite">Choose a point on Earth</output></div><button class="use" disabled>Use this location</button></footer>
+  <label class="pilot-list">Or explore a regional planner<select aria-label="Choose a pilot by name"></select></label>
+</section>
