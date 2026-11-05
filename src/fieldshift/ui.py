@@ -562,8 +562,8 @@ def _location_brief(point: dict) -> None:
         from .regions import pilot_candidate
         pilot = pilot_candidate(latitude, longitude)
         if pilot:
-            st.badge(f"{pilot.name} · regional rotation rules available", color="green", icon=":material/agriculture:")
-            st.caption("Open this field to compare rule-checked plans from its regional crop catalogue.")
+            st.badge(f"Near the {pilot.name} pilot area", color="green", icon=":material/agriculture:")
+            st.caption("The pilot crop catalogue may be relevant here. Confirm with a local adviser before using its rules.")
         elif calendars:
             st.badge("Global climate + historical crop timing", color="blue", icon=":material/public:")
             st.caption("This point has climate context and recorded crop timing. It does not have a locally reviewed rotation engine.")

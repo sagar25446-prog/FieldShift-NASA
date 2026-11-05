@@ -4,7 +4,7 @@
 **Categories:** Advanced, Intermediate  
 **Skills:** Arts & Multimedia, Earth Science, Software  
 **Last reviewed:** 2026-11-05
-**Project Repository:** <https://github.com/sagar25446-prog/FieldShift-NASA>  
+**Project Repository:** <https://github.com/sagar25446-prog/Nasa-Hacakathon>
 **Live Application:** <https://fieldshift-nasa.streamlit.app>
 
 ---
@@ -32,19 +32,19 @@ For the full gap analysis and work remaining, see [Project status report](PROJEC
 
 ---
 
-## What FieldShift Does NOT Do (Strict Scientific Boundaries)
+## Current limitations
 
 To preserve scientific rigor and avoid misleading vulnerable smallholders, FieldShift maintains strict boundaries:
-- ❌ **No black-box ML predictions:** Uses deterministic, verifiable biophysical equations rather than opaque neural networks.
-- ❌ **No fabricated yield or profit guarantees:** Economic figures represent indicative GoI MSP (2024–25) and PAU/USDA cost-of-cultivation benchmarks for comparison only.
-- ❌ **No remote soil chemistry claims:** Does not claim to measure nitrogen, phosphorus, or pH from space; remote sensors cannot measure root-zone chemistry without ground truth.
-- ❌ **No fake confidence percentages:** Missing data is explicitly displayed as `N/A`, avoiding spurious probabilistic precision.
+- The dependable NASA data integration is historical NASA POWER climate. Optional dataset modules are separate and may require local data or network access.
+- Rotation rules are limited to four configured pilot catalogues. Global calendar comparisons check historical timing only.
+- Climate and soil products are spatial estimates; they do not replace field measurements.
+- The app does not provide a validated yield forecast, farm-specific profit forecast, or guarantee of soil improvement.
+- Model outputs have not been reviewed by external agronomists or evaluated in a representative farmer study.
 
 ---
 
-## Verification & Automated Test Status
+## Verification status
 
-- **Automated Tests:** 266 total test cases across 26 test files.
-- **Pass Rate:** 262 passed, 4 skipped (live-network integration tests).
-- **Continuous Integration:** Automated GitHub Actions pipeline running on Python 3.11 and 3.12 (`.github/workflows/ci.yml`).
-- **Codebase Integrity:** MIT License, clean architecture separating engine logic from Streamlit presentation.
+- Automated test totals change over time; see `docs/TEST_REPORT.md` for the dated report and rerun `python -m pytest` for the current checkout.
+- NASA POWER live integration and browser interaction checks are optional and depend on internet/browser availability.
+- Passing software tests verifies implemented behaviour, not scientific calibration or farmer benefit.

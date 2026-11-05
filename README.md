@@ -1,202 +1,81 @@
-# 🌾 FieldShift
+# FieldShift
 
-**Plan resilient crop rotations with evidence, NASA Earth observations, and biophysical transparency.**
+**Explore how climate and crop rotation choices relate to a farm.**
 
-FieldShift is a global decision-support web application built for the NASA Space Apps Challenge 2026 challenge **"Field Shift: Adapting Farms with NASA Data."**
+FieldShift is a NASA Space Apps Challenge 2026 prototype for *Field Shift: Adapting Farms with NASA Data*. It combines historical NASA POWER climate context, farmer-provided soil and water details, documented crop information, and farmer priorities to compare rotation options where reviewed regional rules are available.
 
-It combines **farmer-provided field data**, **6 core NASA Earth Observation satellite datasets**, and source-linked regional crop catalogues to help farmers transition away from water-depleting monocultures to resilient, diversified multi-season crop rotations. FieldShift provides deterministic, biophysically grounded alternatives—not black-box yield predictions or spurious profit guarantees.
+> FieldShift is a decision-support prototype. It does not forecast farm weather, predict yield or profit, or guarantee soil improvement. NASA POWER is gridded climate data, not a field measurement. Review any plan with a qualified local agricultural adviser.
 
-> ⚠️ **Important:** FieldShift is an explainable decision-support prototype. It cannot guarantee crop yield, profitability, or soil improvement. Farmers should combine its outputs with local expertise, certified soil testing, and local agricultural extension guidance (e.g. Krishi Vigyan Kendras / university farm advisors).
+## What works today
 
----
+- Explore arbitrary coordinates with an interactive globe and retrieve historical daily NASA POWER climate data.
+- Inspect monthly rainfall and temperature summaries, coverage, provenance and downloadable daily CSV.
+- Enter soil and water details, leaving unmeasured values unknown. Optional SoilGrids estimates are identified as modelled.
+- Generate explainable rule-based crop-rotation alternatives for four configured pilot areas: Punjab, the US Corn Belt, Andalusia, and the semi-arid tropics of India.
+- Compare farmer priorities, historical context and clearly labelled hypothetical stress tests.
+- Outside pilot regions, inspect global climate data and, where available, historical crop-calendar timing. Calendar timing alone is not an agronomic rotation recommendation.
 
-## 🖥️ Live Application & Judging Quick-Start
+Optional MODIS, soil-grid and future-climate features depend on source access, geographic coverage and local files. They are not all inputs to every recommendation. See [data and methods](docs/DATA_SOURCES.md) and [known limitations](docs/KNOWN_LIMITATIONS.md).
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://fieldshift-nasa.streamlit.app)
+## Run locally
 
-Start on Home and choose a route.
+Python 3.11 or 3.12 is recommended.
 
-The home page now opens with a rotatable Earth explorer inspired by NASA Eyes on the Earth. Drag the globe, switch to Flat map, or choose a regional planner by name. A point selection opens its climate and crop-calendar report. The globe is a geographic illustration; the climate values are retrieved separately from NASA POWER. See [Earth explorer design and controls](docs/EARTH_EXPLORER.md).
-
-- **Explore your location.** Click or tap the world map, then choose **Explore this location**. FieldShift retrieves NASA POWER climate history and looks up any recorded crop calendars for that grid cell. Zoom in to refine the selection, use the arrow keys on the map, or type precise coordinates in Farm Profile.
-- **Plan a rotation.** Select a green pilot marker, then **Open farm profile**. Soil and water start unknown. Enter what you know, review the climate record, set priorities and choose **Compare plans**. A nearby free selection can use a pilot catalogue when the farmer confirms its growing calendar applies.
-- **Try the demonstration.** Choose **Load demo & view plans** to explore Ludhiana with illustrative farm inputs and its saved 2024 NASA POWER record.
-
-The map runs locally from bundled [Natural Earth 1:110m land outlines](https://github.com/nvkelso/natural-earth-vector/blob/master/geojson/ne_110m_land.geojson). The cover image is an illustration. Live climate retrieval requires an internet connection.
-
-### What happens at an arbitrary map point
-
-Any valid latitude and longitude can be explored with NASA POWER; this does not mean every point has a locally validated crop planner. Where a cell has a published record in the **unfilled Sacks et al. crop-calendar atlas**, FieldShift can compare crop sequences by their recorded planting and harvest timing. This is a historical, coarse-grid timing check only. If the cell has no calendar record, users can enter timing from their own records. Neither path establishes crop suitability, pest compatibility, soil fit, yield, or a planting recommendation for that specific field. The global calendar source and its limitations are described in [data provenance](data/README.md).
-
----
-
-## 🛰️ NASA Earth Observation Data Lineage & Decision Impact Table
-
-FieldShift does not use satellite data as decorative background graphics. Every NASA dataset feeds directly into an agronomic check, dynamic biophysical equation, or risk envelope:
-
-| NASA Dataset / Mission | Variables Used | Spatial & Temporal Resolution | Exactly How It Drives FieldShift's Decision & Ranking |
-|---|---|---|---|
-| **NASA POWER** (Surface Meteorology) | `T2M`, `T2M_MAX`, `T2M_MIN`, `PRECTOTCORR`, `ALLSKY_SFC_SW_DWN`, `RH2M`, `WS2M` | 0.5° global grid; Daily (1981–present) | Directly drives **FAO-56 Penman-Monteith daily reference evapotranspiration ($ET_0$)**, stage crop coefficients ($K_c$), effective rainfall deficit, and **FAO EcoCrop thermal suitability scoring**. |
-| **NASA NEX-GDDP-CMIP6** (Downscaled Projections) | Daily `tasmax`, `tasmin`, `pr` across 5 downscaled GCMs | 0.25° downscaled grid; 2041–2060 (SSP2-4.5 & SSP5-8.5) | Stresstests rotations under mid-century warming; computes thermal threshold exceedances, heat wave risks, and multi-model agreement. |
-| **NASA SMAP** (L4 Soil Moisture) | Root-zone (0–100 cm) & surface (0–5 cm) volumetric moisture | 9 km grid; 3-hour / daily | Establishes root-zone moisture anomalies during planting windows; alerts farmers to germination moisture deficits for rainfed crops. |
-| **NASA MODIS MCD12Q2** (Land Phenology) | Mid-Greenup, Mid-Greendown, EVI2 cycle count & QA | 500 m pixel; Annual (2016–2025) | Verifies historical multi-season vegetation cycles; transparently warns if a candidate plan adds a cropping season not seen in recent years. |
-| **NASA MODIS MOD13Q1** (Vegetation Index) | 16-day Composite 250m NDVI | 250 m pixel; 16-day (2000–present) | Evaluates historical seasonal canopy vigor and provides independent phenological greenness verification. |
-| **NASA GRACE / GRACE-FO** (Terrestrial Water Storage) | Gravimetric Mascon Water Storage Anomalies | ~300 km footprint; Monthly | Quantifies regional groundwater mass depletion (-4.0 cm/yr in NW India; Ogallala and Mediterranean overdraft); grounds water conservation impact metrics. |
-| **NASA FIRMS** (Active Fire) | VIIRS (375m) & MODIS (1km) Thermal Anomalies | 375 m / 1 km; Near-Real-Time | Maps post-monsoon crop residue burning hotspots; informs residue retention and Happy Seeder soil organic carbon credits. |
-
----
-
-## 🧑‍🌾 Farmer Persona & End-to-End User Journey
-
-### Persona: Sardar Gurpreet Singh (Ludhiana District, Punjab)
-* **Profile:** 52 years old, manages a 6-acre family farm in central Punjab.
-* **The Dilemma:** Has grown continuous flooded paddy (Kharif) → wheat (Rabi) for 25 years. His submersible tubewell pump is now at 160 feet (falling 2–3 feet every year), and electricity cuts threaten his crop during peak summer. He wants to diversify into maize, moong, or mustard, but fears yield collapse, pest carryover, or running out of water.
-* **How FieldShift Empowers Gurpreet:**
-  1. **Enters Real Field Reality:** Uses the **Tubewell Water Helper** to enter his 10 HP motor and 25 hours/week pumping allowance $\rightarrow$ FieldShift computes his exact seasonal water capacity in mm.
-  2. **Enters Soil Health Card:** Enters his Government of India Soil Health Card (pH 7.4, EC 0.35, OC 0.48%) $\rightarrow$ FieldShift sets soil context constraints.
-  3. **Discovers Feasible Alternatives:** FieldShift searches PAU-documented transition graphs and presents **Maize → Wheat → Summer Moong** and **Cotton → Wheat**.
-  4. **Sees Transparent Trade-Offs:** The tool shows that Maize-Wheat-Moong saves **985 mm (9.8 million litres) of water per hectare** vs. paddy-wheat, preserves comparable gross margins under MSP, and adds a biological legume nitrogen credit for the subsequent wheat crop.
-  5. **Prints 1-Page Summary Card:** Gurpreet downloads a clean, printable 1-page summary card with verified sowing/harvest calendar windows to review with his local Krishi Vigyan Kendra (KVK) extension officer.
-  6. **Adopts "Pilot-First":** Following FieldShift's pilot protocol, Gurpreet tests the maize-wheat-moong rotation on 1 acre (16% of his holding) in Year 1 before scaling.
-
----
-
-## 🔍 Retrospective Validation: March 2022 Terminal Heatwave Hindcast
-
-To verify scientific validity against real agricultural outcomes, FieldShift was backtested against the **March 2022 Northwest India Terminal Heatwave**:
-* **The Historic Anomaly:** March 2022 was the hottest March in 122 years across northwestern India. Daily maximum temperatures reached 38°–40°C during wheat anthesis and grain-filling (dough stage), shrivelling grains and causing a 10%–15% statewide yield loss.
-* **FieldShift's Blind Hindcast:** When fed genuine NASA POWER daily observations from March 2022 for the Ludhiana grid cell (30.85°N, 75.70°E), FieldShift's FAO EcoCrop thermal module identified **9 days exceeding the critical 32°C grain-filling heat threshold** and **3 days exceeding the 35°C extreme heat threshold**.
-* **Outcome:** FieldShift triggered a **"Terminal Heat Risk"** tradeoff warning and penalized the late-sown wheat score. In contrast, short-duration summer pulses (moong) and diversified rotations had clear avoidance windows, proving that FieldShift's thermal models accurately detect real-world climatic risks.
-
----
-
-## 🌍 Global Multi-Region Architecture ("Farmers Around the World")
-
-FieldShift is not restricted to one geography. It implements a modular **Global Agro-Ecological Archetype System**:
-
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│                   Global Multi-Region Dispatch Engine                  │
-├─────────────────────┬────────────────────┬─────────────────────────────┤
-│ Region              │ Climate Archetype  │ Documented Cropping System  │
-├─────────────────────┼────────────────────┼─────────────────────────────┤
-│ 🇮🇳 Punjab, India   │ Subtropical Summer │ Rice, Wheat, Maize, Moong,  │
-│    (Indo-Gangetic)  │ Monsoon (Cwa/BSh)  │ Cotton, Potato, Raya Mustard│
-│ 🇺🇸 US Corn Belt     │ Humid Continental  │ Corn, Soybean, Cereal Rye,  │
-│    (Iowa, USA)      │ (Dfa)              │ Oats, Perennial Alfalfa     │
-│ 🇪🇸 Mediterranean    │ Mediterranean      │ Durum Wheat, Sunflower,     │
-│    (Andalusia)      │ Summer-Dry (Csa)   │ Garbanzo Chickpea, Barley   │
-│ 🇮🇳 Semi-Arid Tropics│ Tropical Dry       │ Sorghum (Jowar), Pigeonpea, │
-│    (Deccan/Maha)    │ Vertisol (BSh)     │ Chickpea, Rainfed Soybean   │
-└─────────────────────┴────────────────────┴─────────────────────────────┘
-```
-* **Automatic Coordinate Matching:** Enter coordinates anywhere on Earth; FieldShift calculates geographic bounds and distance heuristics to match the nearest agro-ecological archetype while querying NASA POWER on the exact field coordinates.
-
----
-
-## 📱 User Interface Walkthrough & Features
-
-```text
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           FieldShift Architecture                       │
-├─────────────────────────────────────────────────────────────────────────┤
-│  [Sidebar]                 [Main Workspace (11 Interactive Pages)]     │
-│  • Region Selector (4)     1. Home / Overview & NASA EO Suite Inspector │
-│  • Language (EN / ਪੰਜਾਬੀ / हिंदी) 2. Farm Profile (Tubewell & SHC Helpers) │
-│  • Page Navigation (11)    3. Climate Insights (Live NASA POWER ET₀)    │
-│  • Provenance Status       4. Climate Trends (25-Year OLS & P-Values)   │
-│  • Reset / Clear           5. Farmer Priorities (Interactive Sliders)   │
-│                            6. Rotation Recommendations (Pareto Top Plan)│
-│                            7. Hypothetical Stress Tests (Dry / Hot)     │
-│                            8. Future Climate (NASA NEX-GDDP-CMIP6)      │
-│                            9. Comparison View & Weight Sensitivity (±20%)│
-│                            10. Data and Methods & 2022 Heatwave Hindcast│
-│                            11. Pitch Deck, Demo Video Script & Validation│
-└─────────────────────────────────────────────────────────────────────────┘
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
 ```
 
-* 🌐 **Multilingual Interface:** English, Punjabi (ਪੰਜਾਬੀ), and Hindi (हिंदी) support for regional crop nomenclature and advisories.
-* 📜 **Soil Health Card (SHC) Mode:** Direct entry of government laboratory card values (pH, EC, Organic Carbon %).
-* 🗓️ **Sowing & Harvesting Calendars:** University-verified calendar windows for every crop in candidate rotations.
-* 🌱 **Pilot-First Protocol Banner:** Built-in guidance advising 10%–20% acreage trials before full field conversion.
-* 💾 **Persistence (JSON Export & Import):** Save and restore complete farm profiles locally with strict schema validation.
-* 📄 **1-Page Printable Summary Card:** Formatted HTML/PDF export for agricultural extension workers.
-* 📱 **Mobile Responsive CSS:** Media queries tailored for high-contrast viewing on mobile devices in the field.
+If PowerShell blocks activation, run the environment interpreter directly:
 
----
-
-## 🏛️ Agricultural Extension & KVK Deployment Pathway
-
-FieldShift is engineered for real-world institutional adoption:
-1. **Primary Delivery Channel:** Delivered through **Krishi Vigyan Kendras (KVKs)**, agricultural university extension scientists (PAU, ICAR), and **Farmer Producer Organizations (FPOs)** rather than requiring isolated smartphone usage.
-2. **Offline-Capable Field Tool:** Includes bundled verified NASA POWER snapshots (`data/demo_snapshot_ludhiana_2024.json`) to operate seamlessly during rural connectivity dropouts.
-3. **Physical Handouts:** Extension officers generate and print the 1-Page Summary Card during village training camps (*kisan melas*).
-
----
-
-## 🧪 Automated Testing & Continuous Integration
-
-FieldShift is backed by **261 automated tests** verifying every biophysical equation, API contract, graph transition, and edge case:
-
-```text
-======================= 257 passed, 4 skipped in 20.76s =======================
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m streamlit run app.py
 ```
-* **Test Suites (25 files):** Covering FAO-56 Penman-Monteith, EcoCrop thermal limits, multi-year SOC kinetics, NASA POWER API parsers, SoilGrids, MODIS phenology, and JSON persistence.
-* **GitHub Actions CI:** Automated continuous integration runs on every commit and PR across Python 3.11 and 3.12 (`.github/workflows/ci.yml`).
-* **Zero Fabricated Data:** Unknowns remain explicit `N/A`, and no unsupported yield or profit predictions are made.
 
-```bash
-# Run the test suite
+NASA POWER does not require an API key. Live retrieval requires internet access. Never put credentials in source control; local `.env` and Streamlit secrets are ignored by Git.
+
+## Checks
+
+```powershell
 python -m pytest
 ```
 
----
+Run optional network checks separately when access is available:
 
-## 📦 Installation & Local Development
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/sagar25446-prog/FieldShift-NASA.git
-cd FieldShift-NASA
-
-# 2. Install dependencies (pinned versions)
-pip install -r requirements.txt
-
-# 3. Launch the Streamlit application
-streamlit run app.py
+```powershell
+$env:RUN_POWER_INTEGRATION = "1"
+python -m pytest tests/test_nasa_power_integration.py -q
 ```
 
----
+The interactive browser journey is opt-in and requires installed Playwright and Microsoft Edge:
 
-## ⚖️ Ethics, Governance & AI Tool Disclosure
+```powershell
+$env:FIELDSHIFT_BROWSER_TEST = "1"
+$env:FIELDSHIFT_BROWSER_CHANNEL = "msedge"
+python -m pytest tests/test_world_map_browser.py -q
+```
 
-* **NASA Space Apps Challenge Rules Compliance:** Developed openly and transparently for the 2026 Space Apps Challenge.
-* **AI Tool Disclosure:** AI coding assistants (Google Antigravity / Gemini) were utilized for code implementation, test generation, and documentation drafting under human architectural oversight and agronomic verification.
-* **Ethics & Bias Safeguards:**
-  - *No Algorithmic Black Box:* Uses auditable deterministic graph search and published biophysical equations (FAO-56, EcoCrop, Janssen SOC).
-  - *Smallholder Equity:* Does not penalize smallholder farmers who lack precision soil sensors; provides graceful fallback to regional university practice packages.
-  - *No Commercial Vendor Bias:* Independent of seed or chemical corporate sponsorship; all inputs link to public university guidelines.
+## Project layout
 
----
+- `src/fieldshift/nasa_power.py` — NASA POWER client, validation and provenance.
+- `src/fieldshift/rotation_engine.py` and regional JSON files — explainable rules and crop catalogues.
+- `src/fieldshift/ui.py` — Streamlit user interface.
+- `data/crops.json` — sourced Punjab crop catalogue.
+- `docs/` — data provenance, assumptions, architecture, challenge fit, testing and review materials.
+- `tests/fixtures/` — saved responses for deterministic offline tests.
 
-## 📄 Documentation Directory
+## Project status
 
-- [Judge Defense Q&A Dossier (10 Judge Questions)](docs/JUDGE_QA.md)
-- [Rotation Engine & Decision Architecture](docs/ROTATION_ENGINE.md)
-- [Challenge Requirements Point-by-Point](docs/CHALLENGE_REQUIREMENTS.md)
-- [5-Slide Pitch Deck](docs/PITCH_DECK.md)
-- [75-Second Demo Video Script](docs/DEMO_VIDEO_SCRIPT.md)
-- [Agronomic & Institutional Methodology Validation](docs/EXPERT_VALIDATION.md)
-- [Test Report & Automated Audit (266 Tests)](docs/TEST_REPORT.md)
-- [Known Limitations & Disclosures](docs/KNOWN_LIMITATIONS.md)
-- [Submission Checklist](docs/SUBMISSION_CHECKLIST.md)
-- [NASA POWER Data Guide](docs/NASA_POWER_DATA.md)
-- [Climate Trends Methodology](docs/CLIMATE_TRENDS_METHODOLOGY.md)
-- [Future Climate Projections](docs/FUTURE_CLIMATE.md)
-- [Observed Land Use & Phenology](docs/OBSERVED_LAND_USE.md)
+The prototype addresses the core challenge workflow, but it has not been validated by qualified agronomists or representative farmers. Agronomic review, observed user testing, and a verified hosted deployment check remain open. Read the [project status report](docs/PROJECT_STATUS_REPORT.md) and [challenge requirements mapping](docs/CHALLENGE_REQUIREMENTS.md) before relying on or presenting the outputs.
 
----
+## Links
 
-## 📜 License
+- [NASA challenge statement](https://www.spaceappschallenge.org/2026/challenges/field-shift-adapting-farms-with-nasa-data/)
+- [FieldShift app](https://fieldshift-nasa.streamlit.app/)
+- [FieldShift repository](https://github.com/sagar25446-prog/Nasa-Hacakathon)
+- [Earth explorer design](docs/EARTH_EXPLORER.md)
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+FieldShift is an independent student prototype and is not endorsed by NASA.

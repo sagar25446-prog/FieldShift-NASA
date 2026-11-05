@@ -44,7 +44,7 @@ Before this date the FAO-56 water balance gave **every crop the whole year's ET0
 3. **Temperature thresholds:** Sourced from [FAO EcoCrop Database](https://ecocrop.apps.fao.org/) cardinal temperature limits ($T_{\min,\text{abs}}$, $T_{\min,\text{opt}}$, $T_{\max,\text{opt}}$, $T_{\max,\text{abs}}$) and PAU heat-stress thresholds (e.g. 32°C terminal heat for wheat).
 4. **Economic benchmarks:** Indicative gross revenues and margins are calculated using Government of India Minimum Support Prices (MSP 2024-25), USDA-ARS benchmarks, and university operational costs. They represent policy benchmarks and indicative comparisons, not farm-specific profit guarantees.
 5. **Water requirements:** Sourced from Government of India Annexure AS110 and PAU Packages of Practices. In addition, real-time climate-derived crop water requirements (ETc) and net irrigation deficits are calculated via FAO-56 Penman–Monteith daily ET₀ and crop development stage coefficients (Kc).
-6. **Satellite Context Integration:** Incorporates NASA SMAP (9 km root-zone moisture), NASA GPM IMERG (satellite precipitation comparison), NASA MODIS (NDVI vigor & phenology), NASA GRACE (regional groundwater depletion), and NASA FIRMS (thermal active fire anomalies).
+6. **Optional datasets:** NASA MODIS phenology and future climate have separate modules. Availability can depend on local files, network access and spatial coverage. NASA SMAP, GPM, GRACE and FIRMS are not a dependable, always-on input to each rotation recommendation; consult `docs/DATA_SOURCES.md` before claiming a layer is active.
 7. **Missing observations:** NASA POWER fill values (-999.0) are converted to NaN and counted. They are never silently replaced with interpolated values.
 
 ---
@@ -90,22 +90,18 @@ Before this date the FAO-56 water balance gave **every crop the whole year's ET0
 
 ---
 
-## Feature Matrix
+## Feature and evidence matrix
 
 | Feature | Institutional Source | Status in Prototype |
 |---|---|---|
-| Temperature suitability thresholds | FAO EcoCrop cardinal temperatures & PAU heat thresholds | ✅ Active |
-| Extended rotation graph | 19 edges; all 10 crops reachable and feasible | ✅ Active |
-| Indicative economics & MSP benchmarks | GoI MSP 2024-25 & PAU costs; baseline water savings | ✅ Active |
-| Future climate projections | NASA NEX-GDDP-CMIP6 (5 models, SSP2-4.5 & SSP5-8.5) | ✅ Active |
-| Observed land use dynamics | NASA MODIS MCD12Q2 phenology & greenup seasons | ✅ Active |
-| Regional Earth observation context | NASA GRACE groundwater depletion & NASA FIRMS fires | ✅ Active |
-| Weight sensitivity & rank stability | ±20% priority perturbations tested | ✅ Active |
-| NASA SMAP root-zone soil moisture | NASA SMAP L3/L4 9 km radiometer volumetric moisture | ✅ Active |
-| NASA GPM IMERG precipitation | Dual-frequency radar/microwave precipitation context | ✅ Active |
-| Multi-year rotation trajectory (3–5 yr) | Cumulative water, Janssen (1984) SOC & N balance | ✅ Active |
-| Global Multi-Region Architecture | Punjab, US Corn Belt, Mediterranean, Semi-Arid | ✅ Active |
-| Profile JSON persistence & Printable Card | JSON export/import & formatted printable HTML card | ✅ Active |
+| NASA POWER daily climate | NASA POWER API | Primary live data module; gridded historical climate context |
+| Soil profile | Farmer/lab inputs; optional ISRIC SoilGrids estimate | Implemented; missing inputs remain unknown; estimate is not a field test |
+| Rotation rules | Four regional catalogues and deterministic engine | Implemented for configured pilot areas; external agronomic review pending |
+| Global historical crop timing | Sacks et al. unfilled 0.5° calendar | Timing only, no crop suitability conclusion |
+| Optional MODIS / future climate | Separate modules and source-specific extracts/APIs | Conditional availability; not universal engine inputs |
+| SMAP / GPM / GRACE / FIRMS | Source documentation and exploratory references | Not dependable, always-on inputs to current recommendations |
+| Yield, profit and soil change guarantees | Not provided | Not validated and not claimed |
+| External agronomist/farmer validation | Review worksheet in `docs/EXPERT_VALIDATION.md` | Pending; no participant results claimed |
 
 ---
 

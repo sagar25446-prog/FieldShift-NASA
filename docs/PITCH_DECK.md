@@ -1,78 +1,32 @@
-# 🌾 FieldShift — 5-Slide Competition Pitch Deck
-**NASA International Space Apps Challenge**
-**Team:** FieldShift | **Target Audience:** Hackathon Judges & Agricultural Stakeholders
+# FieldShift pitch outline
 
----
+## 1. The challenge
 
-## Slide 1: The Problem — The Sinking Breadbaskets of the World
-**Headline:** Monoculture traps farmers between collapsing aquifers and climate extremes.
+Farmers weigh climate, water, soil and crop choices when planning what to grow next. The NASA Space Apps challenge asks teams to build decision support that brings those kinds of information together to explore crop rotations.
 
-### Visual / Graphics:
-- Side-by-side satellite imagery: NASA GRACE groundwater depletion map of Northwestern India (-4.0 cm/yr) and NASA FIRMS post-monsoon stubble fire smoke plumes across the Indo-Gangetic Plains.
-- **Farmer Persona:** Sardar Gurpreet Singh, 52, farming 6 acres in Ludhiana, Punjab.
-  - Sinks his tubewell 15 feet deeper every 4 years.
-  - Locked into rice-wheat monoculture because he lacks decision confidence on water budgets, soil risk, and economic safety.
-  - Facing rising energy costs, erratic monsoon breaks, and extreme March heat waves that shrivel wheat grains.
+## 2. What we built
 
-### Key Bullet Points:
-- **Global Aquifer Depletion:** Over 78% of Punjab administrative blocks and major agricultural belts worldwide (US Ogallala, Mediterranean Guadalquivir) face severe groundwater overdraft.
-- **Information Asymmetry:** Farmers want to diversify away from water-thirsty crops, but have zero visibility into their actual water budget, soil health trajectory, or future climate resilience.
-- **Ecological Urgency:** Monocultures drive soil organic matter depletion (<0.5% SOC), severe post-harvest residue fires, and massive synthetic nitrogen runoff.
+FieldShift is a Streamlit prototype. A user selects a location, reviews historical NASA POWER climate context, enters known soil and water details, chooses priorities and compares rule-based rotation plans in four pilot regions.
 
----
+## 3. What the user can see
 
-## Slide 2: The Solution — FieldShift
-**Headline:** Empowering farmers to transition from water-depleting monocultures to resilient, science-backed crop rotations.
+Each plan shows its crop sequence, available component scores, rule checks, trade-offs and missing inputs. A score is a comparison aid; it is not a probability of success, yield forecast, or promise of soil improvement.
 
-### Visual / Graphics:
-- Interactive UI screenshot showing the FieldShift workflow: Coordinates & Farm Inputs &rarr; NASA EO Analysis &rarr; Graph Search &rarr; Pareto Frontier &rarr; Water Savings Headline Banner (1,000 mm conserved!).
+## 4. How we use NASA data
 
-### Key Bullet Points:
-- **NASA-Powered Decision Engine:** Turns raw Earth observation data into hyper-local, actionable agronomic choices.
-- **Transparent Pareto Optimization:** Evaluates candidate multi-season crop rotations across water, soil, climate, and diversity without fake promises or black-box ML.
-- **Preserves Farmer Autonomy:** Puts the farmer in control with custom priority sliders, tubewell/canal water calculators, and explicit constraint avoidance.
-- **Proven Water Savings:** Shows exact cubic meters of water saved vs continuous monoculture (e.g. 10,000 m³/ha saved by shifting to Maize–Wheat–Moong).
+NASA POWER daily temperature and precipitation are retrieved for the selected coordinate and date range. The app preserves units, dates, request URL and missing-data coverage. The data is gridded climate context, not a farm station measurement. Separate optional modules are described in the data-source documentation; they are not all inputs to each plan.
 
----
+## 5. What remains
 
-## Slide 3: The NASA Earth Observation Stack
-**Headline:** Fusing 6 NASA satellite missions into a single unified farm intelligence pipeline.
+Crop calendars and rotation rules need review by qualified regional agronomists. Farmer and extension-adviser usability sessions, field calibration, and deployment verification are outstanding. Outside pilot areas, the app can provide climate context and sometimes historical crop timing, not a locally reviewed crop recommendation.
 
-### Visual / Architecture Diagram:
-- A layered technical stack:
-  1. **NASA POWER (Daily Surface Reanalysis):** 40+ years of daily historical solar radiation, Tmax, Tmin, and precipitation on a global 0.5° grid.
-  2. **NASA NEX-GDDP-CMIP6 (High-Res Future Projections):** Multi-model downscaled climate forecasts (SSP2-4.5 & SSP5-8.5) to test 2041–2060 heat wave risks.
-  3. **NASA SMAP (Soil Moisture Active Passive):** 9 km radiometer surface & root-zone volumetric water content assessing seedling establishment risk.
-  4. **NASA MODIS (MCD12Q2 & MOD13Q1):** 250m satellite land cover phenology (EVI2/NDVI) detecting double-cropping cycles and greenness peaks.
-  5. **NASA GRACE / GRACE-FO:** Gravimetric satellite measurement of regional groundwater mass balance.
-  6. **NASA FIRMS (VIIRS & MODIS):** Real-time thermal anomaly monitoring identifying post-harvest stubble burning windows.
+## Demo flow
 
----
+1. Open Home and point out the prototype disclaimer and globe.
+2. Choose the Punjab pilot and load the illustrative demo profile.
+3. Review NASA POWER provenance and note the gridded-data limitation.
+4. Compare two actual engine-generated plans and their checks and trade-offs.
+5. Change one farmer priority and show the weights used by the planner.
+6. Open Data and Methods and explain the unknown values and pending expert review.
 
-## Slide 4: Scientific & Economic Rigor
-**Headline:** Real biophysical equations and official government economics — zero fabricated numbers.
-
-### Visual / Comparison:
-- Mathematical callouts showing:
-  - **FAO-56 Penman–Monteith:** Dynamic stage-interpolated crop coefficients ($K_c$) and SCS effective rainfall for net irrigation deficit.
-  - **FAO EcoCrop & Cardinal Temperatures:** Rigorous thermal suitability bounds and anthesis heat stress thresholds.
-  - **Janssen (1984) SOC Model:** First-order soil organic carbon decay ($k = 0.025 \text{ yr}^{-1}$) and crop residue humification tracking over 3–5 year horizons.
-  - **Government of India MSP 2024–25 & CACP Economics:** Transparent gross margins, input costs, and water productivity (₹/m³) without deceptive yield guarantees.
-  - **Rank Sensitivity Analysis:** Proves rotation recommendations remain stable under ±20% preference perturbations.
-
----
-
-## Slide 5: Global Impact & Scalability
-**Headline:** Built in Punjab, engineered for the world.
-
-### Visual / Global Map:
-- World map showing 4 calibrated agricultural archetypes:
-  1. **Indo-Gangetic Plain (India):** Monsoonal subtropical (Rice–Wheat transition to Maize, Pulses, Millets).
-  2. **US Corn Belt (Iowa, USA):** Humid continental (Continuous Corn transition to Oats, Alfalfa, Rye cover).
-  3. **Mediterranean Basin (Spain):** Winter-wet / summer-dry (Cereal–Fallow transition to Chickpea, Sunflower).
-  4. **Semi-Arid Tropics (Deccan, India / Africa):** Dryland Vertisols (Cotton/Cane transition to Sorghum, Pigeonpea).
-
-### Key Takeaways:
-- **Global Coordinate Engine:** Enter any lat/long on Earth; FieldShift automatically detects climate zone, fetches NASA POWER data, and configures the crop engine.
-- **One-Page Printable Farmer Rotation Card:** Instant PDF/print export bridging the digital divide for extension workers in the field.
-- **Ready to Deploy:** Fully tested (247+ passing automated tests, GitHub Actions CI, MIT License), zero API key requirements, live and operational today!
+Label demo inputs as illustrative. Use only the output shown in the current app session; do not promise particular rankings, savings or gains in advance.

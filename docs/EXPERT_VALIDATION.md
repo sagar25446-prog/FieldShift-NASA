@@ -1,36 +1,49 @@
-# 🎓 Agronomic & Institutional Methodology Validation
+# Agronomist and farmer review record
 
-FieldShift's biophysical models and decision-support algorithms are designed to adhere strictly to standards established by premier international and national agricultural research institutions.
+**Status: not yet externally reviewed.** This document is a review worksheet, not an endorsement. No expert testimonial or farmer trial is claimed. Record a review only after the person has reviewed the stated material and agreed to the wording.
 
----
+## Agronomist review
 
-## 1. Institutional Framework Alignment
+Complete one copy for each region and season system. Attach the catalogue/rules revision reviewed and sources or field-study evidence for proposed changes.
 
-| Domain | Institutional Standard | Implementation in FieldShift |
-| :--- | :--- | :--- |
-| **Crop Water Requirements** | **FAO Irrigation & Drainage Paper 56** (Penman–Monteith ET₀ & Table 12 $K_c$) | Daily stage-interpolated crop coefficients ($K_{c,\text{ini}}, K_{c,\text{mid}}, K_{c,\text{end}}$), SCS runoff curve numbers, and net irrigation deficits. |
-| **Thermal Suitability** | **FAO EcoCrop Environmental Database** & PAU Package of Practices | 4-point cardinal temperatures ($T_{\text{min,abs}}, T_{\text{min,opt}}, T_{\text{max,opt}}, T_{\text{max,abs}}$) and anthesis extreme-heat threshold checks. |
-| **Soil Organic Carbon (SOC)** | **Janssen (1984) SOC Model** & **IPCC (2006)** Guidelines Vol. 4 | First-order decomposition kinetics ($k \approx 0.025 \text{ yr}^{-1}$) parameterized with regional crop residue C:N ratios and humification factors. |
-| **Nitrogen Dynamics** | **FAO Fertilizer & Plant Nutrition Bulletin 16** | Legume biological atmospheric $N_2$ fixation credits (Moong, Chickpea, Dhaincha, Alfalfa) and crop removal balances. |
-| **Indicative Economics** | **Commission for Agricultural Costs & Prices (CACP)** & **PAU Economics** | Official Government of India Minimum Support Prices (MSP) 2024–25 and university benchmark operational costs. |
-| **Multi-Objective Choice** | **Pareto Efficiency Criteria** & Rank Stability Testing | Strict non-dominance frontier; refusal to assume dominance when parameters are unmeasured; $\pm 20\%$ weight perturbation stability testing. |
+| Field | Reviewer entry |
+|---|---|
+| Reviewer name and role | Pending |
+| Institution / region | Pending |
+| Date and catalogue revision | Pending |
+| Crops and calendars reviewed | Pending |
+| Water / temperature / soil assumptions reviewed | Pending |
+| Rotation and pest-family rules reviewed | Pending |
+| Errors or unsafe interpretations found | Pending |
+| Required changes before farmer-facing use | Pending |
+| Reviewer's approved public attribution, if any | Pending |
 
----
+### Review questions
 
-## 2. Agronomic Expert Review & Testimonials
+1. Are crop names, season windows and units correct for this area?
+2. Are hard exclusions supported by the cited local guidance? Are any missing?
+3. Are water-demand comparisons appropriate to the stated crop duration and irrigation method?
+4. Are soil and nutrient metrics described without implying a measured improvement?
+5. Do the unknown-data messages and plan trade-offs make sense to farmers?
+6. Which crop plans should be marked unsupported pending stronger evidence?
 
-### Quote from Agricultural Extension Agronomist:
-> *"The predominant failure mode of digital agricultural apps in South Asia is the temptation to present unverified yield predictions or spurious profit guarantees that lose farmer trust. FieldShift's decision to ground every rotation in published Package of Practices from Punjab Agricultural University, explicitly distinguish model estimates from field observations, and highlight water savings in physical cubic meters per hectare is exactly what agricultural extension officers need to facilitate genuine farmer adoption."*
-> — **Dr. K. S. Bhullar**, Agricultural Extension Specialist & Farming Systems Consultant
+## Farmer and adviser usability review
 
-### Alignment with USDA-ARS Marsden Farm Findings:
-> *"Research from the long-term Marsden Farm cropping systems trial demonstrated that diversifying simple 2-year corn-soybean monocultures into 3- and 4-year rotations with small grains and forage legumes reduced synthetic mineral nitrogen applications by over 80% and herbicide dependence by 88% while matching or exceeding conventional net profitability. FieldShift's multi-year trajectory model captures these exact biophysical and economic dynamics for farmers across global agro-ecological zones."*
-> — **Methodology Note**, based on USDA-ARS Sustainable Agricultural Systems studies
+Do not ask participants to make an irreversible farm decision. Use a demo profile and observe whether they can:
 
----
+1. Select a location and tell the difference between climate context, historical calendar timing, and a supported regional rotation plan.
+2. Enter what they know about soil and water and leave unknown values blank.
+3. Find the data dates, units, sources and missing-data warnings.
+4. Compare plans and explain one benefit, one trade-off and one uncertainty in their own words.
+5. Identify which result needs confirmation from a local adviser.
 
-## 3. Scientific Integrity Principles Enforced
+Record anonymous task completion, confusion points, accessibility/language issues, and requested changes. Obtain permission before recording identifiable participant details or quoting them publicly.
 
-1. **No False Certainty:** The engine never displays arbitrary "confidence percentages" (e.g. "94% confidence this crop will succeed"). Unknown variables remain explicitly `N/A`.
-2. **Hard Constraints Cannot Be Bought:** A high economic margin or diversity score can **never** override a physical failure check (e.g., waterlogging sensitivity in wheat or budget deficits).
-3. **Transparent Provenance:** Every crop coefficient, temperature threshold, and rotation link is directly tied to an active HTTPS source reference.
+## Current status
+
+- External agronomist review: **pending**.
+- Farmer/adviser usability sessions: **pending**.
+- Field-trial calibration: **not performed**.
+- Public testimonials: **none approved**.
+
+Code tests and literature citations cannot substitute for these reviews. Update this record only with real review evidence.

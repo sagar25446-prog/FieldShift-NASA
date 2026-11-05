@@ -1,7 +1,7 @@
 # FieldShift — Submission Checklist
 
 **Challenge:** Field Shift: Adapting Farms with NASA Data  
-**Team repository:** https://github.com/sagar25446-prog/FieldShift-NASA  
+**Team repository:** https://github.com/sagar25446-prog/Nasa-Hacakathon
 **Live demo:** https://fieldshift-nasa.streamlit.app *(verify after deployment)*
 
 ---
@@ -57,7 +57,7 @@
 2. Sign in with your **GitHub account** (`sagar25446-prog`)
 3. Click **"New app"**
 4. Select:
-   - **Repository:** `sagar25446-prog/FieldShift-NASA`
+   - **Repository:** `sagar25446-prog/Nasa-Hacakathon`
    - **Branch:** `main`
    - **Main file path:** `app.py`
 5. Click **"Deploy!"**
@@ -75,10 +75,10 @@
 - [ ] **Project title:** FieldShift
 - [ ] **Challenge:** Field Shift: Adapting Farms with NASA Data
 - [ ] **Project description:** (see draft below)
-- [ ] **GitHub link:** https://github.com/sagar25446-prog/FieldShift-NASA
+- [ ] **GitHub link:** https://github.com/sagar25446-prog/Nasa-Hacakathon
 - [ ] **Demo link:** https://fieldshift-nasa.streamlit.app
 - [ ] **Team members:** Add all team members
-- [ ] **NASA data used:** NASA POWER Daily API (T2M, T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN), NASA NEX-GDDP-CMIP6 climate projections (5 models, SSP2-4.5 & SSP5-8.5), NASA MODIS MCD12Q2 land surface phenology (500m), NASA GRACE groundwater depletion context (Rodell et al. 2009 Nature), and NASA FIRMS active fire detection context (VIIRS 375m & MODIS 1km)
+- [ ] **NASA data used:** NASA POWER Daily is the primary live climate integration. Describe optional modules only if the current app session can demonstrate their source, coverage and provenance. Do not imply that every optional source is fused into rotation ranking.
 - [ ] **Tools/technologies:** Python, Streamlit, pandas, NumPy, Plotly, pytest (MIT License)
 
 ### Check If Required
@@ -134,5 +134,5 @@ FieldShift does not predict yields, forecast weather, or make uncalibrated profi
 | **Can this predict crop yield or profit?** | No. FieldShift compares documented rotation alternatives using transparent, rule-based agronomic methods. It does not predict yield, profit, or soil improvement, as those require detailed field calibration that coarse satellite grids cannot provide. |
 | **How are all catalogue crops represented in the rotation graph?** | The rotation graph contains 19 PAU-documented relationships connecting all 10 catalogue crops across Kharif, Rabi, and Summer seasons. Both Pearl Millet (Bajra) and Rapeseed Mustard (Raya/Sarson) are fully connected and reachable under their appropriate soil conditions (e.g. well-drained, sandy loam). |
 | **What happens if soil or climate data is missing?** | Missing inputs are never fabricated or guessed. If an indicator lacks data, its score displays "N/A" and uncertainty warnings are attached to the plan. Composite scores only weight available metrics, and Pareto comparisons never let unknown scores give false dominance. |
-| **Why rule-based rather than machine learning?** | Smallholder farmers need transparent, auditable rationales. Rule-based search over peer-reviewed PAU recommendations ensures every constraint (e.g. waterlogging sensitivity, family rotation breaks) is 100% explainable, verifiable, and free from black-box hallucinations. |
+| **Why rule-based rather than machine learning?** | The current prototype uses deterministic regional rules so users can inspect the inputs and checks. The rules still need qualified local agronomist review; they are not guaranteed to be complete or correct for every farm. |
 | **Can this scale to other regions?** | Yes. The engine, scoring system, and NASA POWER pipeline are region-agnostic. Adapting to another state or country requires only a regional crop catalogue, rotation graph, and season calendar definitions. |

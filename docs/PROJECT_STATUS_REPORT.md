@@ -44,3 +44,7 @@ NASA POWER is retrieved through a dedicated client with units, request provenanc
 ## Improvement made after this review
 
 The home page now distinguishes arbitrary-location climate/calendar exploration from a supported pilot-region rotation planner. Its map identifies itself as a geographic illustration, and its location report labels NASA POWER as gridded climate context and the calendar atlas as historical regional timing. See [Earth explorer methods](EARTH_EXPLORER.md).
+
+## Completion boundary
+
+Software and documentation can be made internally consistent, checked and prepared for outside review. They cannot complete third-party agronomic approval, farmer research, or field calibration without actual qualified reviewers, participating farmers and local study data. These are named acceptance gates, not tasks that can be truthfully checked off by implementation alone. See [review worksheet](EXPERT_VALIDATION.md).

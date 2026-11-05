@@ -78,3 +78,9 @@ Validate calculations and messaging with advisors and representative users; prep
 - Unit, integration, and manual test results are recorded.
 - Limitations and non-guarantee language are visible in the product and demo.
 - A clean setup can run the app and checks using the README instructions.
+
+**Current completion status**
+
+- Software and documentation cleanup is in progress; run results must be recorded after each release candidate.
+- External agronomist review and farmer usability testing are not complete. They require real participants and must not be represented as completed by code changes.
+- Deployment health should be checked on the public app after each repository push; a successful Git push alone is not deployment verification.
