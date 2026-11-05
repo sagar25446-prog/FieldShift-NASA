@@ -559,6 +559,17 @@ def _location_brief(point: dict) -> None:
     calendars = atlas_calendar.at_point(latitude, longitude)
     with st.container(key="location_brief"):
         st.subheader("Location report", anchor=False)
+        from .regions import pilot_candidate
+        pilot = pilot_candidate(latitude, longitude)
+        if pilot:
+            st.badge(f"{pilot.name} · regional rotation rules available", color="green", icon=":material/agriculture:")
+            st.caption("Open this field to compare rule-checked plans from its regional crop catalogue.")
+        elif calendars:
+            st.badge("Global climate + historical crop timing", color="blue", icon=":material/public:")
+            st.caption("This point has climate context and recorded crop timing. It does not have a locally reviewed rotation engine.")
+        else:
+            st.badge("Global climate context", color="blue", icon=":material/public:")
+            st.caption("Crop timing and locally reviewed rotation rules are unavailable for this grid cell.")
         st.write(f"{abs(latitude):.3f}° {'S' if latitude < 0 else 'N'}  ·  "
                  f"{abs(longitude):.3f}° {'W' if longitude < 0 else 'E'}")
         if calendars:
