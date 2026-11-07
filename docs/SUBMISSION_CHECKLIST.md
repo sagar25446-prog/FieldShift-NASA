@@ -18,8 +18,8 @@
 - [x] `requirements.txt` lists all pinned dependencies
 - [x] `.streamlit/config.toml` present for deployment
 - [x] Code pushed to GitHub (`main` branch)
-- [ ] **Deploy to Streamlit Cloud** (manual step — see instructions below)
-- [ ] **Verify public URL loads and completes full workflow**
+- [x] **Deploy to Streamlit Cloud** (deployed live at https://fieldshift-nasa.streamlit.app)
+- [x] **Verify public URL loads and completes full workflow** (verified via outputs/verify_live.py)
 
 ### Documentation & Competition Materials
 - [x] `README.md` — project overview, global features, setup, tests
