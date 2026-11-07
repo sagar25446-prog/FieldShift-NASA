@@ -9,8 +9,8 @@
                         └──────┬───────┘
                                │
                         ┌──────▼───────┐
-                        │    ui.py     │  8-page Streamlit interface
-                        │  (1161 lines)│  sidebar, forms, charts
+                        │    ui.py     │  11-page Streamlit interface
+                        │  (2854 lines)│  sidebar, forms, charts
                         └──┬──┬──┬──┬──┘
                            │  │  │  │
               ┌────────────┘  │  │  └────────────────┐
@@ -28,7 +28,7 @@
               │    │crops.   │  │rotation_│   │ (FAO/IPCC,     │
               │    │json     │  │rules.   │   │  N-balance,    │
               │    │(10 crops│  │json     │   │  SOC direction)│
-              │    │ + PAU   │  │(11 edges│   └────────────────┘
+              │    │ + PAU   │  │(19 edges│   └────────────────┘
               │    │ sources)│  │+ season │
               │    └─────────┘  │ cycle)  │
               │                 └─────────┘
@@ -44,9 +44,26 @@
 | Module | Purpose |
 |---|---|
 | `climate_features.py` | Extract precipitation totals and temperature summaries from retrieved data |
-| `data_access.py` | Data source readiness contracts (NASA POWER, GPM, MODIS, soil-moisture) |
-| `agronomy.py` | Agronomic rule contracts (not yet fully implemented) |
-| `recommendations.py` | Rotation comparison contracts (not yet fully implemented) |
+| `climate_suitability.py` | FAO EcoCrop thermal suitability assessment |
+| `climate_trends.py` | Multi-decadal OLS trend analysis from NASA POWER |
+| `data_access.py` | Data source readiness contracts |
+| `economics.py` | Indicative gross-margin economics (GoI MSP, PAU costs) |
+| `export_import.py` | JSON farm profile serialization and printable HTML summary cards |
+| `fao56.py` | Full FAO-56 Penman-Monteith ET₀/ETc water balance |
+| `future_climate.py` | NASA NEX-GDDP-CMIP6 climate projection integration |
+| `global_calendar.py` | Global crop calendar atlas (Sacks et al. 2010) |
+| `growing_season.py` | Season date windowing and crop duration calculation |
+| `land_use_phenology.py` | MODIS MCD12Q2 phenology client and season-use classification |
+| `multi_year_simulation.py` | 3–5 year rotation trajectory simulation (SOC, N-balance) |
+| `satellite_context.py` | GRACE, FIRMS, SMAP, GPM, MODIS reference context |
+| `sensitivity.py` | Weight perturbation analysis and plain-language explanations |
+| `soil_nutrient_model.py` | Simplified FAO/IPCC Tier 1 N-balance and SOC model |
+| `soil_data.py` | ISRIC SoilGrids integration with uncertainty envelopes |
+| `world_map.py` | D3.js interactive globe/map selector component |
+| `calendar_workspace.py` | Custom calendar editing for non-pilot locations |
+| `regions.py` | Multi-region framework (Punjab, US Corn Belt, Mediterranean, Semi-Arid) |
+| `agronomy.py` | Verified crop calendars, pilot recommendations, heatwave hindcast |
+| `recommendations.py` | Rotation comparison guard (logic lives in rotation_engine.py) |
 
 ## Data Flow
 

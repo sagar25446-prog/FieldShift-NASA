@@ -2,7 +2,7 @@
 
 ## Automated checks in this release
 
-**58 tests total (57 passed + 1 opt-in integration skip)**
+**269 tests total (264 passed + 5 opt-in integration/deployment skips)**
 
 ### Foundation tests (`test_foundation.py`)
 - Import and behaviour checks for data-access, agronomy, and recommendation contracts.

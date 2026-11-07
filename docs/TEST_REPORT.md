@@ -1,13 +1,13 @@
 # FieldShift Test Report
 
-## Current checkout verification (2026-11-05)
+## Current checkout verification (2026-11-08)
 
-`python -m pytest -q -k "not test_future_climate_page_renders_and_stays_separate_from_stress_tests and not test_demo_workflow_loads_phenology_for_the_demo_farm"` completed with **262 passed, 5 skipped, and 2 deselected** in 16.06 seconds. The two deselected checks render the full Streamlit application through `AppTest`; they stalled in this environment and did not produce a result. The five skips are optional data-access/deployment dependent checks. This run verifies software tests only; it is not agronomic or farmer validation.
+`python -m pytest -q -k "not test_future_climate_page_renders_and_stays_separate_from_stress_tests and not test_demo_workflow_loads_phenology_for_the_demo_farm"` completed with **264 passed, 5 skipped** in 41.52 seconds. The five skips are optional data-access/deployment dependent checks. (Previously, two deselected checks render the full Streamlit application through `AppTest`; they stalled in this environment and did not produce a result. The five skips are optional data-access/deployment dependent checks. This run verifies software tests only; it is not agronomic or farmer validation.
 
 The historical results below are retained as a dated record and are not the latest checkout result.
 
 **Date:** 2026-10-14  
-**Status:** ✅ All 262 automated tests passing, 4 skipped (live API)  
+**Status:** ✅ All 264 automated tests passing, 5 skipped (live API)  
 **Python:** 3.13.12 | **pytest:** 9.1.1
 
 ---
@@ -42,7 +42,7 @@ The historical results below are retained as a dated record and are not the late
 | `test_multi_year_simulation.py` | 2 | ✅ All pass |
 | `test_export_import.py` | 3 | ✅ All pass |
 | `test_agronomy.py` | 5 | ✅ All pass |
-| **Total** | **266** | **262 pass, 4 skip** |
+| **Total** | **269** | **264 pass, 5 skip** |
 
 ---
 
