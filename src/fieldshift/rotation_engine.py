@@ -9,6 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from pathlib import Path
 import json
+import math
 from typing import Mapping
 
 
@@ -143,10 +144,10 @@ def normalize_weights(weights: Mapping[str, float]) -> dict[str, float]:
     if unknown:
         raise RotationInputError(f"Unknown priority metrics: {sorted(unknown)}")
     completed = {metric: float(weights.get(metric, 0.0)) for metric in METRICS}
-    if any(value < 0 for value in completed.values()):
-        raise RotationInputError("Priority weights cannot be negative.")
+    if any(not math.isfinite(value) or value < 0 for value in completed.values()):
+        raise RotationInputError("Priority weights must be finite and cannot be negative.")
     total = sum(completed.values())
-    if total <= 0:
+    if not math.isfinite(total) or total <= 0:
         raise RotationInputError("At least one priority weight must be greater than zero.")
     return {metric: value / total for metric, value in completed.items()}
 

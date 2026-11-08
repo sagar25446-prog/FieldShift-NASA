@@ -157,9 +157,11 @@ def evaluate_robustness(
     if baseline_id not in {scenario.identifier for scenario in scenarios}:
         raise ScenarioInputError("Scenario comparison requires the historical_baseline scenario.")
     outcomes: dict[tuple[str, ...], tuple[ScenarioOutcome, ...]] = {}
+    baseline_scenario = next(s for s in scenarios if s.identifier == baseline_id)
     for baseline_plan in baseline_plans:
         evaluated: list[ScenarioOutcome] = []
-        baseline_scores: Mapping[str, float | None] | None = None
+        reference = engine.assess_sequence(baseline_plan.crop_ids, scenario_profile(profile, baseline_scenario))
+        baseline_scores = {metric: reference.metrics[metric].score for metric in METRICS}
         for scenario in scenarios:
             assessed = engine.assess_sequence(baseline_plan.crop_ids, scenario_profile(profile, scenario))
             scores = {metric: assessed.metrics[metric].score for metric in METRICS}

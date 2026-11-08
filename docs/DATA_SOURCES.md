@@ -78,8 +78,14 @@ MCD12Q2 is used instead of the raw 16-day MOD13Q1 NDVI because MCD12Q2 provides 
 | NASA NEX-GDDP-CMIP6 v2.0 (5 models; SSP2-4.5, SSP5-8.5) | tasmax, tasmin, pr | 0.25° (~25 km); daily; 1995–2014 vs 2041–2060 | **Future-climate comparison:** the same plan's water score, climate score, ETc, irrigation need and heat days under each model's future vs its own historical run | Projections, not forecasts; 5 of 35 models; temperature and precipitation only; no adaptation or CO₂ effects ([details](FUTURE_CLIMATE.md)) |
 | ISRIC SoilGrids 2.0 (optional) | Sand/silt/clay, SOC, pH, total N | 250 m | Starting SOC for the simplified soil model; texture only if robust | Modelled estimate; wide uncertainty; beta API |
 | Farmer / laboratory input | Soil tests, water budget, constraints | Field | Hard constraints and overrides | Depends on what the farmer knows |
-| GPM IMERG | — | 0.1° | **Not integrated** (needs Earthdata Login) | — |
-| SMAP | — | 9 km | **Not integrated** (surface moisture not decision-relevant here) | — |
+| NASA ECOSTRESS (ISS) | LST, Evaporative Stress Index (ESI) | 70 m; 1–5 days | Plant water stress detection up to 48h before wilting; midday canopy heat closures | ISS precessing orbit cadence; cloud obscuration |
+| NASA SRTM DEM | Elevation, slope %, Topographic Wetness Index (TWI) | 30 m; static | RUSLE water erosion LS-factor assessment, low-lying waterlogging ponding risk, frost drainage basins | Static topographic baseline |
+| NASA / USGS Landsat 8/9 | Surface Reflectance, Bare Soil Index (BSI), NDVI | 30 m; 8-day constellation | Parcel-level field boundary resolution without pixel mixing; fallow bare-field tracking | Cloud/shadow interference; 8-day revisit |
+| NASA SMAP L3/L4 | Volumetric soil moisture (0–5 cm surface, 0–100 cm root-zone) | 9 km; daily / 3-hourly | Distinguishes surface seedbed moisture from subsoil moisture buffering; contextualizes irrigation need | Coarse spatial scale requires SoilGrids pedotransfer downscaling |
+| NASA GPM IMERG V07 | Satellite radar/microwave precipitation | 0.1° (~10 km); half-hourly | Cross-validation with NASA POWER rainfall; storm intensity and monsoon onset tracking | Satellite precipitation estimate calibrated monthly against GPCC gauges |
+| NASA GRACE / GRACE-FO | Terrestrial water storage anomaly (TWS) | 300–400 km; monthly | Regional groundwater depletion rate (-4.0 cm/yr in Punjab) justifying shift away from flooded paddy | Macro regional scale; cannot resolve individual tubewell drawdowns |
+| NASA FIRMS | Active fire thermal anomalies (VIIRS/MODIS) | 375 m / 1 km; near real-time | Tracks post-kharif crop residue burning intensity; motivates rotations eliminating stubble burning | Only detects active burns under clear sky conditions |
+| NASA GEDI LiDAR (ISS) | Full-waveform canopy height, aboveground biomass density | 25 m footprint | Agricultural crop canopy architecture and residue biomass carbon inputs for SOC model | Discontinuous track sampling |
 
 Full method: [`docs/OBSERVED_LAND_USE.md`](OBSERVED_LAND_USE.md).
 

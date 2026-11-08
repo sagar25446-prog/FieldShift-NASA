@@ -8,7 +8,7 @@ export default function({parentElement:root,data,setTriggerValue}) {
   function draw() {
     const height=state.flat?360:480;
     svg.setAttribute('viewBox',`0 0 720 ${height}`);
-    projection=state.flat?d3.geoEquirectangular().scale(720/(2*Math.PI)).translate([360,180]):d3.geoOrthographic().rotate(state.rotation).scale(206*state.zoom).translate([360,240]).clipAngle(90);
+    projection=state.flat?d3.geoEquirectangular().scale(720*state.zoom/(2*Math.PI)).translate([360,180]):d3.geoOrthographic().rotate(state.rotation).scale(206*state.zoom).translate([360,240]).clipAngle(90);
     path=d3.geoPath(projection);
     root.querySelector('.sphere').setAttribute('d',path({type:'Sphere'}));
     root.querySelector('.land').setAttribute('d',path(data.land));
@@ -55,13 +55,16 @@ export default function({parentElement:root,data,setTriggerValue}) {
   root.querySelector('.zoomIn').onclick=()=>zoom(1.25);
   root.querySelector('.zoomOut').onclick=()=>zoom(.8);
   root.querySelector('.reset').onclick=()=>{state.rotation=[-55,-18,0];state.zoom=1;draw();};
-  root.querySelector('.centre').onclick=()=>{if(state.selected){state.rotation=[-state.selected.lon,-state.selected.lat,0];if(!state.flat)draw();}};
+  root.querySelector('.centre').onclick=()=>{if(state.selected){state.flat=false;state.rotation=[-state.selected.lon,-state.selected.lat,0];draw();}};
   svg.onwheel=e=>{e.preventDefault();state.zoom=Math.max(.75,Math.min(3,state.zoom*(e.deltaY<0?1.08:.92)));draw();};
   svg.onpointerdown=e=>{if(e.target.closest('[data-pilot]'))return;down={x:e.clientX,y:e.clientY,rotation:[...state.rotation],moved:false};svg.setPointerCapture(e.pointerId);};
   svg.onpointermove=e=>{if(!down||state.flat)return;const dx=e.clientX-down.x,dy=e.clientY-down.y;if(Math.hypot(dx,dy)>5)down.moved=true;state.rotation=[down.rotation[0]+dx*.35/state.zoom,Math.max(-85,Math.min(85,down.rotation[1]-dy*.35/state.zoom)),0];draw();};
   svg.onpointerup=e=>{if(!down)return;const dragged=down.moved;down=null;if(dragged)return;const p=position(e);if(!state.flat&&Math.hypot(p.x-360,p.y-240)>projection.scale())return;const ll=projection.invert([p.x,p.y]);if(ll&&ll.every(Number.isFinite)&&Math.abs(ll[1])<=90)select(ll[1],Math.max(-180,Math.min(180,ll[0])),null);};
   svg.onpointercancel=()=>{down=null;};
   svg.onkeydown=e=>{if(e.target!==svg)return;if(e.key==='Enter'){e.preventDefault();select(state.cursor.lat,state.cursor.lon,null);return;}if(!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))return;e.preventDefault();const step=1/state.zoom;const lat=Math.max(-90,Math.min(90,state.cursor.lat+(e.key==='ArrowUp'?step:e.key==='ArrowDown'?-step:0)));const lon=((state.cursor.lon+(e.key==='ArrowRight'?step:e.key==='ArrowLeft'?-step:0)+540)%360)-180;state.rotation=[-lon,-lat,0];select(lat,lon,null,false);};
-  const saved=state.selected??data.selected;
+  const incoming=JSON.stringify(data.selected??null);
+  const changed=state.lastIncoming!==incoming;
+  state.lastIncoming=incoming;
+  const saved=changed?data.selected:state.selected;
   if(saved)select(saved.lat,saved.lon,data.pilots.find(p=>p.id===saved.pilot),false);else draw();
 }

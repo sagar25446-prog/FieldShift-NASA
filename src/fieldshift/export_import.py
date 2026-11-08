@@ -110,15 +110,25 @@ def generate_farmer_summary_card_html(
     farm_profile: Mapping[str, Any],
     plan_crop_names: Sequence[str],
     plan_seasons: Sequence[str],
-    water_saved_mm: float = 0.0,
-    water_saved_m3_ha: float = 0.0,
-    gross_margin_text: str = "Indicative positive margin",
+    water_saved_mm: float | None = None,
+    water_saved_m3_ha: float | None = None,
+    gross_margin_text: str = "Unavailable",
     composite_score: float | None = None,
     region_name: str = "Indo-Gangetic Plain (Punjab)",
     crop_calendar_details: Sequence[Mapping[str, str]] | None = None,
+    climate_provenance: str | None = None,
 ) -> str:
     """Generate a clean, printable 1-page HTML summary card with print styling."""
     from .agronomy import CROP_CALENDARS, PILOT_RECOMMENDATION_TEXT
+    from html import escape
+
+    plan_crop_names = [escape(str(value)) for value in plan_crop_names]
+    plan_seasons = [escape(str(value)) for value in plan_seasons]
+    region_name = escape(region_name)
+    gross_margin_text = escape(gross_margin_text)
+    provenance_text = escape(climate_provenance or "NASA POWER request not attached to this exported card; retrieve climate data and review its provenance in the app.")
+    water_mm_text = f"{water_saved_mm:,.0f} mm" if water_saved_mm is not None else "Unavailable"
+    water_volume_text = f"{water_saved_m3_ha:,.0f} m³/ha" if water_saved_m3_ha is not None else "Unavailable"
 
     crops_flow = " &rarr; ".join(
         f"<strong>{c}</strong> <span style='font-size:0.85em;color:#555;'>({s})</span>"
@@ -132,9 +142,9 @@ def generate_farmer_summary_card_html(
             (entry for entry in CROP_CALENDARS.values() if entry.crop_name.lower().startswith(crop_name.lower()) or crop_name.lower().startswith(entry.crop_name.lower())),
             None,
         )
-        sow_win = matched_cal.sowing_window if matched_cal else f"Recommended for {season} season"
-        harv_win = matched_cal.harvest_window if matched_cal else "End of season"
-        dur = f"{matched_cal.typical_duration_days} days" if matched_cal else "Full season"
+        sow_win = matched_cal.sowing_window if matched_cal else "Unknown; local review needed"
+        harv_win = matched_cal.harvest_window if matched_cal else "Unknown"
+        dur = f"{matched_cal.typical_duration_days} days" if matched_cal else "Unknown"
         calendar_rows += f"""
         <tr>
           <td style="padding:6px;font-weight:bold;border-bottom:1px solid #eee;">{crop_name} ({season})</td>
@@ -144,14 +154,14 @@ def generate_farmer_summary_card_html(
         </tr>
         """
 
-    lat = farm_profile.get("latitude", "N/A")
-    lon = farm_profile.get("longitude", "N/A")
-    texture = farm_profile.get("texture", "Medium")
-    ph = farm_profile.get("ph", "N/A")
-    soc = farm_profile.get("organic_carbon_percent", "N/A")
-    budget = farm_profile.get("water_budget_mm", "N/A")
+    def display_value(key: str) -> str:
+        value = farm_profile.get(key)
+        return "Unknown" if value is None else escape(str(value))
 
-    score_badge = f"{composite_score:.2f} / 1.00" if composite_score is not None else "Evidence Verified"
+    lat, lon, texture, ph, soc, budget = map(display_value, (
+        "latitude", "longitude", "texture", "ph", "organic_carbon_percent", "water_budget_mm"))
+
+    score_badge = f"{composite_score:.2f} / 1.00" if composite_score is not None else "Score unavailable"
 
     return f"""<!DOCTYPE html>
 <html>
@@ -361,17 +371,17 @@ def generate_farmer_summary_card_html(
   </div>
 
   <div class="pilot-box">
-    <strong>🌾 Pilot-First Protocol (Risk-Reduction):</strong> Smallholders and farm managers are advised to trial this new sequence on <strong>10%–20% of acreage</strong> in Year 1. Confirm local seed germination, irrigation turns, and market buyers before complete field transition.
+    {"<strong>Local review required (Pilot-First Protocol):</strong> Smallholders and farm managers are advised to trial this new sequence on <strong>10%–20% of operational acreage</strong> in Year 1. Confirm crop-calendar overlap, seed germination, and market access with a qualified local adviser." if farm_profile.get("latitude") is not None else "<strong>Local review required:</strong> Confirm crop-calendar overlap, soil measurements, irrigation, equipment and market access with a qualified local adviser. Any trial area should be agreed for the farm's circumstances."}
   </div>
 
   <div class="water-hero">
     <div>
       <div class="water-hero-txt">💧 Water Conservation vs Continuous Paddy-Wheat Baseline:</div>
-      <div style="font-size:10px;color:#333;">Protects regional aquifers tracked by NASA GRACE and preserves tubewell pumping life.</div>
+      <div style="font-size:10px;color:#333;">{"Modelled difference from a regional benchmark; contextualized by regional aquifer monitoring including NASA GRACE observations." if farm_profile.get("latitude") is not None else "Modelled difference from a regional benchmark; not measured water saved or the farmer's own current rotation."}</div>
     </div>
     <div style="text-align:right;">
-      <div class="water-hero-val">{water_saved_mm:,.0f} mm</div>
-      <div style="font-size:10px;font-weight:bold;color:#0d47a1;">{water_saved_m3_ha:,.0f} m³/ha saved</div>
+      <div class="water-hero-val">{water_mm_text}</div>
+      <div style="font-size:10px;font-weight:bold;color:#0d47a1;">{water_volume_text} modelled difference</div>
     </div>
   </div>
 
@@ -387,8 +397,8 @@ def generate_farmer_summary_card_html(
         <div class="stat-lbl">Indicative Economic Outlook</div>
       </div>
       <div class="stat-card">
-        <div class="stat-val">+ Legume Credit</div>
-        <div class="stat-lbl">Soil Nitrogen Offset</div>
+        <div class="stat-val">Not measured</div>
+        <div class="stat-lbl">Nitrogen fixation / soil change</div>
       </div>
     </div>
   </div>
@@ -396,12 +406,8 @@ def generate_farmer_summary_card_html(
   <div class="section">
     <div class="section-title">🛰️ NASA Earth Observation Provenance</div>
     <div style="font-size:10px;color:#444;background:#f5f5f5;padding:6px 10px;border-radius:4px;">
-      Climate: <strong>NASA POWER</strong> daily historical reanalysis &bull;
-      Future Projections: <strong>NASA NEX-GDDP-CMIP6</strong> &bull;
-      Soil Moisture: <strong>NASA SMAP</strong> &bull;
-      Phenology: <strong>NASA MODIS MCD12Q2</strong> &bull;
-      Groundwater: <strong>NASA GRACE</strong> &bull;
-      Thermal Fire Anomalies: <strong>NASA FIRMS</strong>
+      {provenance_text}<br>
+      Historical gridded climate is not a field measurement. Optional satellite sources are not implied by this card.
     </div>
   </div>
 

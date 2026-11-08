@@ -297,3 +297,233 @@ MODIS_NDVI_CONTEXT = ModisNdviContext(
     source_url="https://modis.gsfc.nasa.gov/",
 )
 
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NASA ECOSTRESS Thermal Stress & Evaporative Stress Index Context
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class EcostressThermalContext:
+    """NASA ECOSTRESS (ISS) 70m Land Surface Temperature & Evaporative Stress context."""
+
+    sensor: str
+    spatial_resolution_m: int
+    temporal_cadence_days: str
+    evaporative_stress_index: float  # ESI (0 = severe water stress, 1 = unstressed)
+    canopy_temperature_anomaly_c: float
+    finding: str
+    citation: str
+    source_url: str
+
+
+ECOSTRESS_PUNJAB_CONTEXT = EcostressThermalContext(
+    sensor="NASA ECOSTRESS (ISS Thermal Radiometer L2/L3 ET & ESI)",
+    spatial_resolution_m=70,
+    temporal_cadence_days="1 to 5 days (ISS precessing orbit)",
+    evaporative_stress_index=0.38,  # Below 0.5 indicates plant water stress
+    canopy_temperature_anomaly_c=+2.4,  # +2.4°C afternoon canopy heating above air temp
+    finding=(
+        "ECOSTRESS 70m high-resolution thermal imaging captures plant water stress and stomatal closure "
+        "hours before visible wilting. In double-cropped Punjab, peak afternoon Land Surface Temperature (LST) "
+        "reveals acute moisture deficits during late-Rabi grain filling and May bare-fallow periods."
+    ),
+    citation="Fisher, J. B., et al. (2020). The ECOSTRESS mission: Ecosystem plant water stress from the International Space Station. Remote Sensing of Environment, 247, 111883.",
+    source_url="https://ecostress.jpl.nasa.gov/",
+)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NASA SRTM Digital Elevation Model & Topography Context
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class SrtmTopographyContext:
+    """NASA SRTM 30m Global DEM topography and erosion risk context."""
+
+    dataset: str
+    spatial_resolution_m: int
+    elevation_m: float
+    slope_percent: float
+    topographic_wetness_index: float
+    water_erosion_risk: str
+    frost_drainage_risk: str
+    citation: str
+    source_url: str
+
+
+SRTM_PUNJAB_CONTEXT = SrtmTopographyContext(
+    dataset="NASA SRTM (Shuttle Radar Topography Mission) 1 Arc-Second (~30m)",
+    spatial_resolution_m=30,
+    elevation_m=244.0,
+    slope_percent=0.75,  # Gentle alluvial plain
+    topographic_wetness_index=11.4,  # High moisture accumulation tendency
+    water_erosion_risk="Low sheet/rill erosion risk (<2 t/ha/yr on <1% slope), but sensitive to surface ponding and waterlogging during monsoon downpours.",
+    frost_drainage_risk="Neutral plain; absence of steep depression basins prevents severe cold-air pooling frost pockets.",
+    citation="Farr, T. G., et al. (2007). The Shuttle Radar Topography Mission. Reviews of Geophysics, 45(2).",
+    source_url="https://www.earthdata.nasa.gov/sensors/srtm",
+)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NASA Landsat 8/9 Field-Scale Parcel Resolution Context
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class LandsatFieldResolutionContext:
+    """NASA/USGS Landsat 8/9 30m multispectral field-scale parcel context."""
+
+    sensor: str
+    spatial_resolution_m: int
+    temporal_cadence_days: int
+    bare_soil_index_summer: float
+    field_scale_advantage: str
+    citation: str
+    source_url: str
+
+
+LANDSAT_FIELD_CONTEXT = LandsatFieldResolutionContext(
+    sensor="NASA/USGS Landsat 8/9 OLI/TIRS (Collection 2 Level-2)",
+    spatial_resolution_m=30,
+    temporal_cadence_days=8,
+    bare_soil_index_summer=0.44,  # Elevated bare soil exposure in April-May
+    field_scale_advantage=(
+        "30-meter multispectral resolution resolves individual smallholder fields (1–5 acres) without pixel "
+        "mixing across ownership boundaries. Bare Soil Index (BSI) reliably pinpoints the exact 60-day summer "
+        "fallow gap between wheat harvest and rice transplantation."
+    ),
+    citation="Wulder, M. A., et al. (2019). Current status of Landsat program, science, and applications. Remote Sensing of Environment, 225, 127-147.",
+    source_url="https://landsat.gsfc.nasa.gov/",
+)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NASA GEDI LiDAR Canopy Biomass Context
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class GediBiomassContext:
+    """NASA GEDI (ISS) LiDAR canopy height and aboveground biomass context."""
+
+    sensor: str
+    spatial_resolution_m: int
+    aboveground_biomass_density_mg_ha: float
+    canopy_height_m: float
+    finding: str
+    citation: str
+    source_url: str
+
+
+GEDI_BIOMASS_CONTEXT = GediBiomassContext(
+    sensor="NASA GEDI (Global Ecosystem Dynamics Investigation) ISS LiDAR L4A/L4B",
+    spatial_resolution_m=25,
+    aboveground_biomass_density_mg_ha=14.2,
+    canopy_height_m=2.6,
+    finding=(
+        "Full-waveform LiDAR pulses quantify crop canopy architecture and aboveground crop residue biomass. "
+        "In diversified rotations, retaining legume and cereal residues provides vital carbon inputs for Janssen "
+        "Soil Organic Carbon (SOC) regeneration."
+    ),
+    citation="Dubayah, R., et al. (2020). The Global Ecosystem Dynamics Investigation: High-resolution laser ranging of the Earth's forests and topography. Science Advances, 6(47).",
+    source_url="https://gedi.umd.edu/",
+)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# NASA SI (Spatial Informatics) Data Harmonization Grid
+# ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class DataHarmonizationEntry:
+    """Specification of how a sensor is harmonized to the field decision grid."""
+
+    dataset_name: str
+    agency_mission: str
+    native_spatial_resolution: str
+    temporal_frequency: str
+    harmonization_technique: str
+    decision_support_role: str
+
+
+DATA_HARMONIZATION_GRID: tuple[DataHarmonizationEntry, ...] = (
+    DataHarmonizationEntry(
+        dataset_name="NASA POWER Daily",
+        agency_mission="NASA Langley Research Center (MERRA-2 / CERES)",
+        native_spatial_resolution="~0.5° × 0.625° (~50 km)",
+        temporal_frequency="Daily (1981–present)",
+        harmonization_technique="Bilinear spatial interpolation to farm centroid; solar/wind/RH FAO-56 Penman-Monteith assimilation",
+        decision_support_role="Daily reference evapotranspiration (ET₀), crop water demand (ETc), EcoCrop thermal suitability, and 25-yr trends",
+    ),
+    DataHarmonizationEntry(
+        dataset_name="MODIS MCD12Q2",
+        agency_mission="NASA Terra/Aqua (ORNL DAAC)",
+        native_spatial_resolution="500 m sinusoidal grid",
+        temporal_frequency="Annual phenology (2001–2025)",
+        harmonization_technique="Pixel-to-coordinate extraction with QA masking; mid-greenness window date alignment",
+        decision_support_role="Identifies recent green cycles per season; flags added seasons vs historical bare fields",
+    ),
+    DataHarmonizationEntry(
+        dataset_name="NASA ECOSTRESS",
+        agency_mission="NASA JPL (International Space Station)",
+        native_spatial_resolution="70 m × 70 m",
+        temporal_frequency="1 to 5 days (variable diurnal overpasses)",
+        harmonization_technique="Polygon zonal mean and thermal threshold aggregation over field boundaries",
+        decision_support_role="Detects field-level plant evaporative stress index (ESI) and midday canopy thermal stress hotspots",
+    ),
+    DataHarmonizationEntry(
+        dataset_name="NASA SMAP L3/L4",
+        agency_mission="NASA JPL / Goddard",
+        native_spatial_resolution="9 km (L3 enhanced) / 9 km (L4 root-zone)",
+        temporal_frequency="Daily / 3-hourly",
+        harmonization_technique="Spatial downscaling via SoilGrids 250m texture pedotransfer functions and soil water capacity",
+        decision_support_role="Distinguishes surface (0–5 cm) seedbed moisture from root-zone (0–100 cm) subsoil moisture buffer",
+    ),
+    DataHarmonizationEntry(
+        dataset_name="NASA GPM IMERG V07",
+        agency_mission="NASA / JAXA Precipitation Constellation",
+        native_spatial_resolution="0.1° × 0.1° (~10 km)",
+        temporal_frequency="Half-hourly & Daily",
+        harmonization_technique="Climatological gauge calibration (GPCC) and radar-gauge cross-validation with NASA POWER rainfall",
+        decision_support_role="Identifies high-intensity extreme precipitation storm events, monsoon onset timing, and dry-spell duration",
+    ),
+    DataHarmonizationEntry(
+        dataset_name="NASA/USGS Landsat 8/9",
+        agency_mission="NASA Goddard / USGS",
+        native_spatial_resolution="30 m multispectral",
+        temporal_frequency="8-day constellation revisit",
+        harmonization_technique="Cloud/shadow masking (QA_PIXEL) and Bare Soil Index (BSI) parcel zonal extraction",
+        decision_support_role="Field-scale smallholder parcel delineation; pinpoints bare-fallow periods without inter-field pixel mixing",
+    ),
+    DataHarmonizationEntry(
+        dataset_name="NASA SRTM DEM",
+        agency_mission="NASA JPL / NGA (Space Shuttle Endeavour)",
+        native_spatial_resolution="30 m (1 arc-second)",
+        temporal_frequency="Static baseline topography",
+        harmonization_technique="D8 flow direction, slope gradient calculation, and Topographic Wetness Index (TWI) mapping",
+        decision_support_role="RUSLE water erosion LS-factor assessment, low-lying waterlogging zones, and cold-air frost drainage basins",
+    ),
+    DataHarmonizationEntry(
+        dataset_name="NASA GRACE / GRACE-FO",
+        agency_mission="NASA JPL / GFZ Potsdam",
+        native_spatial_resolution="300–400 km regional mass change",
+        temporal_frequency="Monthly (2002–present)",
+        harmonization_technique="Spherical harmonic regional terrestrial water storage (TWS) and groundwater anomaly scaling",
+        decision_support_role="Macro-scale aquifer depletion rate (-4.0 cm/yr in Punjab) justifying urgent shift away from flooded paddy",
+    ),
+    DataHarmonizationEntry(
+        dataset_name="NASA FIRMS",
+        agency_mission="NASA GSFC / EOSDIS",
+        native_spatial_resolution="375 m (VIIRS) / 1 km (MODIS)",
+        temporal_frequency="Near real-time (daily thermal anomalies)",
+        harmonization_technique="Temporal fire-pixel density clustering during the October 15–November 20 post-kharif turnaround",
+        decision_support_role="Tracks crop residue burning intensity; motivates diversified rotations that eliminate stubble burning pressure",
+    ),
+    DataHarmonizationEntry(
+        dataset_name="ISRIC SoilGrids 2.0",
+        agency_mission="ISRIC World Soil Information",
+        native_spatial_resolution="250 m modelled grid",
+        temporal_frequency="Static baseline with 90% uncertainty envelopes",
+        harmonization_technique="Depth-weighted thickness averaging (0–5, 5–15, 15–30 cm) and FAO/USDA texture triangle classification",
+        decision_support_role="Baseline Soil Organic Carbon (SOC), clay/sand ratio, and cation exchange context when farm soil test is missing",
+    ),
+)

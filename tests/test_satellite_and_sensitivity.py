@@ -106,3 +106,69 @@ def test_plain_language_explanation():
     explanation = generate_plain_language_explanation(top_plan)
     assert isinstance(explanation, str)
     assert "**Why recommended:**" in explanation
+
+
+
+def test_nasa_earth_observation_suite_and_harmonization():
+    from src.fieldshift.satellite_context import (
+        ECOSTRESS_PUNJAB_CONTEXT,
+        SRTM_PUNJAB_CONTEXT,
+        LANDSAT_FIELD_CONTEXT,
+        GEDI_BIOMASS_CONTEXT,
+        DATA_HARMONIZATION_GRID,
+    )
+    # ECOSTRESS
+    assert "ECOSTRESS" in ECOSTRESS_PUNJAB_CONTEXT.sensor
+    assert ECOSTRESS_PUNJAB_CONTEXT.spatial_resolution_m == 70
+    assert ECOSTRESS_PUNJAB_CONTEXT.evaporative_stress_index > 0.0
+
+    # SRTM
+    assert "SRTM" in SRTM_PUNJAB_CONTEXT.dataset
+    assert SRTM_PUNJAB_CONTEXT.spatial_resolution_m == 30
+    assert SRTM_PUNJAB_CONTEXT.slope_percent > 0.0
+
+    # Landsat
+    assert "Landsat" in LANDSAT_FIELD_CONTEXT.sensor
+    assert LANDSAT_FIELD_CONTEXT.spatial_resolution_m == 30
+    assert LANDSAT_FIELD_CONTEXT.bare_soil_index_summer > 0.0
+
+    # GEDI
+    assert "GEDI" in GEDI_BIOMASS_CONTEXT.sensor
+    assert GEDI_BIOMASS_CONTEXT.aboveground_biomass_density_mg_ha > 0.0
+
+    # Data Harmonization Grid
+    assert len(DATA_HARMONIZATION_GRID) == 10
+    datasets = [entry.dataset_name for entry in DATA_HARMONIZATION_GRID]
+    assert "NASA POWER Daily" in datasets
+    assert "NASA ECOSTRESS" in datasets
+    assert "NASA SMAP L3/L4" in datasets
+    assert "NASA GPM IMERG V07" in datasets
+    assert "NASA/USGS Landsat 8/9" in datasets
+    assert "NASA SRTM DEM" in datasets
+    assert "NASA GRACE / GRACE-FO" in datasets
+
+
+def test_strategy_comparison_5_point_narratives():
+    from src.fieldshift.strategy_comparison import compare_existing_rotation
+    engine = ENGINE
+    profile = FarmProfile(
+        latitude=30.85,
+        longitude=75.70,
+        soil=SoilInformation(),
+        climate=None,
+        total_crop_water_budget_mm=600.0,
+        previous_crop_id=None,
+        priority_weights={"water_suitability": 0.5, "rotation_diversity": 0.5},
+    )
+    alternatives = engine.generate(profile).plans
+    strategies = compare_existing_rotation(engine, profile, ("rice", "wheat", "moong"), alternatives)
+    assert len(strategies) >= 3
+    for s in strategies:
+        assert s.why_suggested != ""
+        assert len(s.evidence_support) >= 3
+        assert len(s.benefits_offered) >= 2
+        assert len(s.information_gaps) >= 2
+        assert len(s.risks_and_expert_review) >= 2
+        assert s.bare_field_analysis != ""
+        assert s.vulnerability_analysis != ""
+        assert s.pest_break_analysis != ""

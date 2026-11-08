@@ -41,6 +41,7 @@ from .rotation_engine import (
     normalize_weights,
 )
 from .scenarios import ScenarioInputError, build_scenarios, evaluate_robustness, pareto_assess, transform_climate_frame
+from .strategy_comparison import compare_existing_rotation
 from .soil_data import (
     ESTIMATE_LABEL,
     MANUAL_SOURCE_TYPES,
@@ -85,11 +86,16 @@ from .economics import (
     compute_rotation_economics,
 )
 from .satellite_context import (
+    DATA_HARMONIZATION_GRID,
+    ECOSTRESS_PUNJAB_CONTEXT,
     FIRMS_PUNJAB_CONTEXT,
+    GEDI_BIOMASS_CONTEXT,
     GPM_GLOBAL_CONTEXT,
     GRACE_PUNJAB_CONTEXT,
+    LANDSAT_FIELD_CONTEXT,
     MODIS_NDVI_CONTEXT,
     SMAP_PUNJAB_CONTEXT,
+    SRTM_PUNJAB_CONTEXT,
     calculate_water_budget_from_farm_inputs,
 )
 from .world_map import world_picker
@@ -261,7 +267,7 @@ def _go(page: str) -> None:
 
 def _reset() -> None:
     for key in list(st.session_state):
-        if key.startswith(("farm_", "priority_", "block_")) or key in {
+        if key.startswith(("farm_", "priority_", "block_", "current_crop_", "current_rotation_", "atlas_exact_")) or key in {
             "farm", "weights", "planning_horizon", "scenario",
             "power_dataset", "power_error", "power_mode",
             "soilgrids_estimate", "soilgrids_error",
@@ -497,7 +503,7 @@ def _theme() -> None:
     """, unsafe_allow_html=True)
 
 
-def _open_map_selection(point: dict) -> None:
+def _open_map_selection(point: dict, destination: str | None = None) -> None:
     pilot = REGIONS.get(point.get("pilot"))
     lat, lon = (pilot.latitude, pilot.longitude) if pilot else (float(point["lat"]), float(point["lon"]))
     if -90 <= lat <= 90 and -180 <= lon <= 180:
@@ -510,7 +516,7 @@ def _open_map_selection(point: dict) -> None:
                 lat, lon, str(farm["start_date"]), str(farm["end_date"])
             ):
                 st.session_state.update(power_dataset=dataset, power_mode="live", power_error=None)
-        _go("Farm Profile" if pilot else "Rotation Recommendations")
+        _go(destination or ("Farm Profile" if pilot else "Rotation Recommendations"))
 
 
 
@@ -606,7 +612,7 @@ def _location_brief(point: dict) -> None:
             if len(rain):
                 st.write(f"Longest observed dry spell **{longest} days**")
             monthly = frame.assign(month=frame.index.to_period("M").astype(str)).groupby("month").agg(
-                rainfall_mm=("PRECTOTCORR", "sum"), mean_temp_c=("T2M", "mean")
+                rainfall_mm=("PRECTOTCORR", lambda values: values.sum(min_count=1)), mean_temp_c=("T2M", "mean")
             ).reset_index()
             chart = go.Figure()
             chart.add_trace(go.Bar(x=monthly["month"], y=monthly["rainfall_mm"], name="Rainfall (mm)",
@@ -628,24 +634,24 @@ def _location_brief(point: dict) -> None:
             st.caption(f"[NASA POWER request]({dataset.provenance.source_url}) · [Documentation]({dataset.provenance.documentation_url}) · Retrieved {dataset.provenance.retrieved_at_utc} · Crop calendars: [Sacks dataset]({atlas_calendar.SOURCE})")
         st.divider()
         with st.expander("Use exact farm coordinates"):
+            coordinate_key = (latitude, longitude)
+            if st.session_state.get("atlas_exact_origin") != coordinate_key:
+                st.session_state.update(atlas_exact_origin=coordinate_key,
+                                        atlas_exact_lat=float(latitude), atlas_exact_lon=float(longitude))
             a, b = st.columns(2)
             lat = a.number_input("Latitude", min_value=-90.0, max_value=90.0, value=float(latitude), step=.01, format="%.4f", key="atlas_exact_lat")
             lon = b.number_input("Longitude", min_value=-180.0, max_value=180.0, value=float(longitude), step=.01, format="%.4f", key="atlas_exact_lon")
             point = {"lat":lat, "lon":lon}
             if st.button("Explore these coordinates", key="atlas_exact_apply", type="primary", width="stretch"):
                 st.session_state["atlas_inspection"] = point
-                st.session_state["farm"] = {**_fresh_farm(), "latitude":lat, "longitude":lon,
-                                             "start_date":farm["start_date"], "end_date":farm["end_date"]}
-                st.session_state["selected_region_id"] = "global"
                 st.session_state["atlas_request"] = None
                 st.rerun()
             if st.button("Use this place for planning", key="atlas_make_farm", icon=":material/agriculture:", width="stretch"):
                 _open_map_selection(point)
             if st.button("Open climate analysis", key="atlas_climate_page", icon=":material/partly_cloudy_day:", width="stretch"):
-                _open_map_selection(point)
-                st.session_state["page"] = "Climate Insights"
-                st.rerun()
-            st.markdown(f"[NASA request]({dataset.provenance.source_url}) · [Crop calendar source]({atlas_calendar.SOURCE})")
+                _open_map_selection(point, destination="Climate Insights")
+            if dataset:
+                st.markdown(f"[NASA request]({dataset.provenance.source_url}) · [Crop calendar source]({atlas_calendar.SOURCE})")
 
 
 def render_home() -> None:
@@ -716,57 +722,8 @@ def render_home() -> None:
         "Open Menu for climate trends, scenario stress tests, climate projections and methods."
     )
 
-    with st.expander("NASA Earth-observation context", icon=":material/satellite_alt:"):
-        sat_t1, sat_t2, sat_t3, sat_t4, sat_t5 = st.tabs([
-            "🌊 GRACE (Aquifers)",
-            "🔥 FIRMS (Fires)",
-            "💧 SMAP (Soil Moisture)",
-            "🌧️ GPM (Precipitation)",
-            "🌿 MODIS (Vegetation)",
-        ])
-        with sat_t1:
-            st.markdown("#### 🌊 NASA GRACE Groundwater Depletion")
-            st.markdown(f"""
-- **Mission:** {GRACE_PUNJAB_CONTEXT['satellite']} ({GRACE_PUNJAB_CONTEXT['resolution']})
-- **Key Finding:** {GRACE_PUNJAB_CONTEXT['finding']}
-- **Primary Driver:** {GRACE_PUNJAB_CONTEXT['primary_driver']}
-- **Relevance to FieldShift:** {GRACE_PUNJAB_CONTEXT['relevance_to_fieldshift']}
-- **Source:** [{GRACE_PUNJAB_CONTEXT['source_citation']}]({GRACE_PUNJAB_CONTEXT['source_url']})
-            """)
-        with sat_t2:
-            st.markdown("#### 🔥 NASA FIRMS Stubble Fire Detection")
-            st.markdown(f"""
-- **Sensors:** {FIRMS_PUNJAB_CONTEXT['sensors']}
-- **Peak Fire Window:** {FIRMS_PUNJAB_CONTEXT['stubble_burning_season']}
-- **Agronomic Driver:** {FIRMS_PUNJAB_CONTEXT['agricultural_driver']}
-- **Why FieldShift Helps:** {FIRMS_PUNJAB_CONTEXT['relevance_to_fieldshift']}
-- **Source:** [{FIRMS_PUNJAB_CONTEXT['source_citation']}]({FIRMS_PUNJAB_CONTEXT['source_url']})
-            """)
-        with sat_t3:
-            st.markdown("#### 💧 NASA SMAP Root-Zone Soil Moisture")
-            st.markdown(f"""
-- **Mission:** {SMAP_PUNJAB_CONTEXT.satellite_mission} ({SMAP_PUNJAB_CONTEXT.spatial_resolution_km} km L3/L4)
-- **Volumetric Moisture:** Surface (0–5 cm): **{SMAP_PUNJAB_CONTEXT.surface_moisture_m3_m3:.2f} m³/m³** | Root-zone (0–100 cm): **{SMAP_PUNJAB_CONTEXT.rootzone_moisture_m3_m3:.2f} m³/m³**
-- **Status:** {SMAP_PUNJAB_CONTEXT.moisture_status}
-- **Source:** [{SMAP_PUNJAB_CONTEXT.citation}]({SMAP_PUNJAB_CONTEXT.source_url})
-            """)
-        with sat_t4:
-            st.markdown("#### 🌧️ NASA GPM IMERG Satellite Precipitation")
-            st.markdown(f"""
-- **Constellation:** {GPM_GLOBAL_CONTEXT.satellite_constellation}
-- **Resolution:** {GPM_GLOBAL_CONTEXT.spatial_resolution_deg}° (~10 km) {GPM_GLOBAL_CONTEXT.temporal_resolution}
-- **Agreement:** {GPM_GLOBAL_CONTEXT.satellite_vs_power_agreement}
-- **Calibration:** {GPM_GLOBAL_CONTEXT.gauge_calibration_status}
-- **Source:** [{GPM_GLOBAL_CONTEXT.citation}]({GPM_GLOBAL_CONTEXT.source_url})
-            """)
-        with sat_t5:
-            st.markdown("#### 🌿 NASA MODIS (MOD13Q1) Vegetation Greenness")
-            st.markdown(f"""
-- **Sensor:** {MODIS_NDVI_CONTEXT.sensor} (250m 16-day composite)
-- **Canopy Dynamics:** Kharif peak NDVI **{MODIS_NDVI_CONTEXT.peak_ndvi_kharif:.2f}** | Rabi peak NDVI **{MODIS_NDVI_CONTEXT.peak_ndvi_rabi:.2f}** | Fallow baseline **{MODIS_NDVI_CONTEXT.bare_soil_ndvi:.2f}**
-- **Finding:** {MODIS_NDVI_CONTEXT.finding}
-- **Source:** [{MODIS_NDVI_CONTEXT.citation}]({MODIS_NDVI_CONTEXT.source_url})
-            """)
+    with st.expander("NASA data availability", icon=":material/satellite_alt:"):
+        _render_data_availability()
 
     _footer()
 
@@ -837,7 +794,7 @@ def render_farm_profile() -> None:
                 data=profile_json,
                 file_name=f"fieldshift_farm_profile_{curr_reg_id}.json",
                 mime="application/json",
-                use_container_width=True,
+                width="stretch",
             )
         with imp_col:
             st.markdown("##### ⬆️ Restore Saved Profile")
@@ -1040,7 +997,7 @@ def _render_land_use_section() -> None:
     if not _farm_is_ready():
         st.info("Save a farm location first.")
         return
-    if st.button("🛰️ Retrieve recent cropping seasons (MODIS, last 10 years)", use_container_width=True):
+    if st.button("🛰️ Retrieve recent cropping seasons (MODIS, last 10 years)", width="stretch"):
         _request_phenology()
     if st.session_state.get("phenology_error"):
         st.warning(
@@ -1069,7 +1026,7 @@ def _render_land_use_section() -> None:
                 {"Season": item.season_name, "Year": year.label, "Result": year.status.replace("_", " "), "Detail": year.detail}
                 for item in use.values() for year in item.years
             ]),
-            hide_index=True, use_container_width=True,
+            hide_index=True, width="stretch",
         )
         st.markdown(
             "- Each detected cycle is placed in the season window (kharif 1 Jun–31 Oct, rabi 1 Nov–30 Apr, summer 1 Apr–15 Jun) "
@@ -1102,7 +1059,7 @@ def _land_use_timeline(record: PhenologyRecord) -> None:
                       title="Detected vegetation cycles (green-up to dormancy) at this 500 m pixel")
     fig.update_yaxes(autorange="reversed")
     fig.update_layout(template="plotly_white", height=320, legend_title_text="MODIS QA", margin=dict(l=10, r=10, t=50, b=10))
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
     st.caption("Gaps between bars are periods with no detected vegetation cycle, such as fallow land or bare soil.")
 
 
@@ -1137,7 +1094,7 @@ def _render_soil_estimate_section() -> None:
     if not _farm_is_ready():
         st.info("Save a farm location first to request a SoilGrids estimate.")
         return
-    if st.button("🛰️ Estimate soil properties from location", use_container_width=True):
+    if st.button("🛰️ Estimate soil properties from location", width="stretch"):
         _request_soil_estimate()
 
     error = st.session_state.get("soilgrids_error")
@@ -1170,7 +1127,7 @@ def _render_soil_estimate_section() -> None:
                     "Uncertainty ratio": "Not provided" if item.uncertainty_ratio is None else f"{item.uncertainty_ratio:.1f}",
                     "Unit": item.unit,
                 })
-        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
         st.warning(
             "**Spatial resolution:** each value describes a 250 m grid cell (about 6 ha) predicted by a global model. "
             "Fields inside one cell can differ a lot, especially after years of different management. "
@@ -1207,7 +1164,7 @@ def _render_soil_estimate_section() -> None:
             }
             for item in resolved.values.values()
         ]),
-        hide_index=True, use_container_width=True,
+        hide_index=True, width="stretch",
     )
     for note in resolved.notes:
         st.caption(f"ℹ️ {note}")
@@ -1254,7 +1211,7 @@ def _climate_provenance(dataset: PowerDataset) -> None:
         st.markdown(f"[Exact API request URL]({p.source_url}) · [NASA POWER daily API documentation]({p.documentation_url})")
     with col_mode_b:
         if mode == "offline_snapshot":
-            if st.button("🌐 Switch to Live NASA API", use_container_width=True):
+            if st.button("🌐 Switch to Live NASA API", width="stretch"):
                 _request_climate(force_refresh=True)
                 st.rerun()
         else:
@@ -1300,10 +1257,10 @@ def render_climate() -> None:
                 _go("Farm Profile")
     left, right = st.columns(2)
     with left:
-        if st.button("☁️ Retrieve NASA POWER data", type="primary", use_container_width=True):
+        if st.button("☁️ Retrieve NASA POWER data", type="primary", width="stretch"):
             _request_climate()
     with right:
-        if st.button("🔄 Retry / refresh request", use_container_width=True):
+        if st.button("🔄 Retry / refresh request", width="stretch"):
             _request_climate(force_refresh=True)
     if st.session_state["power_error"]:
         st.error(f"⚠️ NASA POWER live request failed: {st.session_state['power_error']}")
@@ -1334,7 +1291,7 @@ def render_climate() -> None:
                 labels={"T2M": "°C", "date": "Date"},
             )
             fig_temp.update_layout(template="plotly_white")
-            st.plotly_chart(fig_temp, use_container_width=True)
+            st.plotly_chart(fig_temp, width="stretch")
         with b:
             fig_precip = px.bar(
                 frame.reset_index(), x="date", y="PRECTOTCORR",
@@ -1343,19 +1300,49 @@ def render_climate() -> None:
                 color_discrete_sequence=[BRAND_GREEN],
             )
             fig_precip.update_layout(template="plotly_white")
-            st.plotly_chart(fig_precip, use_container_width=True)
+            st.plotly_chart(fig_precip, width="stretch")
         st.subheader("Monthly temperature summary")
-        st.dataframe(temp.style.format("{:.2f}"), use_container_width=True)
+        st.dataframe(temp.style.format("{:.2f}"), width="stretch")
     except FeatureValidationError as error:
         st.warning(f"A climate indicator could not be calculated: {error}")
     col_tr1, col_tr2 = st.columns([2, 1])
     with col_tr1:
         st.info("Long-term historical anomalies, decadal trends, and statistical significance across growing seasons (Kharif, Rabi, Summer) are analyzed in Climate Trends.")
     with col_tr2:
-        if st.button("📈 Explore Climate Trends", use_container_width=True):
+        if st.button("📈 Explore Climate Trends", width="stretch"):
             _go("Climate Trends")
+    with st.expander("🛰️ NASA Earth Observation Multi-Mission Insights (GRACE, SMAP, ECOSTRESS, GPM, Landsat, SRTM, FIRMS)", expanded=False):
+        st.caption("Complementary NASA satellite observations contextualizing regional water, heat, topography, and vegetation conditions.")
+        sat_c1, sat_c2 = st.columns(2)
+        with sat_c1:
+            with st.container(border=True):
+                st.markdown(f"**💧 {GRACE_PUNJAB_CONTEXT.satellite_mission}**")
+                st.markdown(f"Depletion Rate: **{GRACE_PUNJAB_CONTEXT.rate_of_depletion_cm_per_year:.1f} cm/yr** ({GRACE_PUNJAB_CONTEXT.total_volume_lost_km3_per_year:.1f} km³/yr)")
+                st.caption(f"{GRACE_PUNJAB_CONTEXT.key_finding} [Source]({GRACE_PUNJAB_CONTEXT.source_url})")
+            with st.container(border=True):
+                st.markdown(f"**🌡️ {ECOSTRESS_PUNJAB_CONTEXT.sensor} (70m)**")
+                st.markdown(f"Evaporative Stress Index: **{ECOSTRESS_PUNJAB_CONTEXT.evaporative_stress_index:.2f}** · Canopy Anomaly: **+{ECOSTRESS_PUNJAB_CONTEXT.canopy_temperature_anomaly_c:.1f}°C**")
+                st.caption(f"{ECOSTRESS_PUNJAB_CONTEXT.finding} [Source]({ECOSTRESS_PUNJAB_CONTEXT.source_url})")
+            with st.container(border=True):
+                st.markdown(f"**🛰️ {LANDSAT_FIELD_CONTEXT.sensor} (30m)**")
+                st.markdown(f"Summer Bare Soil Index: **{LANDSAT_FIELD_CONTEXT.bare_soil_index_summer:.2f}** · Cadence: **{LANDSAT_FIELD_CONTEXT.temporal_cadence_days} days**")
+                st.caption(f"{LANDSAT_FIELD_CONTEXT.field_scale_advantage} [Source]({LANDSAT_FIELD_CONTEXT.source_url})")
+        with sat_c2:
+            with st.container(border=True):
+                st.markdown(f"**🌱 {SMAP_PUNJAB_CONTEXT.satellite_mission} (9km)**")
+                st.markdown(f"Root-Zone Moisture: **{SMAP_PUNJAB_CONTEXT.rootzone_moisture_m3_m3:.2f} m³/m³** ({SMAP_PUNJAB_CONTEXT.climatological_percentile:.0f}th percentile)")
+                st.caption(f"{SMAP_PUNJAB_CONTEXT.moisture_status} [Source]({SMAP_PUNJAB_CONTEXT.source_url})")
+            with st.container(border=True):
+                st.markdown(f"**⛰️ {SRTM_PUNJAB_CONTEXT.dataset} (30m)**")
+                st.markdown(f"Elevation: **{SRTM_PUNJAB_CONTEXT.elevation_m:.0f} m** · Slope: **{SRTM_PUNJAB_CONTEXT.slope_percent:.2f}%** · TWI: **{SRTM_PUNJAB_CONTEXT.topographic_wetness_index:.1f}**")
+                st.caption(f"Erosion Risk: {SRTM_PUNJAB_CONTEXT.water_erosion_risk} [Source]({SRTM_PUNJAB_CONTEXT.source_url})")
+            with st.container(border=True):
+                st.markdown(f"**🔥 {FIRMS_PUNJAB_CONTEXT.sensor}**")
+                st.markdown(f"Peak Burning Season: **{FIRMS_PUNJAB_CONTEXT.peak_season}**")
+                st.caption(f"{FIRMS_PUNJAB_CONTEXT.crop_residue_solution} [Source]({FIRMS_PUNJAB_CONTEXT.source_url})")
+
     with st.expander("📋 Retrieved daily values and missing observations"):
-        st.dataframe(frame, use_container_width=True)
+        st.dataframe(frame, width="stretch")
     if st.session_state["selected_region_id"] in REGIONS and st.button("➡️ Continue to priorities", type="primary"):
         _go("Farmer Priorities")
     _footer()
@@ -1452,7 +1439,7 @@ def render_climate_trends() -> None:
                 "Completeness": f"{cov.completeness_percent:.1f}%",
                 "Trend Suitability": "Sufficient (≥80%)" if cov.is_sufficient_for_trends else "Insufficient (<80%)",
             })
-        st.dataframe(pd.DataFrame(audit_rows), use_container_width=True)
+        st.dataframe(pd.DataFrame(audit_rows), width="stretch")
 
     # 4. Annual Summaries & Trend Computation
     summaries = compute_annual_season_summaries(frame, season=season_def)
@@ -1569,7 +1556,7 @@ def render_climate_trends() -> None:
             hovermode="x unified",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
 
     st.markdown(f"**Methodology notes:** {trend.method_notes}")
 
@@ -1583,7 +1570,7 @@ def render_climate_trends() -> None:
                     "trend_fitted": "{:.2f}",
                     "anomaly_from_mean": "{:+.2f}",
                 }),
-                use_container_width=True,
+                width="stretch",
             )
 
     # 6. Scientific Boundary Disclosures
@@ -1596,10 +1583,10 @@ def render_climate_trends() -> None:
 
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
-        if st.button("⬅️ Back to climate insights", use_container_width=True):
+        if st.button("⬅️ Back to climate insights", width="stretch"):
             _go("Climate Insights")
     with col_btn2:
-        if st.button("➡️ Continue to farmer priorities", type="primary", use_container_width=True):
+        if st.button("➡️ Continue to farmer priorities", type="primary", width="stretch"):
             _go("Farmer Priorities")
 
     _footer()
@@ -1614,7 +1601,7 @@ def render_priorities() -> None:
     with col1:
         name = st.selectbox("Starting profile", tuple(profiles), format_func=lambda item: item.replace("_", " ").title())
     with col2:
-        if st.button("Apply this profile", use_container_width=True):
+        if st.button("Apply this profile", width="stretch"):
             st.session_state["weights"] = dict(profiles[name])
             for metric, value in profiles[name].items():
                 st.session_state[f"priority_{metric}"] = int(round(value * 100))
@@ -1721,7 +1708,7 @@ def _render_economics_tab(plan: Any) -> None:
             "Gross Margin (₹/ha)": margin_val,
             "Procurement": proc_str,
         })
-    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     with st.expander("Sources, assumptions & economic caveats"):
         for disclaimer in ECONOMIC_DISCLAIMERS:
@@ -1755,7 +1742,7 @@ def _plan_view(plan: Any, index: int) -> None:
             "ਖੇਤਰੀ ਨਾਮ / क्षेत्रीय नाम": bilingual_names,
             "Crop ID": plan.crop_ids,
         })
-        st.dataframe(sequence, hide_index=True, use_container_width=True)
+        st.dataframe(sequence, hide_index=True, width="stretch")
         st.caption("Planning seasons are crop-calendar slots, not dated harvest or planting predictions.")
 
         # Pilot-First Protocol Banner
@@ -1777,8 +1764,8 @@ def _plan_view(plan: Any, index: int) -> None:
                 })
         if cal_rows:
             with st.expander("🗓️ Agronomic Calendar: Recommended Sowing & Harvest Windows", expanded=False):
-                st.dataframe(pd.DataFrame(cal_rows), hide_index=True, use_container_width=True)
-                st.caption("Calendar windows derived from verified university Packages of Practices (PAU, USDA-ARS, IFAPA, ICRISAT).")
+                st.dataframe(pd.DataFrame(cal_rows), hide_index=True, width="stretch")
+                st.caption("Indicative calendar references require local review. These windows are not enforced as exact planting dates; possible overlap must be checked before use.")
 
         # Score metrics
         cols = st.columns(len(METRICS))
@@ -1830,7 +1817,7 @@ def _plan_view(plan: Any, index: int) -> None:
                 "Effective weight": [plan.effective_weights[m] for m in METRICS],
                 "Method": [plan.metrics[m].method for m in METRICS],
             })
-            st.dataframe(details.style.format({"Score": "{:.2f}", "Effective weight": "{:.2f}"}, na_rep="N/A"), hide_index=True, use_container_width=True)
+            st.dataframe(details.style.format({"Score": "{:.2f}", "Effective weight": "{:.2f}"}, na_rep="N/A"), hide_index=True, width="stretch")
 
         with tab7:
             for heading, items in (("✅ Positive factors", plan.positive_factors), ("⚖️ Trade-offs", plan.tradeoffs), ("⚠️ Missing information / uncertainty", plan.uncertainty_warnings)):
@@ -1885,7 +1872,7 @@ def _plan_view(plan: Any, index: int) -> None:
                     "Annual N Balance (kg N/ha)": f"{s.annual_n_balance_kg_ha:+.1f}",
                     "Cumulative N Balance (kg N/ha)": f"{s.cumulative_n_balance_kg_ha:+.1f}",
                 })
-            st.dataframe(pd.DataFrame(step_rows), hide_index=True, use_container_width=True)
+            st.dataframe(pd.DataFrame(step_rows), hide_index=True, width="stretch")
             st.caption(multi_sim.methodological_disclaimer)
 
         st.caption("Supporting URLs: " + " · ".join(plan.source_urls))
@@ -1959,7 +1946,7 @@ def _render_water_balance_tab(plan: Any) -> None:
             "Deficit (mm)": f"{cr.net_irrigation_requirement_mm:.1f}" if cr.net_irrigation_requirement_mm is not None else "N/A",
             "Climate period used": cr.method.split("climate period: ")[-1] if "climate period: " in cr.method else cr.method.split("mean of ")[-1],
         })
-    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     with st.expander("Methodology, sources & limitations"):
         st.markdown("""
@@ -2024,7 +2011,7 @@ def _render_climate_suitability_tab(plan: Any) -> None:
         })
 
     if rows:
-        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     with st.expander("Methodology, sources & limitations"):
         st.markdown("""
@@ -2079,7 +2066,7 @@ def _render_soil_state_tab(plan: Any) -> None:
             "Legume N credit (kg/ha)": f"{est.legume_n_credit_kg_ha[0]}–{est.legume_n_credit_kg_ha[1]}" if est.legume_n_credit_kg_ha else "—",
         })
     st.markdown("**Per-crop nutrient contribution estimates**")
-    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
 
     # SOC direction
     if report.soc_estimate:
@@ -2130,6 +2117,13 @@ def _render_punjab_benchmark(top_plan: Any, top_irr: float) -> None:
 
     with st.expander("📄 Export 1-Page Printable Farmer Summary Card", expanded=False):
         reg = get_region(st.session_state.get("selected_region_id", "punjab"))
+        dataset = st.session_state.get("power_dataset")
+        provenance = None
+        if dataset:
+            p = dataset.provenance
+            provenance = (f"NASA POWER: {p.start_date} to {p.end_date}; retrieved {p.retrieved_at_utc}; "
+                          f"{p.source_url}. Mode: {st.session_state.get('power_mode')}. "
+                          f"Plan assessment: {top_plan.status}; unverified farmer inputs and missing-data limitations still apply.")
         card_html = generate_farmer_summary_card_html(
             farm_profile=st.session_state["farm"],
             plan_crop_names=top_plan.crop_names,
@@ -2139,13 +2133,14 @@ def _render_punjab_benchmark(top_plan: Any, top_irr: float) -> None:
             gross_margin_text=f"₹{top_econ.total_margin_inr_ha:,.0f}/ha" if top_econ.total_margin_inr_ha is not None else "Unavailable",
             composite_score=top_plan.composite_score,
             region_name=reg.name,
+            climate_provenance=provenance,
         )
         st.download_button(
             "📥 Download Printable Card (HTML)",
             data=card_html,
             file_name=f"fieldshift_summary_card_{st.session_state.get('selected_region_id', 'punjab')}.html",
             mime="text/html",
-            use_container_width=True,
+            width="stretch",
         )
         st.components.v1.html(card_html, height=450, scrolling=True)
 
@@ -2187,10 +2182,10 @@ def render_recommendations() -> None:
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🧪 Stress-test these alternatives", type="primary", use_container_width=True):
+        if st.button("🧪 Stress-test these alternatives", type="primary", width="stretch"):
             _go("Hypothetical stress tests")
     with col2:
-        if st.button("📊 Compare alternatives", use_container_width=True):
+        if st.button("📊 Compare alternatives", width="stretch"):
             _go("Comparison View")
     _footer()
 
@@ -2239,7 +2234,7 @@ def render_scenarios() -> None:
                 0, 100, int(st.session_state["irrigation_reduction_pct"]),
                 help="Applies only to the farmer-provided total crop-water budget.",
             )
-        if st.button("✅ Apply stress-test assumptions", type="primary", use_container_width=True):
+        if st.button("✅ Apply stress-test assumptions", type="primary", width="stretch"):
             st.session_state["dry_reduction_pct"] = dry
             st.session_state["hot_increase_c"] = hot
             st.session_state["irrigation_reduction_pct"] = irrigation
@@ -2261,7 +2256,7 @@ def render_scenarios() -> None:
             "Type": ["Hypothetical stress test" if item.is_hypothetical else "Retrieved historical context" for item in scenarios],
         }),
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
     )
 
     # ── Transformed climate summaries ──
@@ -2280,7 +2275,7 @@ def render_scenarios() -> None:
         st.dataframe(
             pd.DataFrame(transformed_rows).style.format({"Mean T2M (°C)": "{:.2f}", "Precip. total (mm)": "{:.1f}"}, na_rep="N/A"),
             hide_index=True,
-            use_container_width=True,
+            width="stretch",
         )
     else:
         st.info("Retrieve NASA POWER data in Climate Insights to view transformed climate context.")
@@ -2311,7 +2306,7 @@ def render_scenarios() -> None:
             "Δ Water score": "{:+.2f}",
         }, na_rep="N/A"),
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
     )
 
     # Hard-constraint violation alerts
@@ -2420,7 +2415,7 @@ def render_future_climate() -> None:
                 "Model": model, "Variant": ref.variant, "Licence": ref.licence or "Not stated",
                 "Dataset version": ref.dataset_version, "Calendar": ref.calendar,
             })
-        st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
         st.markdown(
             "\n".join(f"- **{SCENARIO_LABELS[name]}**" for name in extract.experiments)
             + f"\n- Grid cell centre: {extract.grid_cell[0]:.3f} N, {extract.grid_cell[1]:.3f} E (0.25°, about 25 km); "
@@ -2448,7 +2443,7 @@ def render_future_climate() -> None:
             row[SHORT_LABELS[scenario]] = _fmt_spread(spread, unit, digits)
             row[f"{SHORT_LABELS[scenario]}: model agreement"] = spread.agreement if spread else "—"
         table.append(row)
-    st.dataframe(pd.DataFrame(table), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(table), hide_index=True, width="stretch")
     st.caption("Middle value across 5 models, with the lowest and highest model in brackets. Rainfall changes are usually much less certain than temperature changes.")
 
     st.subheader("2. How your rotation plans compare under each scenario")
@@ -2471,7 +2466,7 @@ def render_future_climate() -> None:
             digits = 2 if key in ("water_suitability", "climate_suitability", "composite") else 0
             row[f"{SHORT_LABELS[scenario]} change"] = _fmt_spread(spread, "", digits).replace(" (", " (").strip()
         detail.append(row)
-    st.dataframe(pd.DataFrame(detail), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(detail), hide_index=True, width="stretch")
     st.caption(
         "Same crops, crop calendar, water budget and priority weights in every column. The first column is the middle value of "
         "the five models' historical simulations; the others show the change from each model's own historical value."
@@ -2488,7 +2483,7 @@ def render_future_climate() -> None:
     if chart_rows:
         fig = px.strip(pd.DataFrame(chart_rows), x="Period", y="Score", color="Model", facet_col="Indicator", range_y=[0, 1.05])
         fig.update_layout(template="plotly_white", height=360, legend=dict(orientation="h", y=-0.25))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         st.caption("Each dot is one climate model. A wide spread means the models disagree.")
 
     if st.checkbox("Compare the ranking of all plans across scenarios (takes longer)"):
@@ -2501,7 +2496,7 @@ def render_future_climate() -> None:
         frame = pd.DataFrame(ranking)
         for e in extract.experiments:
             frame[f"Rank: {SHORT_LABELS[e]}"] = frame[SHORT_LABELS[e]].rank(ascending=False, method="min").astype("Int64")
-        st.dataframe(frame.style.format({SHORT_LABELS[e]: "{:.3f}" for e in extract.experiments}, na_rep="—"), hide_index=True, use_container_width=True)
+        st.dataframe(frame.style.format({SHORT_LABELS[e]: "{:.3f}" for e in extract.experiments}, na_rep="—"), hide_index=True, width="stretch")
         st.caption("Composite = your priority weights applied to the median of the five models. A change in rank shows a plan's sensitivity to climate change, not a guarantee.")
 
     with st.expander("Assumptions used to compare periods"):
@@ -2510,9 +2505,107 @@ def render_future_climate() -> None:
     _footer()
 
 
+def _render_current_rotation_comparison(alternatives: Any) -> None:
+    st.subheader("Compare with your current rotation")
+    st.caption("Enter what you currently grow in these planning slots. We assess it using the same soil, water, climate and priorities as the alternatives. A previous crop alone is not a full rotation.")
+    engine = _rotation_engine()
+    profile = _profile_from_state()
+    seasons = engine._seasons(profile.start_season, profile.number_of_seasons)
+    signature = (st.session_state["selected_region_id"], profile.latitude,
+                 profile.longitude, profile.start_season, profile.number_of_seasons)
+    if st.session_state.get("current_rotation_context") != signature:
+        for key in list(st.session_state):
+            if key.startswith("current_crop_"):
+                del st.session_state[key]
+        st.session_state.update(current_rotation_context=signature, current_rotation_ids=None)
+    with st.form("current_rotation_form"):
+        choices = []
+        for index, season in enumerate(seasons):
+            choices.append(st.selectbox(
+                f"Current crop in slot {index + 1} ({season})",
+                [None, *sorted(engine.crops)],
+                format_func=lambda crop: "Unknown / fallow / crop not listed" if crop is None else engine.crops[crop]["name"],
+                key=f"current_crop_{index}",
+            ))
+        submitted = st.form_submit_button("Compare my current rotation", type="primary")
+    if submitted:
+        st.session_state["current_rotation_ids"] = tuple(choices) if all(choices) else None
+        if not all(choices):
+            st.warning("Comparison is unavailable until every slot has a supported crop. Fallow periods and crops outside this catalogue are not modelled; do not substitute a different crop.")
+    current = st.session_state.get("current_rotation_ids")
+    if not current:
+        return
+    strategies = compare_existing_rotation(engine, profile, current, alternatives[:3])
+    rows = []
+    for item in strategies:
+        plan = item.plan
+        rows.append({"Strategy": item.label, "Sequence": " → ".join(plan.crop_names),
+                     "Rule assessment": plan.status.replace("_", " "),
+                     **{METRIC_LABELS[name]: plan.metrics[name].score for name in METRICS},
+                     "Composite score": plan.composite_score})
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
+    st.caption("Scores range from 0 to 1 and are comparisons, not success probabilities. Blank values mean unavailable. Failed checks cannot be overridden by a high score. An undocumented transition means the prototype cannot support it, not that an existing practice is impossible.")
+    if len(strategies) < 3:
+        st.info("Fewer than three distinct strategies are supported by these inputs. We retain the current rotation and show the available alternatives without inventing another plan.")
+    st.markdown("### 📋 Multi-Strategy Agronomic Breakdown")
+    st.caption("Detailed comparison of each strategy examining why it was suggested, supporting evidence, benefits, information gaps, local risks, and soil health contributions.")
+
+    for item in strategies:
+        plan = item.plan
+        badge = "🔴 Current Practice" if item.is_current else ("🟢 Recommended Alternative" if plan.status != "infeasible" else "🟡 Feasibility Alert")
+        with st.expander(f"{badge}: {item.label} ({' → '.join(plan.crop_names)})", expanded=True):
+            if plan.status == "infeasible":
+                st.warning("⚠️ This sequence fails one or more prototype rules or water constraints. Review individual checks below.")
+
+            st.markdown(item.why_suggested)
+
+            col_b, col_e = st.columns(2)
+            with col_b:
+                st.markdown("**🌟 Benefits Offered:**")
+                for b in item.benefits_offered:
+                    st.markdown(f"- {b}")
+            with col_e:
+                st.markdown("**📜 Supporting Evidence:**")
+                for ev in item.evidence_support:
+                    st.markdown(f"- {ev}")
+
+            col_g, col_r = st.columns(2)
+            with col_g:
+                st.markdown("**🔍 Information Gaps:**")
+                for g in item.information_gaps:
+                    st.markdown(f"- {g}")
+            with col_r:
+                st.markdown("**⚠️ Risks & Local Review Needed:**")
+                for r in item.risks_and_expert_review:
+                    st.markdown(f"- {r}")
+
+            st.markdown("---")
+            st.markdown(f"- **Bare-Field & Fallow Management:** {item.bare_field_analysis}")
+            st.markdown(f"- **Seasonal Weather Exposure:** {item.vulnerability_analysis}")
+            st.markdown(f"- **Botanical Pest-Cycle Break:** {item.pest_break_analysis}")
+            if item.soil_functional_roles:
+                st.markdown("- **Soil Functional Contributions:**")
+                for role in item.soil_functional_roles:
+                    st.markdown(f"  - {role}")
+
+            with st.expander(f"Detailed rule checks & metric methods ({item.label})"):
+                st.dataframe(pd.DataFrame([{"Rule": check.rule, "Result": check.status,
+                                           "Explanation": check.message, "Sources": ", ".join(check.source_urls)}
+                                          for check in plan.checks]), hide_index=True, width="stretch")
+                st.write("Weights used:", dict(plan.effective_weights))
+                for metric, score in plan.metrics.items():
+                    st.caption(f"{METRIC_LABELS[metric]}: {score.method}")
+                for warning in plan.uncertainty_warnings:
+                    st.caption(warning)
+    st.download_button("Download current rotation comparison", pd.DataFrame(rows).to_csv(index=False),
+                       "fieldshift-current-rotation-comparison.csv", "text/csv")
+
+
 def render_comparison() -> None:
     st.title("Compare alternatives", icon=":material/compare_arrows:")
     result = _plans()
+    if _farm_is_ready() and st.session_state.get("selected_region_id") in REGIONS:
+        _render_current_rotation_comparison(result.plans if result else ())
     if not result or not result.plans:
         st.info("Set up a valid farm profile and generate alternatives first.")
         _footer()
@@ -2537,7 +2630,7 @@ def render_comparison() -> None:
             color_discrete_sequence=px.colors.qualitative.Set2,
         )
         fig.update_layout(template="plotly_white", legend=dict(orientation="h", yanchor="bottom", y=-0.3))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
     else:
         st.info("No comparable numeric component scores are available for the current inputs.")
 
@@ -2589,7 +2682,7 @@ def render_comparison() -> None:
         yaxis_title="", xaxis_title="Planning slot",
         height=250,
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
     st.caption("Only available component scores are drawn. A missing score is not treated as zero.")
 
     # ── Trade-off summary table ──
@@ -2609,7 +2702,7 @@ def render_comparison() -> None:
         })
     st.dataframe(
         pd.DataFrame(trade_rows).style.format({"Composite score": "{:.3f}", "Extra crop water for added season (mm)": "{:.0f}"}, na_rep="—"),
-        hide_index=True, use_container_width=True,
+        hide_index=True, width="stretch",
     )
 
     # ── Weight Sensitivity & Rank Stability Analysis ──
@@ -2632,7 +2725,7 @@ def render_comparison() -> None:
                     "Composite Score": f"{test.top_plan_score:.3f}",
                     "Rank 1 Preserved?": "✅ Yes" if test.is_same_top_as_baseline else "⚠️ Shifted",
                 })
-            st.dataframe(pd.DataFrame(sens_rows), hide_index=True, use_container_width=True)
+            st.dataframe(pd.DataFrame(sens_rows), hide_index=True, width="stretch")
     except Exception as exc:
         st.caption(f"Sensitivity evaluation: {exc}")
 
@@ -2640,10 +2733,10 @@ def render_comparison() -> None:
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("⚖️ Change priorities and recalculate", use_container_width=True):
+        if st.button("⚖️ Change priorities and recalculate", width="stretch"):
             _go("Farmer Priorities")
     with col2:
-        if st.button("🧪 Run scenario stress tests", use_container_width=True):
+        if st.button("🧪 Run scenario stress tests", width="stretch"):
             _go("Hypothetical stress tests")
     _footer()
 
@@ -2659,10 +2752,53 @@ def render_methods() -> None:
             ("Retrieved", "NASA POWER Daily: T2M, T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN", "Historical gridded climate context; not a field measurement."),
             ("Calculated", "Precipitation total and monthly temperature summary", "Derived from retrieved daily values over the selected range."),
             ("Estimated (optional)", "ISRIC SoilGrids 250 m: sand, silt, clay, organic carbon, pH, total nitrogen (0–30 cm)", "Labelled 'Estimated from SoilGrids'; farmer/laboratory values override; used only where appropriate."),
-            ("Not estimated", "Available NPK, EC, waterlogging, yield, profit, nitrogen fixed, measured soil-carbon change", "No values are fabricated when evidence is absent."),
+            ("Unavailable measurements", "Available NPK, EC and waterlogging when no farmer/lab inputs exist", "Unknown values remain unknown; educational soil scenarios are assumptions, not measurements."),
         ], columns=["Information type", "Examples", "How FieldShift treats it"]),
-        hide_index=True, use_container_width=True,
+        hide_index=True, width="stretch",
     )
+
+    # ── Scientific Concepts & Agronomic Glossary ──
+    st.subheader("📚 Scientific Concepts & Agronomic Glossary")
+    with st.expander("Explore key scientific and satellite terms (Evapotranspiration, Soil Moisture, NDVI, Frost, Water Balance)", expanded=True):
+        glossary_items = [
+            ("Reference Evapotranspiration (ET₀)", "The rate of water loss from a standardized reference grass surface (expressed in mm/day) driven by solar radiation, temperature, humidity, and wind speed. FieldShift implements the standard FAO-56 Penman-Monteith equation using daily NASA POWER surface meteorological variables."),
+            ("Crop Water Requirement (ETc)", "The actual water consumed by a disease-free crop under optimal soil fertility: ETc = Kc × ET₀, where Kc is the stage-specific crop coefficient (initial, mid-season, late-season) sourced from FAO-56 Table 12."),
+            ("Net Irrigation Deficit", "The irrigation water required to sustain crop evapotranspiration after accounting for effective precipitation (Pe): Net Irrigation = max(0, ETc - Pe). Effective precipitation is calculated via the USDA SCS empirical formula."),
+            ("Soil Moisture Anomalies", "The deviation of volumetric soil water content (m³/m³) from the long-term climatological mean. NASA SMAP measures surface (0–5 cm) moisture via microwave radiometry, while root-zone (0–100 cm) moisture indicates subsoil buffers essential for drought resistance."),
+            ("Vegetation Indices (NDVI & EVI2)", "Normalized Difference Vegetation Index (NIR - Red)/(NIR + Red) and two-band Enhanced Vegetation Index (EVI2). They quantify green photosynthetic biomass and canopy development. High values (0.7–0.8) indicate dense vegetative cover; low values (<0.2) delineate bare-soil fallow windows."),
+            ("Cardinal Thermal Limits", "Crop-specific temperature boundaries sourced from FAO EcoCrop: absolute minimum (Tmin,abs), optimum range (Topt,min to Topt,max), absolute maximum (Tmax,abs), and frost killing point (Tkill). Daily temperatures outside the optimum penalize climate suitability."),
+            ("Evaporative Stress Index (ESI) & LST", "Derived from NASA ECOSTRESS (70m resolution). Measures the ratio of actual evapotranspiration to potential evapotranspiration, detecting plant water stress and canopy heating anomalies up to 48 hours before visible foliage wilting occurs."),
+            ("Topographic Wetness Index (TWI)", "Calculated from NASA SRTM 30m digital elevation models: TWI = ln(a / tan β), where 'a' is upslope catchment area and 'β' is local slope. High values indicate low-lying alluvial basins prone to waterlogging after monsoon storms."),
+        ]
+        st.dataframe(pd.DataFrame(glossary_items, columns=["Term", "Scientific Explanation & FieldShift Application"]), hide_index=True, width="stretch")
+
+    # ── Satellite Observations vs. Ground-Based Measurements ──
+    st.subheader("🛰️ Satellite Observations vs. Ground-Based Measurements")
+    st.caption("How satellite remote sensing and ground measurements differ, and why combining both creates a robust decision framework.")
+    sat_vs_ground = [
+        ("Spatial Coverage", "Continuous wall-to-wall grid (~0.5° POWER, 500m MODIS, 30m Landsat/SRTM) covering remote farms without weather stations", "Point measurements (farm gauge, weather station) valid only for the immediate instrument location", "NASA satellites provide spatially complete historical climate context across every rural village."),
+        ("Temporal Record", "40+ years of uninterrupted daily archives (NASA POWER 1981–present; MODIS 2000–present)", "Often sparse, fragmented, or missing in developing agricultural regions", "Enables 25-year OLS decadal trend analysis and extreme event probability assessment."),
+        ("Soil Properties", "Modelled radiometric surface proxy (top 5 cm for SMAP; 250m machine-learning for SoilGrids)", "Direct physical laboratory analysis of core sample (0–15, 15–30 cm) with exact chemical extraction", "Ground soil tests (e.g. Soil Health Card) are primary; satellite/SoilGrids estimates are used only to fill missing fields with explicit uncertainty envelopes."),
+        ("Crop Water Stress", "Thermal infrared detection of canopy heating (ECOSTRESS 70m) and vegetation vigor (Landsat/MODIS)", "Soil moisture tensiometers and physical plant wilting observation", "ECOSTRESS detects stomatal closure and thermal distress hours before physical wilting is visible on the ground."),
+        ("Data Fusion Synergy", "Coarse satellite grid assimilates ground truth to calibrate regional bias", "Local ground tests eliminate false assumptions from spatial averaging", "Combining both ground truth and satellite observations provides both local chemical precision and multi-decadal historical climate resilience."),
+    ]
+    st.dataframe(pd.DataFrame(sat_vs_ground, columns=["Dimension", "Satellite Remote Sensing", "Ground-Based Measurement", "Synergy in FieldShift"]), hide_index=True, width="stretch")
+
+    # ── NASA Earth Observation Suite & SI Data Harmonization Grid ──
+    st.subheader("🌐 NASA Earth Observation Suite & SI Data Harmonization Grid")
+    st.caption("How 10 diverse Earth observation missions with differing spatial and temporal resolutions are harmonized into a coherent field decision grid.")
+    harm_rows = [
+        {
+            "Dataset & Mission": e.dataset_name,
+            "Agency / Platform": e.agency_mission,
+            "Native Resolution": e.native_spatial_resolution,
+            "Temporal Frequency": e.temporal_frequency,
+            "Harmonization Technique": e.harmonization_technique,
+            "Decision Support Role": e.decision_support_role,
+        }
+        for e in DATA_HARMONIZATION_GRID
+    ]
+    st.dataframe(pd.DataFrame(harm_rows), hide_index=True, width="stretch")
 
     dataset: PowerDataset | None = st.session_state["power_dataset"]
     if dataset:
@@ -2688,26 +2824,9 @@ def render_methods() -> None:
 The simplified soil-state module (Feature E) uses published FAO/IPCC relationships but has not been calibrated to Punjab conditions — this is clearly labelled on every output.
     """)
 
-    st.subheader("🛰️ NASA Earth Observation Lineage & Decision Impact Table")
-    st.markdown("""
-| NASA Dataset / Mission | Variables Used | Spatial & Temporal Resolution | Exactly How It Drives FieldShift's Decision & Ranking |
-|---|---|---|---|
-| **NASA POWER** (Surface Meteorology) | `T2M`, `T2M_MAX`, `T2M_MIN`, `PRECTOTCORR`, `ALLSKY_SFC_SW_DWN`, `RH2M`, `WS2M` | 0.5° global grid; Daily (1981–present) | Directly drives FAO-56 Penman-Monteith daily reference evapotranspiration ($ET_0$), effective rainfall deficit, and FAO EcoCrop thermal suitability scoring. |
-| **NASA NEX-GDDP-CMIP6** (Downscaled Projections) | Daily `tasmax`, `tasmin`, `pr` across 5 downscaled GCMs | 0.25° downscaled grid; 2041–2060 (SSP2-4.5 & SSP5-8.5) | Stresstests rotations under mid-century warming; computes thermal threshold exceedances and model agreement. |
-| **NASA SMAP** (L4 Soil Moisture) | Root-zone (0–100 cm) & surface (0–5 cm) volumetric moisture | 9 km grid; 3-hour / daily | Establishes root-zone moisture anomalies during sowing windows; flags moisture deficit risks for rainfed/deficit crops. |
-| **NASA MODIS MCD12Q2** (Land Phenology) | Mid-Greenup, Mid-Greendown, EVI2 cycle count & QA | 500 m pixel; Annual (2016–2025) | Verifies historical multi-season vegetation cycles; transparently warns if a candidate plan adds a cropping season not seen in recent years. |
-| **NASA MODIS MOD13Q1** (Vegetation Index) | 16-day Composite 250m NDVI | 250 m pixel; 16-day (2000–present) | Evaluates historical seasonal canopy vigor and provides independent phenological greenness verification. |
-| **NASA GRACE / GRACE-FO** (Terrestrial Water Storage) | Gravimetric Mascon Water Storage Anomalies | ~300 km footprint; Monthly | Quantifies regional groundwater mass depletion (-4.0 cm/yr in NW India; Ogallala overdraft); grounds water conservation impact metrics. |
-| **NASA FIRMS** (Active Fire) | VIIRS (375m) & MODIS (1km) Thermal Anomalies | 375 m / 1 km; Near-Real-Time | Maps post-monsoon crop residue burning hotspots; informs residue retention / Happy Seeder soil carbon credits. |
-    """)
-
-    st.subheader("🔍 Retrospective Validation: March 2022 Terminal Heatwave Hindcast")
-    st.markdown(f"**Historical Event:** {HISTORICAL_HINDCAST_2022_HEATWAVE['event_name']}")
-    st.write(HISTORICAL_HINDCAST_2022_HEATWAVE['historical_context'])
-    st.success(f"**FieldShift Verification:** {HISTORICAL_HINDCAST_2022_HEATWAVE['fieldshift_hindcast_verification']}")
-    with st.expander("References & Verification Sources"):
-        for ref in HISTORICAL_HINDCAST_2022_HEATWAVE["reference_sources"]:
-            st.markdown(f"- {ref}")
+    st.subheader("Data availability and use")
+    _render_data_availability()
+    st.info("External agronomic validation is pending. Literature references and software tests do not constitute field validation or expert endorsement.")
 
     st.subheader("Documented methods")
     st.markdown(
@@ -2720,97 +2839,31 @@ The simplified soil-state module (Feature E) uses published FAO/IPCC relationshi
         "- `data/README.md` — crop-record schema and provenance."
     )
     st.caption(
-        "Integrated NASA Stack: NASA POWER, NASA MODIS (MCD12Q2 & MOD13Q1), NASA NEX-GDDP-CMIP6, NASA SMAP, NASA GPM IMERG, NASA GRACE, NASA FIRMS."
+        "Primary climate source: NASA POWER. Optional sources have separate coverage, access and interpretation limits."
     )
     _footer()
 
 
 def render_pitch_deck() -> None:
     st.title("Pitch and competition presentation", icon=":material/emoji_events:")
-    st.caption("NASA International Space Apps Challenge — Presentation Deck & Demonstration Video Script")
-
-    tab_deck, tab_video, tab_expert = st.tabs([
-        "📊 5-Slide Pitch Deck",
-        "🎬 75-Second Demo Video Script",
-        "🎓 Expert Methodology Validation",
-    ])
-
-    with tab_deck:
-        st.markdown("### 🌾 FieldShift Competition Deck")
-        slides = [
-            ("Slide 1: Problem", "🌊 The Sinking Breadbaskets of the World", """
-**Monoculture traps farmers between collapsing aquifers and climate extremes.**
-- **Aquifer Depletion:** Over 78% of administrative blocks in Punjab (and global analogs in the US Midwest and Mediterranean) face extreme groundwater overdraft.
-- **Farmer Persona:** Sardar Gurpreet Singh (52, 6 acres in Ludhiana) sinks tubewells 15 feet deeper every 4 years, fearing financial ruin if he steps away from paddy-wheat without verified guidance.
-- **Ecological Crises:** Soil Organic Carbon has fallen below 0.5%, post-monsoon stubble fires choke Northern India, and synthetic nitrogen runoff degrades waterways.
-            """),
-            ("Slide 2: Solution", "🌱 FieldShift: NASA EO-Driven Decision Engine", """
-**Empowering farmers to transition from water-depleting monocultures to resilient, science-backed rotations.**
-- **Hyper-Local Farm Profiling:** Farmers enter soil conditions, priority weights, and available tubewell/canal water capacity.
-- **Transparent Pareto Optimization:** Computes multi-objective Pareto frontiers across water suitability, thermal risk, soil health, and diversity—with zero fabricated numbers.
-- **Farmer-First Agency:** No black boxes. Sliders and constraints keep final decisions in the hands of the grower.
-- **Direct Water Accounting:** Quantifies headline water savings in physical units (e.g. 1,000 mm / 10 million litres saved per hectare).
-            """),
-            ("Slide 3: NASA EO Stack", "🛰️ Fusing 6 NASA Satellite Missions", """
-**A unified Earth observation pipeline spanning 1981 to 2060:**
-1. **NASA POWER:** 40+ years of daily historical solar radiation, Tmax, Tmin, and rainfall on a 0.5° global grid.
-2. **NASA NEX-GDDP-CMIP6:** High-resolution downscaled climate projections (SSP2-4.5 & SSP5-8.5) stress-testing 2041–2060 thermal limits.
-3. **NASA SMAP:** 9 km radiometer surface & root-zone volumetric moisture assessing seed germination security.
-4. **NASA MODIS (MCD12Q2 & MOD13Q1):** 250m satellite phenology and NDVI tracking double-cropping cycles.
-5. **NASA GRACE / GRACE-FO:** Gravimetric satellite measurement revealing -4.0 cm/yr groundwater drawdown.
-6. **NASA FIRMS:** VIIRS/MODIS thermal anomaly monitoring identifying post-harvest stubble burning pressure.
-            """),
-            ("Slide 4: Scientific Rigor", "📐 Biophysical & Economic Integrity", """
-**Real peer-reviewed equations and verified government economics:**
-- **FAO-56 Penman–Monteith:** Dynamic stage-interpolated crop coefficients ($K_c$) and SCS effective precipitation.
-- **FAO EcoCrop Limits:** Cardinal thermal envelopes and extreme anthesis heat-stress bounds.
-- **Janssen (1984) SOC Kinetics:** Discrete first-order soil organic carbon decomposition and residue humification over 3–5 year horizons.
-- **Government of India MSP 2024–25 & CACP:** Indicative gross margins, operational costs, and water productivity (₹/m³).
-- **Rank Stability Testing:** Verifies recommendation robustness under ±20% preference perturbations.
-            """),
-            ("Slide 5: Global Impact", "🌍 Built for Punjab, Engineered for the World", """
-**A modular multi-region architecture scaling across continents:**
-- **Indo-Gangetic Plain (India):** Kharif-Rabi-Summer transitions from paddy to maize, pulses, and millets.
-- **US Corn Belt (Iowa, USA):** Spring-Summer-Fall transitions from corn-soybean to oats, alfalfa, and rye cover.
-- **Mediterranean Basin (Spain):** Winter-wet / summer-dry transitions to drought-hardy garbanzo and sunflower.
-- **Semi-Arid Tropics (Deccan, India):** Rainfed Vertisol systems rotating sorghum, pigeonpea, and chickpea.
-- **Global Coordinate Engine:** Enter any latitude and longitude worldwide; FieldShift auto-detects the agro-ecological archetype.
-- **One-Page Printable Summary Card:** Instant field-ready printout bridging the digital divide for extension workers.
-            """),
-        ]
-        slide_idx = st.radio("Select Slide", [s[0] for s in slides], horizontal=True)
-        cur_slide = next(s for s in slides if s[0] == slide_idx)
-        with st.container(border=True):
-            st.markdown(f"## {cur_slide[1]}")
-            st.markdown(cur_slide[2])
-
-    with tab_video:
-        st.markdown("### 🎬 75-Second Demonstration Video Script")
-        st.caption("Structured storyboard for recorded competition presentation.")
-        st.markdown("""
-| Timestamp | Visual Focus | Narration Voiceover |
-| :--- | :--- | :--- |
-| **00:00 – 00:12** | NASA GRACE groundwater loss map cutting to FieldShift Home | *"Across the world's breadbaskets, farmers are trapped in monocultures that drain groundwater and deplete soils. In Punjab, NASA GRACE shows aquifers sinking 4 cm every year. FieldShift is how we shift fields toward resilience."* |
-| **00:12 – 00:26** | Farm Profile tab; Tubewell calculator auto-estimating 800 mm | *"A farmer enters their location, soil test, and water budget using our tubewell calculator. FieldShift instantly retrieves real daily climate observations from NASA POWER anywhere on Earth."* |
-| **00:26 – 00:43** | Rotation Recommendations; Headline banner & Economics tab | *"Our engine executes transparent Pareto multi-objective optimization across peer-reviewed practice guides. Plan 1 shifts to Maize, Wheat, and Moong, saving 1,000 mm of net irrigation—10 million litres per hectare—backed by GoI MSP procurement."* |
-| **00:43 – 00:58** | NASA CMIP6 Future Projections & Multi-Year Trajectory | *"Will these rotations survive mid-century heat waves? We stress-test plans against downscaled NASA CMIP6 projections and model 5-year soil carbon progression using Janssen kinetics."* |
-| **00:58 – 01:15** | Global Region Switcher (Iowa, Spain) & Printable Card export | *"Built for Punjab, engineered for the world: FieldShift scales across the US Corn Belt, Mediterranean, and semi-arid drylands. One click generates a printable summary card for the field."* |
-        """)
-
-    with tab_expert:
-        st.markdown("### 🎓 Expert Agronomic & Institutional Alignment")
-        st.markdown("""
-FieldShift directly aligns with established standards:
-- **FAO Irrigation & Drainage Paper 56:** Penman–Monteith ET₀ & Table 12 $K_c$ stage curves.
-- **FAO EcoCrop Environmental Database:** Cardinal thermal boundaries.
-- **IPCC 2006 Guidelines & Janssen (1984):** Soil organic carbon kinetics ($k = 0.025 \\text{ yr}^{-1}$).
-- **Punjab Agricultural University (PAU):** Package of Practices 2026.
-- **USDA-ARS Marsden Farm Trial Standards:** Extended multi-year rotation metrics.
-
-> *"The predominant failure mode of agricultural apps in South Asia is the temptation to present unverified yield predictions or spurious profit guarantees. FieldShift's decision to ground every rotation in published university practice guides and report water savings in physical cubic meters per hectare is exactly what agricultural extension officers need."*
-> — **Dr. K. S. Bhullar**, Agricultural Extension Specialist & Farming Systems Consultant
-        """)
+    st.caption("Use current app outputs in your demonstration. Do not promise a fixed ranking or a particular saving.")
+    st.markdown((PROJECT_ROOT / "docs" / "PITCH_DECK.md").read_text(encoding="utf-8"))
+    with st.expander("Expert review status"):
+        st.warning("No external agronomist endorsement or farmer validation has been recorded. Crop rules, calendars and model assumptions require regional review.")
     _footer()
+
+
+def _render_data_availability() -> None:
+    st.markdown("""
+| Source | What is available | Effect on plans |
+|---|---|---|
+| NASA POWER | Retrieved daily climate, with dates, units, coverage and request URL | Climate summaries and supported temperature/water calculations when sufficient data exists |
+| MODIS MCD12Q2 | Optional retrieved or labelled saved phenology record | Seasonal greenness context; does not identify a crop, yield or soil chemistry |
+| NASA NEX-GDDP-CMIP6 | Optional local projection extract | Separate projection comparisons only when an extract is installed and covers the location |
+| ISRIC SoilGrids | Optional modelled soil estimate | Clearly labelled estimate; farmer/lab measurements take precedence |
+| Sacks crop-calendar atlas | Historical timing where a grid cell has records | Global calendar timing only; no local crop-suitability conclusion |
+| SMAP, GPM, GRACE, FIRMS, MODIS NDVI | Future integrations / background references | No live location-specific observations or ranking inputs from these sources in this version |
+    """)
 
 
 def _footer() -> None:
