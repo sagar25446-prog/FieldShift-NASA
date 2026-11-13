@@ -2,12 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
-
 from fieldshift.agronomy import (
     CROP_CALENDARS,
-    HISTORICAL_HINDCAST_2022_HEATWAVE,
-    PILOT_RECOMMENDATION_TEXT,
     get_crop_calendar,
 )
 from fieldshift.export_import import generate_farmer_summary_card_html
@@ -41,18 +37,7 @@ def test_crop_calendar_multiregion():
     assert sorghum.region_id == "semi_arid"
 
 
-def test_pilot_recommendation_guidance():
-    assert "10%" in PILOT_RECOMMENDATION_TEXT or "10% to 20%" in PILOT_RECOMMENDATION_TEXT
-    assert "Pilot-First" in PILOT_RECOMMENDATION_TEXT
-
-
-def test_hindcast_metadata_structure():
-    assert "March 2022" in HISTORICAL_HINDCAST_2022_HEATWAVE["event_name"]
-    assert "32°C" in HISTORICAL_HINDCAST_2022_HEATWAVE["fieldshift_hindcast_verification"]
-    assert len(HISTORICAL_HINDCAST_2022_HEATWAVE["reference_sources"]) >= 2
-
-
-def test_summary_card_renders_calendar_and_pilot_box():
+def test_summary_card_renders_calendar_and_disclosures():
     farm = {
         "latitude": 30.85,
         "longitude": 75.70,
@@ -69,7 +54,7 @@ def test_summary_card_renders_calendar_and_pilot_box():
         water_saved_m3_ha=9850.0,
         composite_score=0.88,
     )
-    assert "Pilot-First Protocol" in html
-    assert "Recommended Sowing & Harvest Windows" in html
+    assert "Local review required" in html
+    assert "Catalogue sowing and harvest windows" in html
     assert "Wheat" in html
-    assert "NASA GRACE" in html
+    assert "NASA GRACE" not in html

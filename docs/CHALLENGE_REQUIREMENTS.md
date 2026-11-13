@@ -3,7 +3,7 @@
 **Challenge URL:** <https://www.spaceappschallenge.org/2026/challenges/field-shift-adapting-farms-with-nasa-data/>  
 **Categories:** Advanced, Intermediate  
 **Skills:** Arts & Multimedia, Earth Science, Software  
-**Last reviewed:** 2026-11-05
+**Last reviewed:** 2026-11-13
 **Project Repository:** <https://github.com/sagar25446-prog/Nasa-Hacakathon>
 **Live Application:** <https://fieldshift-nasa.streamlit.app>
 

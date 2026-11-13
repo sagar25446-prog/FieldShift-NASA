@@ -1,4 +1,9 @@
-"""Assess a farmer's stated current sequence alongside generated alternatives."""
+"""Compare a farmer-entered sequence with engine-generated alternatives.
+
+This module is a presentation layer over ``rotation_engine``. It does not add
+new agronomic thresholds, pest predictions, or soil-change claims. Each message
+is either an engine result or an explicit statement of what cannot be known.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +15,8 @@ from .rotation_engine import FarmProfile, RotationEngine, RotationPlan
 
 @dataclass(frozen=True)
 class Strategy:
+    """One comparable sequence plus source-linked, plain-language context."""
+
     label: str
     plan: RotationPlan
     is_current: bool = False
@@ -24,112 +31,139 @@ class Strategy:
     soil_functional_roles: tuple[str, ...] = ()
 
 
+def _check_messages(plan: RotationPlan, status: str) -> tuple[str, ...]:
+    """Return unique engine check messages in their original order."""
+    return tuple(dict.fromkeys(check.message for check in plan.checks if check.status == status))
+
+
+def _soil_roles(plan: RotationPlan, engine: RotationEngine) -> tuple[str, ...]:
+    """Describe catalogue roles without estimating nitrogen or soil change."""
+    roles: list[str] = []
+    for crop_id in plan.crop_ids:
+        crop = engine.crops[crop_id]
+        nutrient = crop.get("nutrient_characteristics", {})
+        notes = str(nutrient.get("notes", "")).strip()
+        if crop.get("legume"):
+            role = f"{crop['name']} is catalogued as a legume."
+            if nutrient.get("status") != "unknown" and notes:
+                role = f"{role} Catalogue note: {notes}"
+            else:
+                role = f"{role} Field nitrogen contribution is not estimated by FieldShift."
+            roles.append(role)
+        elif nutrient.get("status") != "unknown" and notes:
+            roles.append(f"{crop['name']}: {notes}")
+    return tuple(dict.fromkeys(roles))
+
+
+def _land_use_statement(plan: RotationPlan) -> str:
+    comparison = plan.land_use_comparison
+    if comparison is None:
+        return (
+            "No MODIS phenology comparison is attached to this assessment. "
+            "FieldShift cannot establish whether a planned slot is currently bare or covered."
+        )
+    if comparison.added_seasons:
+        slots = ", ".join(comparison.added_seasons)
+        return (
+            f"The plan adds cropping in the following slot(s) relative to the attached MODIS record: {slots}. "
+            "This is a planning difference, not proof of ground cover, erosion reduction, or soil improvement."
+        )
+    if comparison.continued_seasons:
+        return (
+            "The attached MODIS record indicates recent seasonal greenness in each planned slot. "
+            "It does not identify the crop or measure field-scale ground cover."
+        )
+    return "The attached MODIS comparison is inconclusive for one or more planned slots."
+
+
+def _climate_statement(plan: RotationPlan) -> str:
+    assessment = plan.climate_assessment
+    if assessment is None:
+        return (
+            "No crop-temperature assessment was available for this sequence. "
+            "Historical climate suitability therefore remains unknown."
+        )
+    if getattr(assessment, "status", "unknown") == "unknown":
+        return (
+            "The climate record or catalogue thresholds were insufficient for a complete historical thermal assessment. "
+            "This is not a weather forecast."
+        )
+    return (
+        "Historical temperature suitability was calculated from the attached climate record and documented catalogue limits. "
+        "It is a historical comparison, not a yield prediction or future-weather forecast."
+    )
+
+
+def _pest_statement(plan: RotationPlan, engine: RotationEngine) -> str:
+    families = tuple(dict.fromkeys(engine.crops[crop_id]["family"] for crop_id in plan.crop_ids))
+    fails = tuple(check for check in plan.checks if check.status == "fail")
+    if any("restriction" in check.rule or "relationship" in check.rule for check in fails):
+        return "A documented crop/family restriction or rotation relationship fails. The sequence is not presented as feasible."
+    return (
+        f"The sequence contains {len(families)} documented crop family/families ({', '.join(families)}). "
+        "This diversity summary is not a prediction of pest or disease control."
+    )
+
+
 def _build_strategy_narratives(
-    label: str,
     plan: RotationPlan,
     is_current: bool,
     engine: RotationEngine,
-    profile: FarmProfile,
 ) -> tuple[str, tuple[str, ...], tuple[str, ...], tuple[str, ...], tuple[str, ...], str, str, str, tuple[str, ...]]:
-    crop_ids = plan.crop_ids
-    crop_names = plan.crop_names
-    names_str = " → ".join(crop_names)
-
-    # 1. Why suggested
+    """Make a transparent explanation from a completed plan assessment."""
+    sequence = " → ".join(plan.crop_names)
     if is_current:
         why = (
-            f"**Baseline Assessment:** Evaluates the farm's current practice ({names_str}) to establish "
-            f"a rigorous agronomic benchmark for water consumption, soil nutrient balances, and climate vulnerability."
+            f"**Current rotation assessment:** {sequence} is retained as the farmer-entered baseline and assessed "
+            "with the same inputs, rules, and weights as every alternative."
         )
     else:
-        reasons = []
-        wb = plan.water_balance
-        if wb is not None and getattr(wb, "total_net_irrigation_mm", None) is not None:
-            reasons.append(f"conserves water (~{wb.total_net_irrigation_mm:.0f} mm estimated net irrigation)")
-        has_legume = any(getattr(c, "legume", False) for c in getattr(plan, "crops", ())) or any(cid in ("moong", "chickpea", "soybean", "pigeonpea") for cid in crop_ids)
-        if has_legume:
-            reasons.append("integrates a biological nitrogen-fixing break")
-        div_score = plan.metrics.get("rotation_diversity")
-        if div_score and div_score.score is not None and div_score.score >= 0.7:
-            reasons.append("diversifies botanical plant families")
-        why = f"**Why Suggested:** {names_str} was recommended because it {"; and ".join(reasons)} while satisfying regional agronomic compatibility rules." if reasons else f"**Why Suggested:** {names_str} provides a viable, agronomically documented alternative sequence."
+        why = (
+            f"**Engine-generated alternative:** {sequence} was returned by the documented relationship search for the "
+            "selected planning slots. It is not a prescription or a guarantee of performance."
+        )
 
-    # 2. Evidence support
-    evidence = [
-        "Regional Agricultural University Packages of Practices (PAU/USDA/IFAPA/ICRISAT) crop transition guidelines.",
-        "NASA POWER Daily Surface Meteorology: solar radiation, temperature, and humidity driving FAO-56 Penman-Monteith ET₀ calculations.",
-        "FAO EcoCrop cardinal thermal limits (Tmin, Topt, Tmax) evaluated against local historical daily temperature records.",
-        "Government procurement benchmarks (CACP MSP 2024-25 / Agricultural Statistics) for indicative economic viability.",
-    ]
-
-    # 3. Benefits offered
-    benefits = []
-    wb = plan.water_balance
-    if wb is not None and getattr(wb, "total_net_irrigation_mm", None) is not None:
-        benefits.append(f"Water Conservation: Requires estimated {wb.total_net_irrigation_mm:.0f} mm net irrigation, reducing groundwater extraction pressure.")
-    if any(cid in ("moong", "chickpea", "soybean", "pigeonpea") for cid in crop_ids):
-        benefits.append("Biological Nitrogen Fixation: Legume incorporation fixes 30–50 kg atmospheric N/ha and improves soil organic carbon.")
-    if len(set(engine.crops.get(c, {}).get("family", c) for c in crop_ids)) >= 2:
-        benefits.append("Pest/Disease Interruption: Alternating botanical families breaks continuous host cycles for cereal stem borers and root pathogens.")
-    benefits.append("Income & Market Diversification: Spreads revenue risk across multiple distinct harvest windows rather than a single commodity.")
-
-    # 4. Information gaps
-    gaps = (
-        "Satellite meteorology (~0.5° NASA POWER) represents regional grid conditions, not microclimatic field station measurements.",
-        "Soil nutrient dynamics use published stoichiometric approximations and have not been calibrated with long-term field plot trials.",
-        "Local mandi commodity price volatility, storage access, and private trader quality deductions are not dynamically modeled.",
+    evidence = tuple(plan.source_urls) or (
+        "No catalogue source URL was attached to this assessment; review the individual rule checks.",
+    )
+    benefits = plan.positive_factors or (
+        "No additional positive factor could be calculated from the available inputs.",
+    )
+    gaps = tuple(dict.fromkeys((*plan.uncertainty_warnings, *_check_messages(plan, "unknown")))) or (
+        "No additional missing-input warning was generated. This does not replace local validation.",
+    )
+    risks = tuple(dict.fromkeys((*plan.tradeoffs, *_check_messages(plan, "fail")))) or (
+        "Review crop calendar, soil condition, irrigation capacity, equipment, and market access locally before acting.",
+    )
+    return (
+        why,
+        evidence,
+        benefits,
+        gaps,
+        risks,
+        _land_use_statement(plan),
+        _climate_statement(plan),
+        _pest_statement(plan, engine),
+        _soil_roles(plan, engine),
     )
 
-    # 5. Risks and expert review needed
-    risks = (
-        "Verify certified short-duration seed varieties (e.g. university-recommended cultivars) with local agricultural extension advisers.",
-        "Ensure field drainage is adequate before sowing: rainfed or furrow-irrigated crops may be sensitive to temporary waterlogging.",
-        "Assess farm labor and equipment availability during tight multi-crop harvesting and field preparation turnaround windows.",
+
+def _strategy(label: str, plan: RotationPlan, is_current: bool, engine: RotationEngine) -> Strategy:
+    values = _build_strategy_narratives(plan, is_current, engine)
+    return Strategy(
+        label=label,
+        plan=plan,
+        is_current=is_current,
+        why_suggested=values[0],
+        evidence_support=values[1],
+        benefits_offered=values[2],
+        information_gaps=values[3],
+        risks_and_expert_review=values[4],
+        bare_field_analysis=values[5],
+        vulnerability_analysis=values[6],
+        pest_break_analysis=values[7],
+        soil_functional_roles=values[8],
     )
-
-    # 6. Bare field analysis
-    has_summer_crop = any(cid in ("moong", "summer_moong", "dhaincha", "sunnhemp") for cid in crop_ids) or "summer" in [s.lower() for s in getattr(plan, "seasons", ())]
-    if has_summer_crop:
-        bare_field = (
-            "🛡️ **Soil Protected:** Summer window (April–June) is actively cultivated, "
-            "protecting topsoil from extreme wind erosion, lowering canopy soil temperatures by 4–8°C, and building soil organic matter."
-        )
-    else:
-        bare_field = (
-            "⚠️ **Bare-Field Window Detected:** Leaves fields uncropped during the peak solar radiation window (April–June), "
-            "exposing bare soil to wind erosion, organic matter depletion, and excessive evaporative moisture loss."
-        )
-
-    # 7. Vulnerability analysis
-    vulnerabilities = []
-    if "wheat" in crop_ids:
-        vulnerabilities.append("Late-Rabi terminal heat exposure: March temperatures exceeding 32°C during anthesis/grain filling cause grain shriveling.")
-    if "maize" in crop_ids or "cotton" in crop_ids:
-        vulnerabilities.append("Kharif seedling monsoon vulnerability: Young seedlings are sensitive to standing water ponding during intense rainfall storms.")
-    vulnerability = " · ".join(vulnerabilities) if vulnerabilities else "Moderate seasonal weather exposure within typical regional agronomic tolerance limits."
-
-    # 8. Pest break analysis
-    families = [engine.crops.get(c, {}).get("family", "Unknown") for c in crop_ids]
-    if len(set(families)) == 1 and families[0] in ("Poaceae", "Grass"):
-        pest_break = "⚠️ **Continuous Grass Monoculture:** All crops belong to Poaceae, allowing cereal stem borers and root-knot nematodes to persist across seasons."
-    else:
-        pest_break = f"✅ **Botanical Break:** Rotates {', '.join(set(families))}, disrupting insect pest reproduction cycles and fungal disease accumulation."
-
-    # 9. Soil functional roles
-    roles = []
-    for cid in crop_ids:
-        c_info = engine.crops.get(cid, {})
-        c_name = c_info.get("name", cid.capitalize())
-        if c_info.get("legume", False) or cid in ("moong", "chickpea", "soybean", "pigeonpea"):
-            roles.append(f"🌿 **Nitrogen-Fixer ({c_name}):** Symbiotic rhizobia fix atmospheric N2, adding organic N to the soil profile.")
-        if cid in ("cotton", "mustard", "rapeseed_mustard", "sorghum"):
-            roles.append(f"🌱 **Deep-Rooter ({c_name}):** Taproots penetrate subsoil hardpans (up to 1.5–2m), opening macropores that improve water infiltration.")
-        if cid in ("pearl_millet", "sorghum"):
-            roles.append(f"☀️ **Drought-Tolerant ({c_name}):** C4 photosynthetic metabolism achieves superior water-use efficiency during moisture deficits.")
-        if cid in ("cereal_rye", "dhaincha", "sunnhemp", "moong"):
-            roles.append(f"🌾 **Soil Armor & Cover ({c_name}):** Provides rapid vegetative ground cover that shields soil aggregates from erosion.")
-
-    return (why, tuple(evidence), tuple(benefits), gaps, risks, bare_field, vulnerability, pest_break, tuple(roles))
 
 
 def compare_existing_rotation(
@@ -138,53 +172,18 @@ def compare_existing_rotation(
     current_crop_ids: tuple[str, ...],
     alternatives: Sequence[RotationPlan],
 ) -> tuple[Strategy, ...]:
-    """Keep the current sequence even when it fails rules or is dominated.
+    """Keep the current sequence even when it fails known rules or is dominated.
 
-    All scores use the same farm, historical climate, horizon and weights. An
-    unsupported transition is a prototype evidence gap, not proof a farmer's
-    existing practice is impossible. Do not replace an unknown or fallow crop
-    with a guessed catalogue crop.
+    An unsupported transition is a prototype evidence gap, not proof that a
+    farmer's current practice is impossible in the field.
     """
     current = engine.assess_sequence(current_crop_ids, profile)
-    cur_narratives = _build_strategy_narratives("Your current rotation", current, True, engine, profile)
-    strategies = [
-        Strategy(
-            label="Your current rotation",
-            plan=current,
-            is_current=True,
-            why_suggested=cur_narratives[0],
-            evidence_support=cur_narratives[1],
-            benefits_offered=cur_narratives[2],
-            information_gaps=cur_narratives[3],
-            risks_and_expert_review=cur_narratives[4],
-            bare_field_analysis=cur_narratives[5],
-            vulnerability_analysis=cur_narratives[6],
-            pest_break_analysis=cur_narratives[7],
-            soil_functional_roles=cur_narratives[8],
-        )
-    ]
+    strategies = [_strategy("Your current rotation", current, True, engine)]
     seen = {current_crop_ids}
     for candidate in alternatives:
         if candidate.crop_ids in seen:
             continue
         seen.add(candidate.crop_ids)
         assessed = engine.assess_sequence(candidate.crop_ids, profile)
-        alt_label = f"Alternative {len(strategies)}"
-        alt_narratives = _build_strategy_narratives(alt_label, assessed, False, engine, profile)
-        strategies.append(
-            Strategy(
-                label=alt_label,
-                plan=assessed,
-                is_current=False,
-                why_suggested=alt_narratives[0],
-                evidence_support=alt_narratives[1],
-                benefits_offered=alt_narratives[2],
-                information_gaps=alt_narratives[3],
-                risks_and_expert_review=alt_narratives[4],
-                bare_field_analysis=alt_narratives[5],
-                vulnerability_analysis=alt_narratives[6],
-                pest_break_analysis=alt_narratives[7],
-                soil_functional_roles=alt_narratives[8],
-            )
-        )
+        strategies.append(_strategy(f"Alternative {len(strategies)}", assessed, False, engine))
     return tuple(strategies)

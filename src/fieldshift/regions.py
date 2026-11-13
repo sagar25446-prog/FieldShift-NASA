@@ -67,7 +67,7 @@ REGIONS: dict[str, RegionDefinition] = {
         baseline_rotation_name="Continuous Rice–Wheat Monoculture",
         baseline_rotation_crops=("rice", "wheat", "moong"),
         baseline_water_mm=2600.0,
-        groundwater_context="NASA GRACE detects -4.0 cm/yr groundwater decline; 78% of Punjab blocks overexploited.",
+        groundwater_context="FieldShift does not retrieve field-scale groundwater observations; verify local water availability and allocation before choosing a rotation.",
         description=(
             "The breadbasket of India, characterized by intensively irrigated alluvial soils, "
             "severe groundwater overdraft from flood-irrigated paddy rice, and post-harvest "

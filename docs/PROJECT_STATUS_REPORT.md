@@ -1,6 +1,6 @@
 # FieldShift project status and challenge fit
 
-**Reviewed:** 2026-11-05
+**Reviewed:** 2026-11-13
 **Challenge:** [Field Shift: Adapting Farms with NASA Data](https://www.spaceappschallenge.org/2026/challenges/field-shift-adapting-farms-with-nasa-data/)
 
 ## Executive summary

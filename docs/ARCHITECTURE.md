@@ -55,14 +55,13 @@
 | `growing_season.py` | Season date windowing and crop duration calculation |
 | `land_use_phenology.py` | MODIS MCD12Q2 phenology client and season-use classification |
 | `multi_year_simulation.py` | 3–5 year rotation trajectory simulation (SOC, N-balance) |
-| `satellite_context.py` | GRACE, FIRMS, SMAP, GPM, MODIS reference context |
 | `sensitivity.py` | Weight perturbation analysis and plain-language explanations |
 | `soil_nutrient_model.py` | Simplified FAO/IPCC Tier 1 N-balance and SOC model |
 | `soil_data.py` | ISRIC SoilGrids integration with uncertainty envelopes |
 | `world_map.py` | D3.js interactive globe/map selector component |
 | `calendar_workspace.py` | Custom calendar editing for non-pilot locations |
 | `regions.py` | Multi-region framework (Punjab, US Corn Belt, Mediterranean, Semi-Arid) |
-| `agronomy.py` | Verified crop calendars, pilot recommendations, heatwave hindcast |
+| `agronomy.py` | Source-linked crop calendar references for the presentation layer |
 | `recommendations.py` | Rotation comparison guard (logic lives in rotation_engine.py) |
 
 ## Data Flow

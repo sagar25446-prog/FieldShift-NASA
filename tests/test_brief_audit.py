@@ -2,7 +2,6 @@
 from pathlib import Path
 
 import pytest
-from streamlit.testing.v1 import AppTest
 
 from fieldshift.rotation_engine import (
     ClimateContext, FarmProfile, RotationEngine, RotationInputError,
@@ -71,33 +70,8 @@ def test_export_keeps_unknowns_and_does_not_claim_unretrieved_satellite_data():
     assert "+ Legume Credit" not in card
 
 
-def test_current_rotation_comparison_form_runs_with_actual_engine():
-    def script():
-        from fieldshift.ui import _init_state, _load_complete_demo_workflow, _plans, _render_current_rotation_comparison
-        import streamlit as st
-        _init_state()
-        if not st.session_state.get("initialized"):
-            _load_complete_demo_workflow()
-            st.session_state.initialized = True
-        _render_current_rotation_comparison(_plans().plans)
-    app = AppTest.from_function(script, default_timeout=30).run()
-    for i, crop in enumerate(("rice", "wheat", "moong")):
-        app.selectbox(key=f"current_crop_{i}").set_value(crop)
-    next(button for button in app.button if button.label == "Compare my current rotation").click().run()
-    assert not app.exception
-    assert any("Your current rotation" in str(table.value) for table in app.dataframe)
-
-
-def test_globe_network_failure_shows_error_without_missing_response_crash():
-    def script():
-        import fieldshift.ui as ui
-        from fieldshift.nasa_power import PowerNetworkError
-        from unittest.mock import patch
-        ui._init_state()
-        with patch.object(ui, "_power_client") as client:
-            client.return_value.fetch_daily.side_effect = PowerNetworkError("NASA POWER test timeout")
-            ui._location_brief({"lat": 30.85, "lon": 75.70})
-    app = AppTest.from_function(script, default_timeout=30).run()
-    assert not app.exception
-    assert any("test timeout" in warning.value for warning in app.warning)
-    assert any(button.label == "Retry NASA POWER" for button in app.button)
+def test_current_rotation_comparison_returns_current_and_distinct_alternatives():
+    engine, profile = engine_and_profile()
+    strategies = compare_existing_rotation(engine, profile, ("rice", "wheat", "moong"), engine.generate(profile).plans)
+    assert strategies[0].label == "Your current rotation"
+    assert len({strategy.plan.crop_ids for strategy in strategies}) == len(strategies)

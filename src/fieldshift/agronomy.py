@@ -1,10 +1,9 @@
-"""Agronomic guidance, verified crop calendars, and pilot-first protocols.
+"""Agronomic calendar references used by the FieldShift presentation layer.
 
 Provides:
 1. Documented sowing and harvesting windows from agricultural university guides
    (PAU, USDA-ARS, IFAPA, ICRISAT).
-2. 'Pilot-First' risk-reduction protocols (testing diversified rotations on 10-20% acreage).
-3. Retrospective historical validation benchmark (2022 Punjab terminal heatwave hindcast).
+2. Calendar entries are references, not planting prescriptions.
 """
 
 from __future__ import annotations
@@ -230,38 +229,6 @@ CROP_CALENDARS: dict[str, CropCalendarEntry] = {
 def get_crop_calendar(crop_id: str) -> CropCalendarEntry | None:
     """Return calendar information for a crop ID, or None if undocumented."""
     return CROP_CALENDARS.get(crop_id)
-
-
-PILOT_RECOMMENDATION_TEXT = (
-    "🌱 **Pilot-First Agronomic Protocol:** Smallholder and commercial farmers are "
-    "strongly advised to test any new diversified crop rotation on **10% to 20% of their operational acreage** "
-    "during Year 1. This allows farm managers to verify local seed emergence, fine-tune tubewell water allocation, "
-    "confirm machinery compatibility (e.g. Happy Seeder or zero-till drills), and establish market buyers "
-    "before full-farm transition."
-)
-
-
-HISTORICAL_HINDCAST_2022_HEATWAVE = {
-    "event_name": "March 2022 Northwest India Terminal Heatwave",
-    "region": "Punjab & Haryana (Indo-Gangetic Plain)",
-    "historical_context": (
-        "In March 2022, northwestern India experienced the hottest March in 122 years of recorded history. "
-        "Maximum temperatures exceeded 38-40°C during wheat grain filling (milking/dough stage), causing terminal "
-        "heat stress, shrivelled grain, and a statewide yield drop of approximately 10-15%."
-    ),
-    "fieldshift_hindcast_verification": (
-        "When fed NASA POWER daily temperature observations from March 2022, FieldShift's FAO EcoCrop module "
-        "identifies 9 days exceeding the critical 32°C grain-filling heat threshold and 3 days exceeding the 35°C "
-        "extreme heat threshold. FieldShift's thermal stress rule fires, issuing a 'Terminal Heat Risk' tradeoff alert "
-        "and penalizing the late-sown wheat score. Conversely, early-sown wheat and diversified pulses (summer moong) "
-        "avoided or mitigated the critical damage window, confirming FieldShift's stress detection capabilities."
-    ),
-    "reference_sources": [
-        "IMD (India Meteorological Department) Seasonal Climate Report 2022",
-        "PAU Ludhiana Agronomy Advisory Note on Terminal Heat Mitigation (March 2022)",
-        "NASA POWER Daily Surface Meteorology (Grid cell 30.85°N, 75.70°E)",
-    ],
-}
 
 
 def evaluate_rotation(*_: object, **__: object) -> FeasibilityResult:

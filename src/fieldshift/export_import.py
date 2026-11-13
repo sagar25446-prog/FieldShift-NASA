@@ -119,7 +119,7 @@ def generate_farmer_summary_card_html(
     climate_provenance: str | None = None,
 ) -> str:
     """Generate a clean, printable 1-page HTML summary card with print styling."""
-    from .agronomy import CROP_CALENDARS, PILOT_RECOMMENDATION_TEXT
+    from .agronomy import CROP_CALENDARS
     from html import escape
 
     plan_crop_names = [escape(str(value)) for value in plan_crop_names]
@@ -322,8 +322,8 @@ def generate_farmer_summary_card_html(
 <div class="card">
   <div class="header">
     <div>
-      <div class="title">🌾 FieldShift — Farmer Rotation Plan</div>
-      <div class="subtitle">Evidence-based crop rotation decision support | {region_name}</div>
+      <div class="title">🌾 FieldShift — Rotation comparison summary</div>
+      <div class="subtitle">Decision-support prototype | {region_name}</div>
     </div>
     <div class="badge">Composite: {score_badge}</div>
   </div>
@@ -347,14 +347,14 @@ def generate_farmer_summary_card_html(
   </div>
 
   <div class="section">
-    <div class="section-title">🌱 Recommended Crop Rotation Sequence</div>
+    <div class="section-title">🌱 Selected crop rotation sequence</div>
     <div class="highlight-box">
       {crops_flow}
     </div>
   </div>
 
   <div class="section">
-    <div class="section-title">🗓️ Agronomic Calendar: Recommended Sowing & Harvest Windows</div>
+    <div class="section-title">🗓️ Catalogue sowing and harvest windows</div>
     <table class="calendar-table">
       <thead>
         <tr>
@@ -371,13 +371,13 @@ def generate_farmer_summary_card_html(
   </div>
 
   <div class="pilot-box">
-    {"<strong>Local review required (Pilot-First Protocol):</strong> Smallholders and farm managers are advised to trial this new sequence on <strong>10%–20% of operational acreage</strong> in Year 1. Confirm crop-calendar overlap, seed germination, and market access with a qualified local adviser." if farm_profile.get("latitude") is not None else "<strong>Local review required:</strong> Confirm crop-calendar overlap, soil measurements, irrigation, equipment and market access with a qualified local adviser. Any trial area should be agreed for the farm's circumstances."}
+    <strong>Local review required:</strong> Confirm crop-calendar overlap, soil measurements, irrigation, equipment, seed availability and market access with a qualified local adviser. Choose any trial area for the farm's own circumstances.
   </div>
 
   <div class="water-hero">
     <div>
-      <div class="water-hero-txt">💧 Water Conservation vs Continuous Paddy-Wheat Baseline:</div>
-      <div style="font-size:10px;color:#333;">{"Modelled difference from a regional benchmark; contextualized by regional aquifer monitoring including NASA GRACE observations." if farm_profile.get("latitude") is not None else "Modelled difference from a regional benchmark; not measured water saved or the farmer's own current rotation."}</div>
+      <div class="water-hero-txt">💧 Modelled water difference from the regional benchmark:</div>
+      <div style="font-size:10px;color:#333;">Not a measurement of water saved, a comparison with the farmer's existing rotation, or an aquifer observation.</div>
     </div>
     <div style="text-align:right;">
       <div class="water-hero-val">{water_mm_text}</div>
@@ -386,7 +386,7 @@ def generate_farmer_summary_card_html(
   </div>
 
   <div class="section" style="margin-top:10px;">
-    <div class="section-title">💰 Indicative Economics & Soil Health Trajectory</div>
+    <div class="section-title">💰 Indicative economics and soil information</div>
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-val">{budget} mm</div>

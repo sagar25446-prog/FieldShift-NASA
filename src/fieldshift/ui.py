@@ -85,19 +85,6 @@ from .economics import (
     compare_vs_rice_wheat_baseline,
     compute_rotation_economics,
 )
-from .satellite_context import (
-    DATA_HARMONIZATION_GRID,
-    ECOSTRESS_PUNJAB_CONTEXT,
-    FIRMS_PUNJAB_CONTEXT,
-    GEDI_BIOMASS_CONTEXT,
-    GPM_GLOBAL_CONTEXT,
-    GRACE_PUNJAB_CONTEXT,
-    LANDSAT_FIELD_CONTEXT,
-    MODIS_NDVI_CONTEXT,
-    SMAP_PUNJAB_CONTEXT,
-    SRTM_PUNJAB_CONTEXT,
-    calculate_water_budget_from_farm_inputs,
-)
 from .world_map import world_picker
 from . import global_calendar as atlas_calendar
 from . import calendar_workspace
@@ -114,8 +101,6 @@ from .export_import import (
 )
 from .agronomy import (
     CROP_CALENDARS,
-    HISTORICAL_HINDCAST_2022_HEATWAVE,
-    PILOT_RECOMMENDATION_TEXT,
     get_crop_calendar,
 )
 from .sensitivity import (
@@ -749,39 +734,6 @@ def render_farm_profile() -> None:
     crops = _rotation_engine().crops if active_reg else {}
     labels = {crop_id: crop["name"] for crop_id, crop in crops.items()}
 
-    with st.expander("Estimate my irrigation budget", icon=":material/water_drop:"):
-        st.markdown(
-            "Converts local irrigation practices (tubewell motor HP, weekly pumping hours, canal water turns) "
-            "into an equivalent seasonal crop-water budget in mm."
-        )
-        wb_c1, wb_c2, wb_c3 = st.columns(3)
-        with wb_c1:
-            tw_hp = st.number_input("Tubewell motor power (HP)", min_value=1.0, max_value=50.0, value=10.0, step=1.0, key="calc_tw_hp")
-            tw_hours = st.number_input("Pumping hours per week", min_value=0.0, max_value=168.0, value=25.0, step=5.0, key="calc_tw_hours")
-        with wb_c2:
-            tw_weeks = st.number_input("Operating weeks per season", min_value=1.0, max_value=26.0, value=16.0, step=1.0, key="calc_tw_weeks")
-            canal_turns = st.number_input("Canal water turns (warrabandi)", min_value=0, max_value=20, value=4, step=1, key="calc_canal_turns")
-        with wb_c3:
-            canal_depth = st.number_input("Depth per canal turn (inches)", min_value=0.0, max_value=12.0, value=3.0, step=0.5, key="calc_canal_depth")
-            farm_acres = st.number_input("Farm size for water calculation (acres)", min_value=0.5, max_value=500.0, value=5.0, step=0.5, key="calc_farm_acres")
-
-        if st.button("Apply estimated water budget (mm)", key="btn_apply_water_calc"):
-            est_budget = calculate_water_budget_from_farm_inputs(
-                tubewell_hp=tw_hp,
-                hours_per_week=tw_hours,
-                weeks_operating=tw_weeks,
-                canal_turns_per_season=canal_turns,
-                canal_depth_inches=canal_depth,
-                farm_size_acres=farm_acres,
-            )
-            st.session_state["farm"]["water_budget_mm"] = est_budget["total_water_budget_mm"]
-            st.success(
-                f"Calculated: **{est_budget['total_water_budget_mm']:.0f} mm** "
-                f"(Tubewell: {est_budget['tubewell_contribution_mm']:.0f} mm, Canal: {est_budget['canal_contribution_mm']:.0f} mm). "
-                f"Updated in form below — click 'Save farm profile' to record."
-            )
-            st.rerun()
-
     with st.expander("Save or restore a farm profile", icon=":material/folder_open:"):
         exp_col, imp_col = st.columns(2)
         with exp_col:
@@ -1311,35 +1263,12 @@ def render_climate() -> None:
     with col_tr2:
         if st.button("📈 Explore Climate Trends", width="stretch"):
             _go("Climate Trends")
-    with st.expander("🛰️ NASA Earth Observation Multi-Mission Insights (GRACE, SMAP, ECOSTRESS, GPM, Landsat, SRTM, FIRMS)", expanded=False):
-        st.caption("Complementary NASA satellite observations contextualizing regional water, heat, topography, and vegetation conditions.")
-        sat_c1, sat_c2 = st.columns(2)
-        with sat_c1:
-            with st.container(border=True):
-                st.markdown(f"**💧 {GRACE_PUNJAB_CONTEXT.satellite_mission}**")
-                st.markdown(f"Depletion Rate: **{GRACE_PUNJAB_CONTEXT.rate_of_depletion_cm_per_year:.1f} cm/yr** ({GRACE_PUNJAB_CONTEXT.total_volume_lost_km3_per_year:.1f} km³/yr)")
-                st.caption(f"{GRACE_PUNJAB_CONTEXT.key_finding} [Source]({GRACE_PUNJAB_CONTEXT.source_url})")
-            with st.container(border=True):
-                st.markdown(f"**🌡️ {ECOSTRESS_PUNJAB_CONTEXT.sensor} (70m)**")
-                st.markdown(f"Evaporative Stress Index: **{ECOSTRESS_PUNJAB_CONTEXT.evaporative_stress_index:.2f}** · Canopy Anomaly: **+{ECOSTRESS_PUNJAB_CONTEXT.canopy_temperature_anomaly_c:.1f}°C**")
-                st.caption(f"{ECOSTRESS_PUNJAB_CONTEXT.finding} [Source]({ECOSTRESS_PUNJAB_CONTEXT.source_url})")
-            with st.container(border=True):
-                st.markdown(f"**🛰️ {LANDSAT_FIELD_CONTEXT.sensor} (30m)**")
-                st.markdown(f"Summer Bare Soil Index: **{LANDSAT_FIELD_CONTEXT.bare_soil_index_summer:.2f}** · Cadence: **{LANDSAT_FIELD_CONTEXT.temporal_cadence_days} days**")
-                st.caption(f"{LANDSAT_FIELD_CONTEXT.field_scale_advantage} [Source]({LANDSAT_FIELD_CONTEXT.source_url})")
-        with sat_c2:
-            with st.container(border=True):
-                st.markdown(f"**🌱 {SMAP_PUNJAB_CONTEXT.satellite_mission} (9km)**")
-                st.markdown(f"Root-Zone Moisture: **{SMAP_PUNJAB_CONTEXT.rootzone_moisture_m3_m3:.2f} m³/m³** ({SMAP_PUNJAB_CONTEXT.climatological_percentile:.0f}th percentile)")
-                st.caption(f"{SMAP_PUNJAB_CONTEXT.moisture_status} [Source]({SMAP_PUNJAB_CONTEXT.source_url})")
-            with st.container(border=True):
-                st.markdown(f"**⛰️ {SRTM_PUNJAB_CONTEXT.dataset} (30m)**")
-                st.markdown(f"Elevation: **{SRTM_PUNJAB_CONTEXT.elevation_m:.0f} m** · Slope: **{SRTM_PUNJAB_CONTEXT.slope_percent:.2f}%** · TWI: **{SRTM_PUNJAB_CONTEXT.topographic_wetness_index:.1f}**")
-                st.caption(f"Erosion Risk: {SRTM_PUNJAB_CONTEXT.water_erosion_risk} [Source]({SRTM_PUNJAB_CONTEXT.source_url})")
-            with st.container(border=True):
-                st.markdown(f"**🔥 {FIRMS_PUNJAB_CONTEXT.sensor}**")
-                st.markdown(f"Peak Burning Season: **{FIRMS_PUNJAB_CONTEXT.peak_season}**")
-                st.caption(f"{FIRMS_PUNJAB_CONTEXT.crop_residue_solution} [Source]({FIRMS_PUNJAB_CONTEXT.source_url})")
+    with st.expander("Additional Earth-observation resources and their status", expanded=False):
+        st.info(
+            "NASA POWER is the live climate source on this page. FieldShift does not display estimates from "
+            "other missions unless it retrieves or imports their location-specific record."
+        )
+        _render_data_availability()
 
     with st.expander("📋 Retrieved daily values and missing observations"):
         st.dataframe(frame, width="stretch")
@@ -1745,8 +1674,10 @@ def _plan_view(plan: Any, index: int) -> None:
         st.dataframe(sequence, hide_index=True, width="stretch")
         st.caption("Planning seasons are crop-calendar slots, not dated harvest or planting predictions.")
 
-        # Pilot-First Protocol Banner
-        st.warning(PILOT_RECOMMENDATION_TEXT)
+        st.warning(
+            "Local review required: confirm crop-calendar overlap, soil measurements, irrigation capacity, "
+            "equipment, seed availability, and market access before acting on a plan."
+        )
 
         # Agronomic calendar windows
         cal_rows = []
@@ -2142,7 +2073,7 @@ def _render_punjab_benchmark(top_plan: Any, top_irr: float) -> None:
             mime="text/html",
             width="stretch",
         )
-        st.components.v1.html(card_html, height=450, scrolling=True)
+        st.caption("The summary card is provided as a downloadable HTML file so it can be opened and printed in a browser.")
 
 
 def render_recommendations() -> None:
@@ -2757,48 +2688,17 @@ def render_methods() -> None:
         hide_index=True, width="stretch",
     )
 
-    # ── Scientific Concepts & Agronomic Glossary ──
-    st.subheader("📚 Scientific Concepts & Agronomic Glossary")
-    with st.expander("Explore key scientific and satellite terms (Evapotranspiration, Soil Moisture, NDVI, Frost, Water Balance)", expanded=True):
+    st.subheader("Scientific concepts used in this version")
+    with st.expander("Open the glossary", expanded=False):
         glossary_items = [
             ("Reference Evapotranspiration (ET₀)", "The rate of water loss from a standardized reference grass surface (expressed in mm/day) driven by solar radiation, temperature, humidity, and wind speed. FieldShift implements the standard FAO-56 Penman-Monteith equation using daily NASA POWER surface meteorological variables."),
             ("Crop Water Requirement (ETc)", "The actual water consumed by a disease-free crop under optimal soil fertility: ETc = Kc × ET₀, where Kc is the stage-specific crop coefficient (initial, mid-season, late-season) sourced from FAO-56 Table 12."),
             ("Net Irrigation Deficit", "The irrigation water required to sustain crop evapotranspiration after accounting for effective precipitation (Pe): Net Irrigation = max(0, ETc - Pe). Effective precipitation is calculated via the USDA SCS empirical formula."),
-            ("Soil Moisture Anomalies", "The deviation of volumetric soil water content (m³/m³) from the long-term climatological mean. NASA SMAP measures surface (0–5 cm) moisture via microwave radiometry, while root-zone (0–100 cm) moisture indicates subsoil buffers essential for drought resistance."),
-            ("Vegetation Indices (NDVI & EVI2)", "Normalized Difference Vegetation Index (NIR - Red)/(NIR + Red) and two-band Enhanced Vegetation Index (EVI2). They quantify green photosynthetic biomass and canopy development. High values (0.7–0.8) indicate dense vegetative cover; low values (<0.2) delineate bare-soil fallow windows."),
             ("Cardinal Thermal Limits", "Crop-specific temperature boundaries sourced from FAO EcoCrop: absolute minimum (Tmin,abs), optimum range (Topt,min to Topt,max), absolute maximum (Tmax,abs), and frost killing point (Tkill). Daily temperatures outside the optimum penalize climate suitability."),
-            ("Evaporative Stress Index (ESI) & LST", "Derived from NASA ECOSTRESS (70m resolution). Measures the ratio of actual evapotranspiration to potential evapotranspiration, detecting plant water stress and canopy heating anomalies up to 48 hours before visible foliage wilting occurs."),
-            ("Topographic Wetness Index (TWI)", "Calculated from NASA SRTM 30m digital elevation models: TWI = ln(a / tan β), where 'a' is upslope catchment area and 'β' is local slope. High values indicate low-lying alluvial basins prone to waterlogging after monsoon storms."),
+            ("Phenology context", "A MODIS MCD12Q2 phenology record, when explicitly retrieved or loaded, can describe seasonal greenness timing. It does not identify the planted crop, measure field-scale cover, or measure soil chemistry."),
+            ("Soil estimate", "SoilGrids values are modelled estimates, not laboratory measurements. Farmer or laboratory values take precedence, and unknown values remain unknown."),
         ]
         st.dataframe(pd.DataFrame(glossary_items, columns=["Term", "Scientific Explanation & FieldShift Application"]), hide_index=True, width="stretch")
-
-    # ── Satellite Observations vs. Ground-Based Measurements ──
-    st.subheader("🛰️ Satellite Observations vs. Ground-Based Measurements")
-    st.caption("How satellite remote sensing and ground measurements differ, and why combining both creates a robust decision framework.")
-    sat_vs_ground = [
-        ("Spatial Coverage", "Continuous wall-to-wall grid (~0.5° POWER, 500m MODIS, 30m Landsat/SRTM) covering remote farms without weather stations", "Point measurements (farm gauge, weather station) valid only for the immediate instrument location", "NASA satellites provide spatially complete historical climate context across every rural village."),
-        ("Temporal Record", "40+ years of uninterrupted daily archives (NASA POWER 1981–present; MODIS 2000–present)", "Often sparse, fragmented, or missing in developing agricultural regions", "Enables 25-year OLS decadal trend analysis and extreme event probability assessment."),
-        ("Soil Properties", "Modelled radiometric surface proxy (top 5 cm for SMAP; 250m machine-learning for SoilGrids)", "Direct physical laboratory analysis of core sample (0–15, 15–30 cm) with exact chemical extraction", "Ground soil tests (e.g. Soil Health Card) are primary; satellite/SoilGrids estimates are used only to fill missing fields with explicit uncertainty envelopes."),
-        ("Crop Water Stress", "Thermal infrared detection of canopy heating (ECOSTRESS 70m) and vegetation vigor (Landsat/MODIS)", "Soil moisture tensiometers and physical plant wilting observation", "ECOSTRESS detects stomatal closure and thermal distress hours before physical wilting is visible on the ground."),
-        ("Data Fusion Synergy", "Coarse satellite grid assimilates ground truth to calibrate regional bias", "Local ground tests eliminate false assumptions from spatial averaging", "Combining both ground truth and satellite observations provides both local chemical precision and multi-decadal historical climate resilience."),
-    ]
-    st.dataframe(pd.DataFrame(sat_vs_ground, columns=["Dimension", "Satellite Remote Sensing", "Ground-Based Measurement", "Synergy in FieldShift"]), hide_index=True, width="stretch")
-
-    # ── NASA Earth Observation Suite & SI Data Harmonization Grid ──
-    st.subheader("🌐 NASA Earth Observation Suite & SI Data Harmonization Grid")
-    st.caption("How 10 diverse Earth observation missions with differing spatial and temporal resolutions are harmonized into a coherent field decision grid.")
-    harm_rows = [
-        {
-            "Dataset & Mission": e.dataset_name,
-            "Agency / Platform": e.agency_mission,
-            "Native Resolution": e.native_spatial_resolution,
-            "Temporal Frequency": e.temporal_frequency,
-            "Harmonization Technique": e.harmonization_technique,
-            "Decision Support Role": e.decision_support_role,
-        }
-        for e in DATA_HARMONIZATION_GRID
-    ]
-    st.dataframe(pd.DataFrame(harm_rows), hide_index=True, width="stretch")
 
     dataset: PowerDataset | None = st.session_state["power_dataset"]
     if dataset:
