@@ -52,4 +52,4 @@ Malformed JSON, missing schema elements, omitted parameters, invalid coordinates
 
 ## Later extensions
 
-GPM, MODIS and NASA–USDA/SMAP-derived soil-moisture products remain later work. They may require Earthdata authentication, product-specific QA/processing, or scale validation. They must not block this POWER MVP or be represented as field soil measurements.
+The optional MODIS MCD12Q2 phenology comparison is documented separately in [`OBSERVED_LAND_USE.md`](OBSERVED_LAND_USE.md). GPM and NASA–USDA/SMAP-derived soil-moisture products remain later work; they may require authentication, product-specific QA/processing, or scale validation. They must not block the POWER workflow or be represented as field soil measurements.

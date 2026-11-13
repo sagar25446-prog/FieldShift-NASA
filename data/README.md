@@ -1,10 +1,10 @@
 # FieldShift crop catalogue
 
-`crops.json` is a manually curated Phase 2 research catalogue for Ludhiana, Punjab. It contains no observations, recommendations, yield projections, costs, prices or economic returns.
+`crops.json` is a manually curated research catalogue for Ludhiana, Punjab. It contains source-linked crop characteristics and **indicative economic benchmarks** for comparison only. It does not contain farm observations, yield projections, local market quotes, or guaranteed economic returns.
 
 The top level has `catalog_metadata`, a reusable `sources` registry, and a `crops` array. Each crop records identity, family/legume status, season, intended role, temperature and water evidence, soil/nutrient/rotation/pest evidence, evidence quality and source IDs.
 
-Unknowns are deliberate: they have `status: "unknown"`, null numeric values where relevant, and an `evidence_needed` message. Unknown does not mean zero, safe or unsuitable.
+Unknowns are deliberate: they have `status: "unknown"`, null numeric values where relevant, and an `evidence_needed` message. Unknown does not mean zero, safe or unsuitable. Economic benchmark fields are not farm-specific costs, prices, or profit predictions; see `docs/DATA_SOURCES.md` and `docs/KNOWN_LIMITATIONS.md`.
 
 `source_ids` refer to the exact URL and access date in the source registry. Numeric water ranges retain their source method/context and unit; they are not converted into an irrigation recommendation.
 

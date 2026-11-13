@@ -18,7 +18,7 @@ NASA POWER daily temperature and precipitation are retrieved for the selected co
 
 ## 5. What remains
 
-Crop calendars and rotation rules need review by qualified regional agronomists. Farmer and extension-adviser usability sessions, field calibration, and deployment verification are outstanding. Outside pilot areas, the app can provide climate context and sometimes historical crop timing, not a locally reviewed crop recommendation.
+Crop calendars and rotation rules need review by qualified regional agronomists. Farmer and extension-adviser usability sessions and field calibration are outstanding. The public deployment was workflow-checked on 2026-11-13. Outside pilot areas, the app can provide climate context and sometimes historical crop timing, not a locally reviewed crop recommendation.
 
 ## Demo flow
 

@@ -19,7 +19,7 @@ FieldShift supports 10 regional crops across three seasonal windows (`kharif`, `
 | `chickpea` | Gram (chickpea) | Fabaceae | Rabi | Low-water rabi pulse | Successor to `rice` and `pearl_millet`; connects to summer `moong`. |
 | `rapeseed_mustard` | Rapeseed and mustard | Brassicaceae | Rabi | Major rabi oilseed group (Gobhi Sarson, Toria, Raya) (175–225 mm) | Successor to `rice`, `maize`, and `pearl_millet`; connects to summer `moong`. Best on well-drained soils. |
 | `potato` | Potato | Solanaceae | Rabi | High-value, short-duration rabi tuber (300–320 mm) | Successor to `rice` and `maize`; connects to summer `moong`. |
-| `moong` | Summer Moong | Fabaceae | Summer | Short-duration pre-monsoon catch crop (230–280 mm) | Successor to all 4 rabi crops; connects to kharif `rice`, `maize`, and `pearl_millet`. Fixes atmospheric N. |
+| `moong` | Summer Moong | Fabaceae | Summer | Short-duration pre-monsoon catch crop (230–280 mm) | Successor to all 4 rabi crops; connects to kharif `rice`, `maize`, and `pearl_millet`. It is catalogued as a legume; FieldShift does not estimate field nitrogen contribution. |
 
 ---
 
@@ -63,6 +63,6 @@ FieldShift supports 10 regional crops across three seasonal windows (`kharif`, `
 
 FieldShift enforces clear disciplinary boundaries:
 - **No Yield Predictions:** FieldShift never outputs expected quintals per hectare.
-- **No Profit Guarantees:** Economic potential is permanently N/A until verified local mandi prices and cost-of-cultivation budgets are configured.
+- **No Profit Guarantees:** Where displayed, economics are source-linked indicative benchmarks, not local mandi prices, farm costs, or profit predictions.
 - **No Soil-Improvement Promises:** Nitrogen credits and soil organic carbon trajectories are illustrative educational models based on FAO/IPCC equations, clearly disclosed as uncalibrated to Punjab conditions.
 - **Hypothetical Scenarios:** Stress tests (+2°C heat, -25% rain) are hypothetical sensitivity analyses, never predictive weather forecasts.

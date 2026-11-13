@@ -81,6 +81,6 @@ Validate calculations and messaging with advisors and representative users; prep
 
 **Current completion status**
 
-- Software and documentation cleanup is in progress; run results must be recorded after each release candidate.
+- The software suite and public workflow were checked on 2026-11-13; the dated results are in `docs/TEST_REPORT.md`.
 - External agronomist review and farmer usability testing are not complete. They require real participants and must not be represented as completed by code changes.
-- Deployment health should be checked on the public app after each repository push; a successful Git push alone is not deployment verification.
+- Deployment health must still be checked after future application-code pushes; a successful Git push alone is not deployment verification.

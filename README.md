@@ -77,5 +77,6 @@ The prototype addresses the core challenge workflow, and its public deployment w
 - [FieldShift app](https://fieldshift-nasa.streamlit.app/)
 - [FieldShift repository](https://github.com/sagar25446-prog/Nasa-Hacakathon)
 - [Earth explorer design](docs/EARTH_EXPLORER.md)
+- [Submission-ready project copy and references](docs/PROJECT_SUBMISSION_CONTENT.md)
 
 FieldShift is an independent student prototype and is not endorsed by NASA.
