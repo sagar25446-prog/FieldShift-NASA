@@ -52,6 +52,14 @@ python -m pytest tests/test_world_map_browser.py -q
 
 Run it after each visual or interaction change. A separate public-site check is still required after the hosting platform rebuilds.
 
+## Public deployment check
+
+**Date:** 2026-11-13
+
+**URL:** https://fieldshift-nasa.streamlit.app/
+
+The public app was opened after the release push. Its globe homepage, location selection, farm-profile handoff, live rotation generation, and comparison view all completed without a displayed Streamlit exception.
+
 ## Scientific boundary
 
 Software tests show that the code behaves as specified. They do **not** establish agronomic accuracy, farmer usability, crop yield, profit, soil improvement, or external NASA endorsement. Those require qualified review and real-world evidence.

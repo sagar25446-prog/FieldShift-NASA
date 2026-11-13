@@ -69,7 +69,7 @@ python -m pytest tests/test_world_map_browser.py -q
 
 ## Project status
 
-The prototype addresses the core challenge workflow, but it has not been validated by qualified agronomists or representative farmers. Agronomic review, observed user testing, and a verified hosted deployment check remain open. Read the [project status report](docs/PROJECT_STATUS_REPORT.md) and [challenge requirements mapping](docs/CHALLENGE_REQUIREMENTS.md) before relying on or presenting the outputs.
+The prototype addresses the core challenge workflow, and its public deployment was workflow-checked on 2026-11-13. It has not been validated by qualified agronomists or representative farmers. Agronomic review and observed user testing remain open. Read the [project status report](docs/PROJECT_STATUS_REPORT.md) and [challenge requirements mapping](docs/CHALLENGE_REQUIREMENTS.md) before relying on or presenting the outputs.
 
 ## Links
 
