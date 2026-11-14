@@ -66,6 +66,12 @@ FieldShift is designed for the five published Space Apps judging criteria: **Imp
 
 **Show in the demo:** Keep the narrative simple: climate context, farmer context, explainable comparison, final farmer choice.
 
+## Lessons applied from recent winners
+
+NASA's 2025 winners covered very different subjects, including a scientific dashboard (SpaceGenes+), a local water-resilience solution (QUEÑARIS), and an agricultural learning experience (Zumorroda-X). Their projects were not copied. FieldShift applies the useful submission patterns: one clear user decision, data that changes the experience, an understandable interactive prototype, and claims that match the available evidence.
+
+Official winner descriptions: [NASA Announces 2025 International Space Apps Challenge Global Winners](https://www.nasa.gov/learning-resources/stem-engagement-at-nasa/nasa-announces-2025-international-space-apps-challenge-global-winners/).
+
 ## Award positioning
 
 FieldShift's strongest honest fit is **Best Use of Data** and **Local Impact**. The project makes NASA climate data understandable inside a farmer workflow, while keeping local crop and soil limits explicit. It can also credibly seek **Best Use of Science** only by presenting its documented assumptions, sources, and limitations accurately. Do not claim that an award fit guarantees selection.
