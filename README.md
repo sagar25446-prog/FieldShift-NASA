@@ -64,19 +64,19 @@ python -m pytest tests/test_world_map_browser.py -q
 - `src/fieldshift/rotation_engine.py` and regional JSON files — explainable rules and crop catalogues.
 - `src/fieldshift/ui.py` — Streamlit user interface.
 - `data/crops.json` — sourced Punjab crop catalogue.
-- `docs/` — data provenance, assumptions, architecture, challenge fit, testing and review materials.
+- `docs/` — data provenance, methods, assumptions, and limitations used by the application.
 - `tests/fixtures/` — saved responses for deterministic offline tests.
 
 ## Project status
 
-The prototype addresses the core challenge workflow, and its public deployment was workflow-checked on 2026-11-13. It has not been validated by qualified agronomists or representative farmers. Agronomic review and observed user testing remain open. Read the [project status report](docs/PROJECT_STATUS_REPORT.md) and [challenge requirements mapping](docs/CHALLENGE_REQUIREMENTS.md) before relying on or presenting the outputs.
+The prototype addresses the core challenge workflow, and its public deployment was workflow-checked on 2026-11-13. It has not been validated by qualified agronomists or representative farmers. Agronomic review and observed user testing remain open. Read the [data sources](docs/DATA_SOURCES.md) and [known limitations](docs/KNOWN_LIMITATIONS.md) before relying on or presenting the outputs.
 
 ## Links
 
 - [NASA challenge statement](https://www.spaceappschallenge.org/2026/challenges/field-shift-adapting-farms-with-nasa-data/)
 - [FieldShift app](https://fieldshift-nasa.streamlit.app/)
 - [FieldShift repository](https://github.com/sagar25446-prog/Nasa-Hacakathon)
-- [Earth explorer design](docs/EARTH_EXPLORER.md)
-- [Submission-ready project copy and references](docs/PROJECT_SUBMISSION_CONTENT.md)
+- [Data sources and methods](docs/DATA_SOURCES.md)
+- [Source references](docs/SUBMISSION_REFERENCES.md)
 
 FieldShift is an independent student prototype and is not endorsed by NASA.
