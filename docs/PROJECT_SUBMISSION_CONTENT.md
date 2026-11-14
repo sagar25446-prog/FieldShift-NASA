@@ -17,9 +17,9 @@ FieldShift helps farmers and extension workers explore crop rotations under chan
 Paste **one public link** after uploading either of these completed assets:
 
 - Preferred: the 30-second video recorded with `docs/DEMO_VIDEO_SCRIPT.md`.
-- Alternative: the public seven-slide deck, `submission/FieldShift_Project_Demo_Deck.pptx`, hosted where judges can open it without a login.
+- Alternative: the public seven-slide deck: https://github.com/sagar25446-prog/Nasa-Hacakathon/blob/main/submission/FieldShift_Project_Demo_Deck.pptx
 
-The link must open without a password, permission request, account, or registration. Test it in a private browser before submission.
+The deck link above is public and available without a GitHub login. Before submitting, replace the team-roster line on slide 1 with the official team name and registered member names, then publish the revised deck. The link must open without a password, permission request, account, or registration.
 
 ## Link to Final Project
 

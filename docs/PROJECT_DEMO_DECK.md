@@ -14,7 +14,7 @@
 
 ## Hosting
 
-Export or upload the deck to a public location that judges can open without an account. Paste that public URL into **Link to Project Demo** only if you use the deck instead of the 30-second video.
+The public deck link is https://github.com/sagar25446-prog/Nasa-Hacakathon/blob/main/submission/FieldShift_Project_Demo_Deck.pptx. Paste that URL into **Link to Project Demo** only if you use the deck instead of the 30-second video. Before publishing, replace the team-roster line on slide 1 with the official team name and registered member names.
 
 ## Sources shown in the deck
 

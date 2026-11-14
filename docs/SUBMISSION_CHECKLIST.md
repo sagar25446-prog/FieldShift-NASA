@@ -39,7 +39,7 @@ The official 2026 guide says project submission closes at **11:59 p.m. local tim
 ## Ready assets
 
 - 30-second recording script: `docs/DEMO_VIDEO_SCRIPT.md`
-- Seven-slide public-demo alternative: `submission/FieldShift_Project_Demo_Deck.pptx`
+- Seven-slide public-demo alternative: https://github.com/sagar25446-prog/Nasa-Hacakathon/blob/main/submission/FieldShift_Project_Demo_Deck.pptx
 - Form copy: `docs/PROJECT_SUBMISSION_CONTENT.md`
 - Full references: `docs/SUBMISSION_REFERENCES.md`
 - SI/AI disclosure record: `docs/AI_USE_DISCLOSURE.md`
