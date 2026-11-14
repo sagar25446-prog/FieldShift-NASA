@@ -1,40 +1,48 @@
-# FieldShift — demonstration scripts
+# FieldShift — official 30-second project demo
 
-Use only a current app run. Do not pre-record a fixed plan, water saving, profit, trend, or ranking and present it as a live result.
+The 2026 guide requires every team to submit a project demo. The allowed formats are a **video of 30 seconds or less** or a deck of **up to seven slides, including title and introduction slides**. The material must be in English, hosted outside the Space Apps form, and available without a password, permission, registration, or login.
 
-## Submission-format check
+This script follows the guide's requested story order: introduce the team, name the challenge, show the idea and NASA data, then show the likely impact. It uses the Punjab pilot because that is the first reviewed rotation catalogue. Do not imply that every global coordinate has a locally validated crop plan.
 
-The official 2026 Project Submission Guide should determine the final video length, file host, language, and any slide rules. On 2026-11-13, the public guide URL could not be retrieved reliably, so this repository does **not** claim that a 30-second limit is confirmed. The 30-second cut below is ready if that is the published requirement; the 90-second version is for a local pitch, a fuller demonstration, or social media.
+## Recording set-up
 
-Before uploading, confirm the current guide and test the public video link in a private browser window.
+- Record at 1080p, with clear screen capture and English narration or English captions.
+- Before recording, select **Punjab**, use the illustrative Ludhiana profile, and retrieve NASA POWER data once so the request does not interrupt the recording.
+- Put the team members' names on the opening screen. Replace the bracketed text below with the names shown on the official team page.
+- Record only live application output. Do not promise a specific crop, yield, profit, water saving, or soil improvement.
+- Upload to a public YouTube, Google Drive, OneDrive, Dropbox, or GitHub link. Test it in a private browser window before pasting it into the form.
 
-## Official-submission cut — 30 seconds
+## Timed narration and screen plan
 
-| Time | Screen action | Narration |
+| Time | Screen | Narration |
 |---|---|---|
-| 0:00–0:05 | **Home / Overview**: title and globe | “Farmers face hard crop decisions as climate and water change. FieldShift helps them explore their next rotation.” |
-| 0:05–0:10 | Select **Punjab**; show the **Location report** | “For a chosen location, we retrieve historical NASA POWER data with its dates, units, and source.” |
-| 0:10–0:17 | **Farm Profile**, then **Rotation Recommendations** | “Farmers add soil and water details; unknown stays unknown.” |
-| 0:17–0:23 | Expand **Your current rotation** and one alternative | “The app compares current and alternative rotations with documented checks, sources, and trade-offs.” |
-| 0:23–0:27 | **Farmer Priorities**, then **Hypothetical stress tests** | “They set priorities and test dry or hot what-ifs—not forecasts.” |
-| 0:27–0:30 | Return to the title or globe | “NASA data, local context, farmer decision.” |
+| 0:00–0:03 | Home screen with a small on-screen title: **FieldShift — [team member names]** | “We are [team member names], and this is FieldShift.” |
+| 0:03–0:07 | Home / Atlas; move to the Punjab pilot point | “Farmers need to plan rotations while heat, rainfall, water, and soil information change.” |
+| 0:07–0:12 | Climate Insights; show the NASA POWER source, units, date range, and provenance | “FieldShift retrieves historical NASA POWER climate context for a farm location.” |
+| 0:12–0:17 | Farm Profile; show soil, irrigation, previous crops, and an **Unknown** choice | “The farmer adds what they know. Missing soil information stays visible as unknown.” |
+| 0:17–0:23 | Rotation Recommendations; open one alternative and its feasibility checks | “Our source-linked rules compare feasible rotations, hard constraints, and trade-offs.” |
+| 0:23–0:27 | Priorities / stress tests, then Comparison | “Farmers set priorities and explore dry or hot stress tests. They are not forecasts.” |
+| 0:27–0:30 | Data and Methods or final Home screen | “FieldShift makes NASA data and uncertainty clear, so the farmer keeps the final decision.” |
 
-## Local-pitch cut — 90 seconds
+## Caption text
 
-| Time | Screen action | Narration |
-|---|---|---|
-| 0:00–0:12 | **Home / Overview** | “Farmers must decide what to grow with uncertain water, changing temperatures, and incomplete soil information. FieldShift helps a farmer or extension worker compare crop-rotation options without hiding what is unknown.” |
-| 0:12–0:25 | Globe → select **Punjab** → **Farm Profile** | “We start with a location and the information the farmer actually has: soil conditions, irrigation budget, previous crops, and priorities. A missing value remains unknown; it is never replaced with a favourable guess.” |
-| 0:25–0:40 | **Climate Insights**: retrieve NASA POWER and open provenance | “For the selected location and dates, FieldShift retrieves historical NASA POWER climate context. The screen preserves the exact request, daily units, missing-data count, and source URL. This is gridded climate context, not a field weather station.” |
-| 0:40–0:57 | **Rotation Recommendations**: open one plan | “The deterministic engine searches a small, source-linked crop graph. It shows the sequence, hard feasibility checks, separate water and climate methods, trade-offs, and the evidence behind each rule. The composite score is a preference-weighted comparison, never a success probability.” |
-| 0:57–1:08 | **Comparison View**: current rotation and alternatives | “A farmer can compare their current rotation with distinct alternatives under the same inputs. A documented failure stays visible instead of being hidden by a high score.” |
-| 1:08–1:20 | **Farmer Priorities** then **Hypothetical stress tests** | “When water conservation matters most, the farmer changes the priority weights. Then they can stress-test dry, hot, or reduced-irrigation assumptions. These are transparent what-if tests, not forecasts.” |
-| 1:20–1:30 | **Data and Methods** | “FieldShift makes NASA data, local inputs, calculated indicators, and unknowns visible separately. It supports a conversation with local expertise; the farmer keeps the final decision.” |
+Use these captions if narration is unclear or the team speaks another language:
 
-## Recording safeguards
+1. **Historical NASA POWER climate context**
+2. **Farmer inputs and unknowns stay separate**
+3. **Documented rules and visible trade-offs**
+4. **Hypothetical stress tests, not forecasts**
+5. **Decision-support prototype. Local advice remains essential.**
 
-- Use the Punjab pilot in the primary recording; do not suggest that an arbitrary world coordinate receives a locally validated rotation plan.
-- Trigger the NASA POWER request before recording. If the saved response is used, label it “Saved offline demonstration record,” not live data.
-- Do not imply that an optional source changes the shown plan unless its provenance is visible in that session.
-- Do not include NASA logos, a NASA endorsement claim, music, images, audio, or other third-party material unless the team has the rights to use it and cites it.
-- If the final submission form requires an AI-use statement, use the factual draft in `docs/AI_USE_DISCLOSURE.md` and add any tools used by other team members.
+## Public link check
+
+- [ ] Link opens in a private or incognito browser.
+- [ ] Video lasts 30 seconds or less.
+- [ ] Names, project title, narration, captions, and on-screen text are in English.
+- [ ] No NASA logo, insignia, or endorsement claim appears.
+- [ ] No copyrighted music or unlicensed visuals appear.
+- [ ] The footage makes the tool's NASA-data use and limits visible.
+
+## Longer team-pitch version
+
+The 90-second rehearsal script moved to `docs/PITCH_DECK.md` so it cannot be mistaken for the official submission video.

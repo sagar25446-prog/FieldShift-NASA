@@ -1,45 +1,72 @@
-# FieldShift — ready-to-paste project submission content
+# FieldShift — ready-to-paste Space Apps project form content
 
-Use the official 2026 form labels and character limits when they become visible. The copy below is intentionally specific to the working prototype and does not claim field validation or NASA endorsement.
+Use the current Project tab on the official team page. The 2026 guide requires English project fields, a public project-demo link, a public final-project link, a description of any Super Intelligence (SI) use, and specific NASA data and reference information.
 
-## Project title
+Do not add results that are not visible in the current app. The text below describes the prototype accurately and does not claim farmer validation, NASA endorsement, yield prediction, profit prediction, or guaranteed soil improvement.
+
+## Project Name
 
 FieldShift
 
-## One-line summary
+## High-Level Project Summary
 
-FieldShift helps farmers and extension workers compare source-linked crop rotations using historical NASA climate context, known local inputs, and their own priorities.
+FieldShift helps farmers and extension workers explore crop rotations under changing climate and water conditions. A user chooses a farm location, retrieves historical NASA POWER climate context, adds known soil, irrigation, and crop-history information, and sets priorities. The app compares source-linked rotation alternatives, shows hard constraints and trade-offs, and keeps missing information visible. It supports a better local planning conversation; the farmer and local advisers retain the final decision.
 
-## Short description
+## Link to Project Demo
 
-FieldShift is an explainable crop-rotation exploration tool. A user selects a farm location, retrieves historical NASA POWER climate context, enters what they know about soil and water, and sets priorities such as water conservation or crop diversity. The app compares a current rotation with multiple documented alternatives, showing hard checks, data sources, trade-offs, and unknowns. It supports better local conversations; it does not forecast yields, profits, or soil improvement.
+Paste **one public link** after uploading either of these completed assets:
 
-## Full project description
+- Preferred: the 30-second video recorded with `docs/DEMO_VIDEO_SCRIPT.md`.
+- Alternative: the public seven-slide deck, `submission/FieldShift_Project_Demo_Deck.pptx`, hosted where judges can open it without a login.
 
-Choosing a crop rotation is difficult when farmers must balance seasonal water availability, heat, soil constraints, past crops, and market uncertainty. A simple score without evidence can hide the most important part of the decision: what the tool does not know.
+The link must open without a password, permission request, account, or registration. Test it in a private browser before submission.
 
-FieldShift turns that uncertainty into a visible part of the workflow. A farmer or extension worker selects a location and retrieves historical daily NASA POWER climate context. The app retains the exact request URL, date range, parameters, units, retrieval time, and missing-data information. The user then enters known soil and irrigation information, previous crops, restrictions, and their priorities. Unknown values remain unknown rather than being silently replaced.
+## Link to Final Project
 
-For supported pilot regions, a deterministic engine searches a documented crop-relationship graph and compares multiple multi-season rotations. Each result separates water suitability, historical climate suitability, soil-related potential, diversity, and available indicative economics. It displays feasibility checks, source links, benefits, trade-offs, and warnings. A farmer can also compare a current rotation with alternatives using the same inputs and weights.
+https://fieldshift-nasa.streamlit.app/
 
-FieldShift includes dry, hot, and reduced-irrigation stress tests to explore how assumptions change a plan. These are clearly labelled hypothetical stress tests, not climate forecasts. Optional modules handle MODIS phenology context, SoilGrids estimates, and a limited future-climate demonstration extract with their own provenance and limits.
+Optional supporting repository link, if the form allows an additional link:
 
-FieldShift is a decision-support prototype, not agricultural advice. It does not measure soil chemistry from space, forecast weather, predict crop yield or profit, or guarantee soil improvement. The final decision remains with the farmer and local agricultural expertise.
+https://github.com/sagar25446-prog/Nasa-Hacakathon
 
-## NASA data and resources used
+## Detailed Project Description
 
-- **NASA POWER Daily API (primary live data path):** historical daily temperature, precipitation, solar radiation, humidity, and wind for a selected coordinate.
-- **MODIS MCD12Q2 Collection 6.1 (optional):** historical seasonal-greenness context; it does not identify crops or yield.
-- **NASA NEX-GDDP-CMIP6 (optional demonstration extract):** future climate-projection comparison, explicitly not a weather forecast.
+Farmers must choose crop sequences while rainfall, heat, water availability, soil constraints, and previous crops all matter. A simple recommendation can hide uncertainty or suggest false precision.
 
-See `docs/SUBMISSION_REFERENCES.md` for direct source links, additional agronomic sources, and a clear statement of which resources are not active integrations.
+FieldShift is an explainable crop-rotation decision-support prototype. The user selects a farm location and retrieves historical daily NASA POWER climate context. The application keeps the NASA request URL, date range, parameters, units, retrieval time, and missing-observation information. It then accepts farmer-provided soil and irrigation information, previous crops, and priority weights. Unknown values remain unknown instead of becoming favourable assumptions.
 
-## Demonstration and project links
+For the supported pilot catalogues, a deterministic rule engine searches multiple multi-season crop sequences. It excludes sequences that violate documented hard rotation rules and explains every result through separate water, historical-climate, soil-related, diversity, and available economic-comparison metrics. It also shows the farmer's weights, source links, feasibility checks, trade-offs, and uncertainty warnings. The current rotation can be compared with alternatives under the same inputs.
 
-- Live application: https://fieldshift-nasa.streamlit.app/
-- Source code: https://github.com/sagar25446-prog/Nasa-Hacakathon
-- Challenge: https://www.spaceappschallenge.org/2026/challenges/field-shift-adapting-farms-with-nasa-data/
+The app includes transparent dry, hot, and irrigation-reduction stress tests. These are hypothetical changes to historical conditions, not weather or climate forecasts. Optional MODIS, SoilGrids, and NEX-GDDP-CMIP6 screens retain their own provenance and limits; they do not silently change the central plan.
 
-## What is next
+FieldShift does not measure soil chemistry from space, predict crop yield or profit, or guarantee soil improvement. It is designed to make Earth-observation context and local uncertainty understandable before a farmer consults regional expertise and makes the final choice.
 
-The next responsible step is regional agronomist review followed by observed farmer and extension-worker usability sessions. FieldShift keeps these validation needs visible instead of presenting the prototype as a completed farming advisory service.
+## Use of Super Intelligence (SI)
+
+**Answer: Yes.** OpenAI Codex assisted the team with coding, test execution, documentation editing, and interface refinement. The deployed FieldShift recommendation path does not call a generative-AI model. Crop-rotation comparison, feasibility checks, scoring, and scenario transforms use deterministic, source-linked code. The team reviewed the submitted material and remains responsible for every claim.
+
+Before submitting, add any other SI tools that any team member used. If the team uses AI-generated images, narration, music, video, or text outside this repository, follow the guide's required acknowledgement or watermark rules.
+
+## NASA Data
+
+**Primary active NASA source: NASA POWER Daily API**
+
+FieldShift requests historical daily climate context for the selected latitude, longitude, and date range through the NASA POWER Daily API. The active request includes precipitation, air temperature, solar radiation, humidity, and wind parameters. The app displays the exact query URL, time range, parameter names, units, retrieval time, and missing-observation information. These gridded historical values provide climate context; they are not direct field measurements or forecasts.
+
+NASA POWER documentation: https://power.larc.nasa.gov/docs/services/api/temporal/daily/
+
+Additional NASA resources appear only in separately labelled optional workflows:
+
+- MODIS MCD12Q2 Collection 6.1 for historical phenology context.
+- NASA NEX-GDDP-CMIP6 demonstration extract for future-climate comparison, clearly labelled as a projection rather than a forecast.
+
+## Space Agency Partner Data and Other References
+
+Paste the source list in `docs/SUBMISSION_REFERENCES.md`. It includes NASA POWER, optional NASA sources, FAO-56, FAO EcoCrop, SoilGrids, the Sacks crop-calendar archive, Punjab Agricultural University materials, Government of India crop-water information, CACP/PAU economics context, and the project software.
+
+## Final accuracy check
+
+- Do not call optional sources live rotation inputs unless they are visibly active in the submitted session.
+- Do not list SMAP, GPM, GRACE, ECOSTRESS, Landsat, SRTM, FIRMS, or GEDI as implemented rotation inputs in this release.
+- Do not claim NASA endorsement or use NASA logos or branding elements.
+- Use the exact public video/deck link that judges can open without access requests.

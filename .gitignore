@@ -29,3 +29,8 @@ Thumbs.db
 data/raw/
 data/processed/
 outputs/
+
+# Local artifact builds and bundled-runtime links
+.submission-build/
+node_modules/
+tmp/
