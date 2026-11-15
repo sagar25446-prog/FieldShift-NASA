@@ -89,16 +89,6 @@
         "stage_days_dev": 40,
         "stage_days_mid": 45,
         "stage_days_late": 30
-      },
-      "indicative_economics": {
-        "status": "documented_market_benchmark",
-        "msp_inr_per_q": 2000.0,
-        "benchmark_yield_q_ha": 110.0,
-        "benchmark_cost_inr_ha": 65000.0,
-        "market_price_usd_per_t": 180.0,
-        "benchmark_cost_usd_ha": 750.0,
-        "benchmark_yield_t_ha": 11.0,
-        "source_ids": ["isu_extension_pm1714"]
       }
     },
     {
@@ -158,16 +148,6 @@
         "stage_days_dev": 35,
         "stage_days_mid": 50,
         "stage_days_late": 25
-      },
-      "indicative_economics": {
-        "status": "documented_market_benchmark",
-        "msp_inr_per_q": 4892.0,
-        "benchmark_yield_q_ha": 35.0,
-        "benchmark_cost_inr_ha": 45000.0,
-        "market_price_usd_per_t": 410.0,
-        "benchmark_cost_usd_ha": 520.0,
-        "benchmark_yield_t_ha": 3.5,
-        "source_ids": ["isu_extension_pm1714"]
       }
     },
     {
@@ -227,16 +207,6 @@
         "stage_days_dev": 40,
         "stage_days_mid": 40,
         "stage_days_late": 20
-      },
-      "indicative_economics": {
-        "status": "documented_market_benchmark",
-        "msp_inr_per_q": 1500.0,
-        "benchmark_yield_q_ha": 25.0,
-        "benchmark_cost_inr_ha": 15000.0,
-        "market_price_usd_per_t": 160.0,
-        "benchmark_cost_usd_ha": 90.0,
-        "benchmark_yield_t_ha": 2.5,
-        "source_ids": ["isu_extension_pm1714"]
       }
     },
     {
@@ -296,16 +266,6 @@
         "stage_days_dev": 30,
         "stage_days_mid": 40,
         "stage_days_late": 25
-      },
-      "indicative_economics": {
-        "status": "documented_market_benchmark",
-        "msp_inr_per_q": 2200.0,
-        "benchmark_yield_q_ha": 40.0,
-        "benchmark_cost_inr_ha": 30000.0,
-        "market_price_usd_per_t": 220.0,
-        "benchmark_cost_usd_ha": 350.0,
-        "benchmark_yield_t_ha": 4.0,
-        "source_ids": ["isu_extension_pm1714"]
       }
     },
     {
@@ -365,16 +325,6 @@
         "stage_days_dev": 25,
         "stage_days_mid": 45,
         "stage_days_late": 15
-      },
-      "indicative_economics": {
-        "status": "documented_market_benchmark",
-        "msp_inr_per_q": 3000.0,
-        "benchmark_yield_q_ha": 90.0,
-        "benchmark_cost_inr_ha": 48000.0,
-        "market_price_usd_per_t": 240.0,
-        "benchmark_cost_usd_ha": 580.0,
-        "benchmark_yield_t_ha": 9.0,
-        "source_ids": ["isu_extension_pm1714"]
       }
     }
   ]

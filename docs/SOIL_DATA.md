@@ -39,7 +39,7 @@ For every value FieldShift keeps the source URL (the exact request), the retriev
 | Property | Mapped unit (API) | ÷ d_factor | Conventional unit used | Used as |
 |---|---|---|---|---|
 | clay, sand, silt | g/kg | 10 | % | texture group (if robust) |
-| soc | dg/kg | 10 | g/kg, then ÷10 → % | starting SOC for the soil-state model |
+| soc | dg/kg | 10 | g/kg, then ÷10 → % | labelled soil context; not a calibrated soil-carbon forecast |
 | phh2o | pH × 10 | 10 | pH | context only |
 | nitrogen | cg/kg | 100 | g/kg | context only |
 | uncertainty | ratio × 10 | 10 | unitless ratio | displayed |

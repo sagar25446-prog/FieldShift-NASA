@@ -17,6 +17,8 @@ FieldShift is a NASA Space Apps Challenge 2026 prototype for *Field Shift: Adapt
 
 Optional MODIS, soil-grid and future-climate features depend on source access, geographic coverage and local files. They are not all inputs to every recommendation. See [data and methods](docs/DATA_SOURCES.md) and [known limitations](docs/KNOWN_LIMITATIONS.md).
 
+Economic scores, gross margins, measured groundwater savings and numerical soil-improvement forecasts are unavailable. Their required local evidence and calibration have not been verified; the app leaves these outcomes unknown.
+
 ## Run locally
 
 Python 3.11 or 3.12 is recommended.
@@ -73,10 +75,16 @@ The prototype addresses the core challenge workflow, and its public deployment w
 
 ## Links
 
-- [NASA challenge statement](https://www.spaceappschallenge.org/2026/challenges/field-shift-adapting-farms-with-nasa-data/)
+- [NASA challenge statement and listed resources](https://www.spaceappschallenge.org/2026/challenges/adapting-farms-with-nasa-data/)
 - [FieldShift app](https://fieldshift-nasa.streamlit.app/)
 - [FieldShift repository](https://github.com/sagar25446-prog/Nasa-Hacakathon)
 - [Data sources and methods](docs/DATA_SOURCES.md)
 - [Source references](docs/SUBMISSION_REFERENCES.md)
 
 FieldShift is an independent student prototype and is not endorsed by NASA.
+
+## Use of AI tools and visual credits
+
+The team used OpenAI Codex to assist with implementation, tests, documentation and presentation drafting. AI assistance also helped create illustrative visuals; these are labelled in the submitted slides. The visual examples are illustrations, not satellite observations or field evidence. Crop and climate outputs should be evaluated through their linked sources and documented methods, not by assuming AI-generated text or images are evidence. No generated image contains a NASA logo or mission mark.
+
+The Landsat image on slide 1 is a NASA Earth Observatory image by Lauren Dauphin using USGS Landsat 8 data, acquired 14 June 2024. See [Geometry in the Golden Triangle](https://commons.wikimedia.org/wiki/File:Geometry_in_the_Golden_Triangle_(154401).jpg) for the image and attribution. NASA POWER is the live climate-data source in the application.

@@ -1,6 +1,6 @@
 # FieldShift crop catalogue
 
-`crops.json` is a manually curated research catalogue for Ludhiana, Punjab. It contains source-linked crop characteristics and **indicative economic benchmarks** for comparison only. It does not contain farm observations, yield projections, local market quotes, or guaranteed economic returns.
+`crops.json` is a manually curated research catalogue for Ludhiana, Punjab. It contains source-linked crop characteristics. Economic entries were removed because exact crop-level sources for realised prices, yields and cultivation costs could not be verified. Economic potential is explicitly unavailable in the planner. The catalogue does not contain farm observations, yield projections, local market quotes, or guaranteed economic returns.
 
 The top level has `catalog_metadata`, a reusable `sources` registry, and a `crops` array. Each crop records identity, family/legume status, season, intended role, temperature and water evidence, soil/nutrient/rotation/pest evidence, evidence quality and source IDs.
 

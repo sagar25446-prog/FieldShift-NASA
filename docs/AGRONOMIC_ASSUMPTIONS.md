@@ -63,6 +63,6 @@ FieldShift supports 10 regional crops across three seasonal windows (`kharif`, `
 
 FieldShift enforces clear disciplinary boundaries:
 - **No Yield Predictions:** FieldShift never outputs expected quintals per hectare.
-- **No Profit Guarantees:** Where displayed, economics are source-linked indicative benchmarks, not local mandi prices, farm costs, or profit predictions.
+- **Economics unavailable:** An announced support price alone is insufficient to estimate farm revenue. Precise crop-level realised prices, yields and cultivation costs are still needed; the planner does not display gross margins or profit predictions.
 - **No Soil-Improvement Promises:** Nitrogen credits and soil organic carbon trajectories are illustrative educational models based on FAO/IPCC equations, clearly disclosed as uncalibrated to Punjab conditions.
 - **Hypothetical Scenarios:** Stress tests (+2°C heat, -25% rain) are hypothetical sensitivity analyses, never predictive weather forecasts.

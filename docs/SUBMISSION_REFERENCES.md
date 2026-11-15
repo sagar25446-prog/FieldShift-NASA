@@ -7,6 +7,7 @@ Use this list in the official Project Submission form. It names the sources used
 | Resource | How FieldShift uses it | Citation / URL |
 |---|---|---|
 | NASA POWER Daily API | Primary live historical climate context: temperature, precipitation, radiation, humidity, and wind; exact query provenance is retained. | NASA POWER, [Daily API documentation](https://power.larc.nasa.gov/docs/services/api/temporal/daily/) and [API getting started](https://power.larc.nasa.gov/docs/tutorials/api-getting-started/). |
+| NASA/USGS Landsat 8 image | Slide 1 visual only; not a crop or soil input to the planner. | NASA Earth Observatory image by Lauren Dauphin using USGS Landsat data, 14 June 2024: [Geometry in the Golden Triangle](https://commons.wikimedia.org/wiki/File:Geometry_in_the_Golden_Triangle_(154401).jpg). |
 | MODIS MCD12Q2 Collection 6.1 | Optional phenology comparison for recent seasonal greenness at a selected point. It does not identify crops or measure yield. | Gray, J., Sulla-Menashe, D., & Friedl, M. (2022). [MCD12Q2 Collection 6.1 User Guide](https://lpdaac.usgs.gov/documents/1417/MCD12Q2_User_Guide_V61.pdf); [ORNL DAAC subset service](https://modis.ornl.gov/rst/api/v1/MCD12Q2/subset). |
 | NASA NEX-GDDP-CMIP6 | Optional, location-specific demonstration extract used only by the separate future-climate page. It is not a weather forecast. | Thrasher, B., Wang, W., Michaelis, A., et al. (2022). *NASA Global Daily Downscaled Projections, CMIP6.* *Scientific Data*, 9, 262. [https://doi.org/10.1038/s41597-022-01393-4](https://doi.org/10.1038/s41597-022-01393-4). |
 
@@ -20,7 +21,7 @@ Use this list in the official Project Submission form. It names the sources used
 | FAO EcoCrop | Crop thermal context in the source-linked catalogue. | [FAO EcoCrop Database](https://ecocrop.apps.fao.org/). |
 | Punjab Agricultural University | Punjab crop calendar, crop characteristics, documented rotation examples, and local constraints. | [PAU Kharif 2026 package](https://pau.edu/content/ccil/pf/pp_kharif.pdf); [PAU Rabi 2026 package](https://pau.edu/content/ccil/pf/pp_rabi.pdf). |
 | Government of India crop-water annexure | Catalogue water-requirement context. | [Parliament Question Annexure AS110](https://sansad.in/getFile/annex/256/AS110.pdf?source=pqars). |
-| CACP and PAU farm-management sources | Indicative economic benchmarks only; not farm prices or profit predictions. | [CACP](https://cacp.dacnet.nic.in/); [Punjab Agricultural University](https://pau.edu/). |
+| CACP and PAU farm-management sources | Reviewed as possible future economic sources. No economic score or gross-margin estimate is active because crop-level values lack precise verification. | [CACP](https://cacp.dacnet.nic.in/); [Punjab Agricultural University](https://pau.edu/). |
 
 ## Software used in the project
 
@@ -30,6 +31,13 @@ Use this list in the official Project Submission form. It names the sources used
 - NumPy — [numpy.org](https://numpy.org/)
 - Plotly — [plotly.com/python](https://plotly.com/python/)
 - pytest — [pytest.org](https://pytest.org/)
+- SciPy — [scipy.org](https://scipy.org/)
+- D3 and D3 Geo (interactive globe) — [d3js.org](https://d3js.org/)
+- OpenAI Codex (AI-assisted code, tests, documentation and slides) — [openai.com/codex](https://openai.com/codex/)
+
+## Illustrative visuals
+
+The slide deck includes AI-assisted agricultural illustrations and explanatory graphics, each visibly labelled as such. These visuals are not NASA observations. The live application screenshot is a capture of FieldShift. The Landsat image has its separate credit above.
 
 ## Scope note for judges
 

@@ -57,7 +57,6 @@ from .soil_data import (
     SoilGridsEstimate,
     resolve_soil_values,
 )
-from .soil_nutrient_model import build_soil_state_report
 from .future_climate import (
     ASSUMPTIONS as PROJECTION_ASSUMPTIONS,
     INDICATOR_LABELS,
@@ -80,11 +79,6 @@ from .land_use_phenology import (
     load_demo_phenology,
     season_use,
 )
-from .economics import (
-    ECONOMIC_DISCLAIMERS,
-    compare_vs_rice_wheat_baseline,
-    compute_rotation_economics,
-)
 from .world_map import world_picker
 from . import global_calendar as atlas_calendar
 from . import calendar_workspace
@@ -93,7 +87,6 @@ from .regions import (
     get_region,
     pilot_candidate,
 )
-from .multi_year_simulation import simulate_multi_year_rotation
 from .export_import import (
     export_farm_profile_to_json,
     generate_farmer_summary_card_html,
@@ -683,7 +676,7 @@ def render_home() -> None:
     step_cards = (
         ("1", "Describe your farm", "Location, soil, water and past crops.", "Farm Profile", ":material/agriculture:"),
         ("2", "Check climate context", "Retrieve or inspect NASA POWER history.", "Climate Insights", ":material/cloudy:"),
-        ("3", "Choose what matters", "Set water, soil, diversity and economics priorities.", "Farmer Priorities", ":material/tune:"),
+        ("3", "Choose what matters", "Set water, climate, soil and diversity priorities.", "Farmer Priorities", ":material/tune:"),
         ("4", "Compare options", "Review checks, trade-offs and stress tests.", "Rotation Recommendations", ":material/compare_arrows:"),
     )
     for column, (number, title, description, destination, icon) in zip(steps, step_cards):
@@ -1539,8 +1532,9 @@ def render_priorities() -> None:
     current = st.session_state["weights"]
     raw: dict[str, float] = {}
     st.markdown("##### Adjust priorities")
-    cols = st.columns(len(METRICS))
-    for col, metric in zip(cols, METRICS):
+    available_metrics = tuple(metric for metric in METRICS if metric != "economic_potential")
+    cols = st.columns(len(available_metrics))
+    for col, metric in zip(cols, available_metrics):
         with col:
             raw[metric] = st.slider(
                 METRIC_LABELS[metric], 0, 100,
@@ -1548,6 +1542,8 @@ def render_priorities() -> None:
                 key=f"priority_{metric}",
             )
 
+    raw["economic_potential"] = 0.0
+    st.caption("Economics is excluded from ranking until crop-level price, yield and cost evidence is verified.")
     try:
         weights = normalize_weights(raw)
         st.session_state["weights"] = weights
@@ -1568,8 +1564,8 @@ def render_priorities() -> None:
         st.caption("The baseline plan uses historical NASA POWER context. Hypothetical stress tests are configured after baseline alternatives are generated.")
 
     st.info(
-        "Current catalogue evidence supports FAO-56 crop water balance, FAO EcoCrop thermal suitability, "
-        "and indicative GoI MSP/PAU gross margin benchmarks.",
+        "Current catalogue evidence supports crop water-balance and thermal-suitability comparisons. "
+        "Economic outcomes are unavailable because complete crop-level evidence has not been verified.",
         icon="ℹ️",
     )
     if st.button("🔄 View rotation recommendations", type="primary"):
@@ -1582,67 +1578,12 @@ def _status_icon(status: str) -> str:
 
 
 def _render_economics_tab(plan: Any) -> None:
-    """Render indicative economics based on GoI MSP and PAU benchmark costs."""
-    if st.session_state["selected_region_id"] != "punjab" or plan.water_balance is None:
-        st.info("The Punjab economic comparison requires a Punjab farm and its calculated water balance.")
-        return
-    crops_dict = _rotation_engine().crops
-    plan_crops = [crops_dict[cid] for cid in plan.crop_ids]
-    wb = getattr(plan, "water_balance", None)
-    net_irr = wb.total_net_irrigation_mm
-    if net_irr is None:
-        st.info("Irrigation demand is unknown for this rotation.")
-        return
-    rot_econ = compute_rotation_economics(plan_crops, plan.seasons, net_irrigation_mm=net_irr)
-    baseline_comp = compare_vs_rice_wheat_baseline(plan_crops, plan.seasons, net_irr)
-
-    st.markdown("#### 💰 Indicative Rotation Economics & MSP Benchmarks")
-    st.caption(
-        "Estimated gross margins calculated from Government of India Minimum Support Prices (MSP 2024-25) "
-        "and Punjab Agricultural University (PAU) benchmark production costs. Indicative only — not a revenue guarantee."
+    """Explain why unsupported economic numbers are not shown."""
+    st.info(
+        "Economic comparison is unavailable. Crop-level yield, cost and realised price "
+        "benchmarks need exact, current regional sources before gross margins can be compared. "
+        "An announced support price alone is not a farm revenue estimate."
     )
-
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        rev_str = f"₹{rot_econ.total_revenue_inr_ha:,.0f}/ha" if rot_econ.total_revenue_inr_ha is not None else "N/A"
-        st.metric("Total Gross Revenue", rev_str)
-    with col2:
-        st.metric("Benchmark Cost", f"₹{rot_econ.total_cost_inr_ha:,.0f}/ha")
-    with col3:
-        margin_str = f"₹{rot_econ.total_margin_inr_ha:,.0f}/ha" if rot_econ.total_margin_inr_ha is not None else "N/A"
-        st.metric("Indicative Gross Margin", margin_str)
-    with col4:
-        wp = rot_econ.water_productivity_inr_per_m3
-        st.metric("Water Productivity", f"₹{wp:.1f}/m³" if wp is not None else "N/A")
-
-    st.markdown(f"**Comparison vs Conventional Rice-Wheat:** {baseline_comp.headline_summary}")
-
-    rows = []
-    for ce in rot_econ.crop_economics:
-        c_meta = crops_dict.get(ce.crop_id, {})
-        bn = c_meta.get("bilingual_name", {})
-        bilingual = f"{bn.get('pa', '')} / {bn.get('hi', '')}" if bn else ""
-        price_str = f"₹{ce.msp_inr_per_q:,.0f}/q" if ce.msp_inr_per_q is not None else "N/A"
-        proc_str = "✅ Assured (MSP)" if ce.msp_procurement_assured else "⚠️ Market dependent"
-        rev_val = f"₹{ce.indicative_gross_revenue_inr_ha:,.0f}" if ce.indicative_gross_revenue_inr_ha is not None else "N/A"
-        margin_val = f"₹{ce.indicative_gross_margin_inr_ha:,.0f}" if ce.indicative_gross_margin_inr_ha is not None else "N/A"
-        rows.append({
-            "Crop": ce.crop_name,
-            "Regional Name": bilingual,
-            "Season": ce.season,
-            "Benchmark Yield (q/ha)": f"{ce.benchmark_yield_q_ha:.1f}" if ce.benchmark_yield_q_ha else "N/A",
-            "Price": price_str,
-            "Revenue (₹/ha)": rev_val,
-            "Cost (₹/ha)": f"₹{ce.benchmark_cost_inr_ha:,.0f}" if ce.benchmark_cost_inr_ha else "N/A",
-            "Gross Margin (₹/ha)": margin_val,
-            "Procurement": proc_str,
-        })
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
-
-    with st.expander("Sources, assumptions & economic caveats"):
-        for disclaimer in ECONOMIC_DISCLAIMERS:
-            st.markdown(f"- {disclaimer}")
-        st.caption("Data Sources: Commission for Agricultural Costs and Prices (CACP) Price Policy Reports 2024-25; PAU Farm Management Guide (2024).")
 
 
 def _plan_view(plan: Any, index: int) -> None:
@@ -1709,14 +1650,14 @@ def _plan_view(plan: Any, index: int) -> None:
         tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs([
             "Why these crops",
             "Feasibility checks",
-            "Economics (GoI MSP & PAU)",
+            "Economics (unavailable)",
             "Water balance (FAO-56)",
             "Climate suitability (EcoCrop)",
             "Score methods",
             "Factors & trade-offs",
-            "Soil-state estimate",
+            "Soil evidence limits",
             "Recent land use (MODIS)",
-            "Multi-year trajectory (3–5 yr)",
+            "Long-term planning limits",
         ])
 
         with tab1:
@@ -1758,53 +1699,21 @@ def _plan_view(plan: Any, index: int) -> None:
                         st.write(f"- {item}")
 
         with tab8:
-            _render_soil_state_tab(plan)
+            st.info(
+                "A numerical soil-carbon or nitrogen forecast is unavailable. Residue handling, fertiliser, "
+                "soil depth, bulk density and measured starting nutrients are needed for a locally calibrated model. "
+                "A legume in the plan does not establish a fixed nitrogen gain."
+            )
 
         with tab9:
             _render_land_use_tab(plan)
 
         with tab10:
-            st.markdown("#### 🔄 Multi-Year Rotational Trajectory Simulation (3–5 Years)")
-            st.caption("Simulates cumulative water savings, Soil Organic Carbon (SOC) trajectory via Janssen (1984) kinetics, and soil Nitrogen balance over successive years.")
-            h_choice = st.radio("Simulation horizon", [3, 5], horizontal=True, key=f"horizon_choice_{index}")
-            farm_info = st.session_state["farm"]
-            reg_info = get_region(st.session_state.get("selected_region_id", "punjab"))
-            wb_obj = getattr(plan, "water_balance", None)
-            net_irr = wb_obj.total_net_irrigation_mm if wb_obj and getattr(wb_obj, "total_net_irrigation_mm", None) is not None else None
-
-            multi_sim = simulate_multi_year_rotation(
-                rotation_crop_ids=plan.crop_ids,
-                horizon_years=h_choice,
-                initial_soc_percent=farm_info.get("organic_carbon_percent") or float(reg_info.soil_defaults.get("organic_carbon_percent", 0.55)),
-                candidate_annual_irrigation_mm=net_irr,
-                baseline_annual_irrigation_mm=reg_info.baseline_water_mm,
+            st.info(
+                "The crop sequence covers planning seasons, but its water, soil-carbon and nitrogen effects "
+                "cannot be multiplied into a reliable 3–5 year forecast. Repeat-year climate, management "
+                "and a measured comparison rotation would be needed. Review each season with a local adviser."
             )
-            st.info(f"🌾 **Trajectory Outcome:** {multi_sim.headline_narrative}")
-
-            m1, m2, m3 = st.columns(3)
-            with m1:
-                st.metric(f"Cumulative Water Conserved ({h_choice} yr)", f"{multi_sim.total_water_saved_mm:,.0f} mm", f"{multi_sim.total_water_saved_m3_ha:,.0f} m³/ha")
-            with m2:
-                soc_delta = multi_sim.soc_change_absolute_percent
-                st.metric("Soil Organic Carbon Trajectory", f"{multi_sim.final_soc_percent:.2f}%", f"{soc_delta:+.3f}% from {multi_sim.initial_soc_percent:.2f}%")
-            with m3:
-                legume_count = sum(1 for cid in plan.crop_ids if cid in ("moong", "soybean", "chickpea", "pigeonpea", "alfalfa", "berseem", "green_manure"))
-                st.metric("Cumulative N Benefit", f"{multi_sim.total_n_benefit_kg_ha:+.1f} kg N/ha", f"{h_choice * legume_count} legume seasons")
-
-            step_rows = []
-            for s in multi_sim.yearly_steps:
-                step_rows.append({
-                    "Year": f"Year {s.year}",
-                    "Sequence": " → ".join(s.crops),
-                    "Net Irrigation (mm)": s.irrigation_mm,
-                    "Water Saved vs Baseline (mm)": s.annual_water_saved_mm,
-                    "Cumulative Water Saved (mm)": s.cumulative_water_saved_mm,
-                    "SOC (%)": f"{s.soc_percent:.3f}%",
-                    "Annual N Balance (kg N/ha)": f"{s.annual_n_balance_kg_ha:+.1f}",
-                    "Cumulative N Balance (kg N/ha)": f"{s.cumulative_n_balance_kg_ha:+.1f}",
-                })
-            st.dataframe(pd.DataFrame(step_rows), hide_index=True, width="stretch")
-            st.caption(multi_sim.methodological_disclaimer)
 
         st.caption("Supporting URLs: " + " · ".join(plan.source_urls))
 
@@ -1858,8 +1767,8 @@ def _render_water_balance_tab(plan: Any) -> None:
     with col2:
         st.metric("Effective rainfall", f"{wb.total_effective_rainfall_mm:.1f} mm")
     with col3:
-        nir = wb.total_net_irrigation_mm if wb.total_net_irrigation_mm is not None else 0.0
-        st.metric("Net irrigation deficit", f"{nir:.1f} mm")
+        nir = wb.total_net_irrigation_mm
+        st.metric("Net irrigation deficit", f"{nir:.1f} mm" if nir is not None else "N/A")
     with col4:
         score = plan.metrics["water_suitability"].score
         st.metric("Water score", f"{score:.2f}" if score is not None else "N/A")
@@ -1956,95 +1865,15 @@ def _render_climate_suitability_tab(plan: Any) -> None:
                 st.warning(f"⚠️ {w}")
 
 
-def _render_soil_state_tab(plan: Any) -> None:
-    """Feature E: Render the simplified soil-state / nutrient-balance model."""
-    engine = _rotation_engine()
-    is_legume = {crop_id: engine.crops[crop_id]["legume"] for crop_id in plan.crop_ids}
-    soc = _resolved_soil()["organic_carbon"]
-    soc_range = (soc.low, soc.high) if soc.low is not None and soc.high is not None else None
-
-    report = build_soil_state_report(
-        crop_ids=plan.crop_ids,
-        crop_names=plan.crop_names,
-        seasons=plan.seasons,
-        is_legume=is_legume,
-        initial_soc_percent=soc.value,  # type: ignore[arg-type]
-        soc_source_type=soc.source_type,
-        soc_source_label=soc.source_label if soc.value is not None else None,
-        soc_depth_m=0.30 if soc.source_type == "soilgrids_estimate" else 0.20,
-        soc_range_percent=soc_range,
-    )
-    if soc.value is None:
-        st.caption("Starting organic carbon: **unknown** (not entered, and no usable SoilGrids estimate).")
-    else:
-        range_text = f" (range {soc.low:.2f}–{soc.high:.2f}%)" if soc_range else ""
-        st.caption(f"Starting organic carbon used: **{soc.value:.2f}%**{range_text} · source: **{soc.source_label}** · depth: {soc.depth}")
-
-    st.warning(
-        "**Simplified estimate** — uses published FAO/IPCC equations with assumed defaults. "
-        "Not calibrated to local Punjab conditions. For educational comparison only.",
-        icon="⚠️",
-    )
-
-    # Nutrient balance table
-    rows = []
-    for est in report.nutrient_estimates:
-        rows.append({
-            "Crop": est.crop_name,
-            "Season": est.season,
-            "Residue N return (kg/ha)": f"{est.residue_n_return_kg_ha[0]}–{est.residue_n_return_kg_ha[1]}",
-            "Residue C input (kg/ha)": f"{est.residue_c_input_kg_ha[0]}–{est.residue_c_input_kg_ha[1]}",
-            "Legume N credit (kg/ha)": f"{est.legume_n_credit_kg_ha[0]}–{est.legume_n_credit_kg_ha[1]}" if est.legume_n_credit_kg_ha else "—",
-        })
-    st.markdown("**Per-crop nutrient contribution estimates**")
-    st.dataframe(pd.DataFrame(rows), hide_index=True, width="stretch")
-
-    # SOC direction
-    if report.soc_estimate:
-        soc_est = report.soc_estimate
-        direction_label = {
-            "likely_increase": "🟢 Likely increase",
-            "likely_decrease": "🔴 Likely decrease",
-            "uncertain": "🟡 Uncertain — more data needed",
-        }
-        st.markdown("**Soil organic carbon direction (simplified)**")
-        st.info(direction_label.get(soc_est.estimated_annual_change_direction, "Unknown"))
-        st.caption(soc_est.method_description)
-
-    # Missing inputs & limitations
-    with st.expander("Required inputs and limitations"):
-        st.markdown("**Required inputs (not all available):**")
-        for inp in report.required_inputs:
-            st.write(f"- {inp}")
-        if report.missing_inputs:
-            st.markdown("**Currently missing:**")
-            for m in report.missing_inputs:
-                st.write(f"- ⚠️ {m}")
-        st.markdown("**Limitations:**")
-        for lim in report.limitations:
-            st.write(f"- {lim}")
-
-
-def _render_punjab_benchmark(top_plan: Any, top_irr: float) -> None:
-    crops_dict = _rotation_engine().crops
-    top_crops = [crops_dict[cid] for cid in top_plan.crop_ids]
-    baseline_comp = compare_vs_rice_wheat_baseline(top_crops, top_plan.seasons, top_irr)
-    top_econ = compute_rotation_economics(top_crops, top_plan.seasons, top_irr)
+def _render_punjab_summary(top_plan: Any, top_irr: float) -> None:
+    """Show the modelled demand without implying measured water savings."""
     with st.container(border=True):
-        st.markdown("### 🏆 Top Alternative vs Conventional Rice-Wheat Baseline")
-        st.markdown(f"**{baseline_comp.headline_summary}**")
-        b_c1, b_c2, b_c3, b_c4 = st.columns(4)
-        with b_c1:
-            st.metric("💧 Water Saved vs Rice-Wheat", f"{baseline_comp.water_saved_mm:.0f} mm", f"-{baseline_comp.water_saved_pct:.1f}%")
-        with b_c2:
-            margin_str = f"₹{top_econ.total_margin_inr_ha:,.0f}/ha" if top_econ.total_margin_inr_ha is not None else "N/A"
-            st.metric("💰 Indicative Gross Margin", margin_str)
-        with b_c3:
-            diff_str = f"{'+' if (baseline_comp.margin_diff_inr_ha or 0) >= 0 else ''}₹{baseline_comp.margin_diff_inr_ha:,.0f}/ha" if baseline_comp.margin_diff_inr_ha is not None else "N/A"
-            st.metric("📈 Margin vs Rice-Wheat", diff_str)
-        with b_c4:
-            st.metric("💧 Water Saved Volume", f"{baseline_comp.water_saved_m3_per_ha:,.0f} m³/ha")
-        st.caption("Baseline: Traditional flooded Rice (Kharif) → Wheat (Rabi) rotation (~1,750 mm irrigation demand, PAU benchmark yields). Economics based on GoI MSP 2024-25 & PAU costs.")
+        st.markdown("### Estimated irrigation need for the top alternative")
+        st.metric("Modelled net irrigation deficit", f"{top_irr:,.0f} mm")
+        st.caption(
+            "Calculated from historical climate and crop assumptions. This is not measured field water use, "
+            "groundwater saved, or a comparison with the farmer's current rotation."
+        )
 
     with st.expander("📄 Export 1-Page Printable Farmer Summary Card", expanded=False):
         reg = get_region(st.session_state.get("selected_region_id", "punjab"))
@@ -2059,9 +1888,9 @@ def _render_punjab_benchmark(top_plan: Any, top_irr: float) -> None:
             farm_profile=st.session_state["farm"],
             plan_crop_names=top_plan.crop_names,
             plan_seasons=top_plan.seasons,
-            water_saved_mm=baseline_comp.water_saved_mm,
-            water_saved_m3_ha=baseline_comp.water_saved_m3_per_ha,
-            gross_margin_text=f"₹{top_econ.total_margin_inr_ha:,.0f}/ha" if top_econ.total_margin_inr_ha is not None else "Unavailable",
+            water_saved_mm=None,
+            water_saved_m3_ha=None,
+            gross_margin_text="Unavailable — local evidence needed",
             composite_score=top_plan.composite_score,
             region_name=reg.name,
             climate_provenance=provenance,
@@ -2104,9 +1933,9 @@ def render_recommendations() -> None:
         top_plan = result.plans[0]
         wb = top_plan.water_balance
         if wb is not None and wb.total_net_irrigation_mm is not None:
-            _render_punjab_benchmark(top_plan, wb.total_net_irrigation_mm)
+            _render_punjab_summary(top_plan, wb.total_net_irrigation_mm)
         else:
-            st.caption("Retrieve climate data to compare irrigation demand with the Punjab rice–wheat benchmark.")
+            st.caption("Retrieve climate data to calculate the modelled irrigation deficit for the top alternative.")
 
     for index, plan in enumerate(result.plans, 1):
         _plan_view(plan, index)
@@ -2640,7 +2469,7 @@ def render_comparison() -> None:
     st.subheader("⚖️ Priority Weight Sensitivity & Rank Stability")
     st.caption(
         "Evaluates whether the #1 recommendation changes when farmer priority weights are varied by ±20%. "
-        "A stable recommendation gives confidence that minor weight uncertainties do not flip the top choice."
+        "This reports sensitivity to the tested weights only; it does not establish field success."
     )
     try:
         stability = evaluate_rank_stability(result.plans, st.session_state["weights"], delta_fraction=0.20)
@@ -2717,11 +2546,11 @@ def render_methods() -> None:
 | Category | Examples | How it is disclosed |
 |---|---|---|
 | **Data coverage** | Missing soil measurements, incomplete climate records, coarse spatial resolution | Listed as specific missing-input notes; missing values are never filled with assumptions |
-| **Model uncertainty** | Simplified agronomic rules, absent crop thermal thresholds, uncalibrated soil-state model | Each score method is documented; unavailable metrics show "N/A" not zero |
+| **Model uncertainty** | Simplified agronomic rules and uncalibrated soil or economic inputs | Each score method is documented; unavailable metrics show "N/A" not zero |
 | **Scenario uncertainty** | User-defined stress tests are not forecasts, precipitation/temperature perturbations are hypothetical | Every stress test is labelled "Hypothetical stress test", never "forecast" or "prediction" |
 
 **No numerical confidence percentage** is reported because this prototype has no validated probabilistic model.
-The simplified soil-state module (Feature E) uses published FAO/IPCC relationships but has not been calibrated to Punjab conditions — this is clearly labelled on every output.
+Numerical soil-state and multi-year outcome estimates are withheld from farmer-facing recommendations until their inputs and local calibration are validated.
     """)
 
     st.subheader("Data availability and use")

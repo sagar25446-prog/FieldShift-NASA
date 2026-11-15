@@ -16,14 +16,14 @@ FieldShift is an explainable decision-support prototype. It supports exploration
 2. **Soil.** Farmer and laboratory values take precedence. SoilGrids is an optional modelled estimate, not a laboratory result. Unknown soil values remain unknown.
 3. **Crop catalogues.** Rotation rules and seasons are limited to their configured regional catalogues and their cited sources. An undocumented edge means the prototype cannot support it; it does not prove the transition is impossible.
 4. **Optional sources.** MODIS phenology, SoilGrids, and an optional local NEX-GDDP-CMIP6 extract have separate access and coverage requirements. SMAP, GPM, GRACE, ECOSTRESS, Landsat, SRTM, FIRMS, and GEDI are documented resources, not active location-specific plan inputs in this release.
-5. **Economics.** Economic values are displayed only where the catalogue has identified benchmarks. They are not local prices, costs, or profit forecasts.
+5. **Economics.** Economic scores and gross-margin estimates are unavailable. Complete crop-level realised price, yield and cost evidence has not been verified for the pilot catalogues.
 
 ## Model boundaries
 
 1. The rule engine is deterministic and small by design. It evaluates documented season, rotation, water, soil, and climate information; it does not simulate a complete farm system.
 2. Hypothetical dry, hot, and irrigation-reduction scenarios are user-defined perturbations of historical context. They are stress tests, not climate forecasts or probability estimates.
 3. Pareto comparisons only use metrics with available numeric values. Missing metrics are not treated as zero.
-4. Any simplified soil-state or multi-year display is educational only and should not be used as a nutrient budget or soil-carbon prediction without local calibration and review.
+4. Numerical soil-state and multi-year outcome estimates are withheld from farmer-facing plans pending local calibration and review. Research modules in the repository are not active recommendation inputs.
 
 ## Required human verification before use in a field
 

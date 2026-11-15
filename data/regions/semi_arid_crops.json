@@ -95,13 +95,6 @@
         "stage_days_dev": 35,
         "stage_days_mid": 45,
         "stage_days_late": 30
-      },
-      "indicative_economics": {
-        "status": "documented_government_msp",
-        "msp_inr_per_q": 3371.0,
-        "benchmark_yield_q_ha": 28.0,
-        "benchmark_cost_inr_ha": 34000.0,
-        "source_ids": ["cacp_msp_2024_25"]
       }
     },
     {
@@ -161,13 +154,6 @@
         "stage_days_dev": 45,
         "stage_days_mid": 65,
         "stage_days_late": 40
-      },
-      "indicative_economics": {
-        "status": "documented_government_msp",
-        "msp_inr_per_q": 7550.0,
-        "benchmark_yield_q_ha": 18.0,
-        "benchmark_cost_inr_ha": 38000.0,
-        "source_ids": ["cacp_msp_2024_25"]
       }
     },
     {
@@ -227,13 +213,6 @@
         "stage_days_dev": 30,
         "stage_days_mid": 40,
         "stage_days_late": 25
-      },
-      "indicative_economics": {
-        "status": "documented_government_msp",
-        "msp_inr_per_q": 5440.0,
-        "benchmark_yield_q_ha": 18.0,
-        "benchmark_cost_inr_ha": 32000.0,
-        "source_ids": ["cacp_msp_2024_25"]
       }
     },
     {
@@ -293,13 +272,6 @@
         "stage_days_dev": 30,
         "stage_days_mid": 45,
         "stage_days_late": 25
-      },
-      "indicative_economics": {
-        "status": "documented_government_msp",
-        "msp_inr_per_q": 4892.0,
-        "benchmark_yield_q_ha": 22.0,
-        "benchmark_cost_inr_ha": 36000.0,
-        "source_ids": ["cacp_msp_2024_25"]
       }
     }
   ]

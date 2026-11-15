@@ -58,26 +58,6 @@ A plan is labelled dominated only when another plan has scores for every objecti
 
 ## Soil-state modelling (Feature E)
 
-A simplified soil-state and nutrient-balance module is included as `soil_nutrient_model.py`. It uses:
+Numerical soil-carbon and nutrient outcomes are **not active in farmer-facing recommendations**. Research code was explored, but its crop residue, fixation and decomposition inputs have not been calibrated for these fields. Presenting its output as a soil improvement estimate would overstate the evidence. The app instead explains what is missing.
 
-- **FAO Fertilizer and Plant Nutrition Bulletin 16** for legume N-fixation credit ranges (20–40 kg N/ha).
-- **Brady & Weil (2017)** for residue C:N ratios and dry-matter ranges.
-- **Janssen (1984)** one-compartment first-order SOC decay model with IPCC-referenced decay constants.
-
-### Calibration limitations
-
-- The N-fixation credit is a rough FAO estimate, **not calibrated** to Punjab conditions.
-- The SOC decay constant (k = 0.025 yr⁻¹ for subtropical semi-arid) is interpolated from temperate/tropical studies.
-- Residue-return fractions assume a default 30%; actual farmer practice (burning, baling, incorporation) varies.
-- No micronutrient, phosphorus, or potassium balance is estimated.
-- All outputs are labelled "Simplified estimate — not calibrated to local conditions."
-
-### Required inputs
-
-1. Crop residue management practice (returned, burned, removed)
-2. Initial soil organic carbon (%) from laboratory analysis
-3. Soil bulk density (Mg/m³) from field measurement
-4. Applied fertiliser rates (kg N/ha) per crop
-5. Irrigation method and scheduling
-
-If any of these are unavailable, the limitation is disclosed alongside the estimate.
+Before activating a soil-state model, a regional agronomist would need to validate its crop parameters and equations. Required field inputs include measured starting organic carbon, sampling depth and bulk density; residue management; fertiliser rates; and irrigation practice. Repeated local measurements would be needed to test its predictions. A crop's legume status alone does not establish a nitrogen credit.
