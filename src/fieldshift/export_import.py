@@ -376,8 +376,8 @@ def generate_farmer_summary_card_html(
 
   <div class="water-hero">
     <div>
-      <div class="water-hero-txt">💧 Modelled water difference from the regional benchmark:</div>
-      <div style="font-size:10px;color:#333;">Not a measurement of water saved, a comparison with the farmer's existing rotation, or an aquifer observation.</div>
+      <div class="water-hero-txt">💧 Water comparison, if a documented baseline is available:</div>
+      <div style="font-size:10px;color:#333;">Any displayed difference is modelled. It is not measured water saved or an aquifer observation.</div>
     </div>
     <div style="text-align:right;">
       <div class="water-hero-val">{water_mm_text}</div>

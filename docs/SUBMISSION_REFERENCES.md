@@ -23,6 +23,19 @@ Use this list in the official Project Submission form. It names the sources used
 | Government of India crop-water annexure | Catalogue water-requirement context. | [Parliament Question Annexure AS110](https://sansad.in/getFile/annex/256/AS110.pdf?source=pqars). |
 | CACP and PAU farm-management sources | Reviewed as possible future economic sources. No economic score or gross-margin estimate is active because crop-level values lack precise verification. | [CACP](https://cacp.dacnet.nic.in/); [Punjab Agricultural University](https://pau.edu/). |
 
+## Sources named in the other pilot catalogues
+
+These regional links identify the institutions or publications recorded in the pilot catalogues. Some are broad institutional pages rather than a crop-specific table; those catalogue values still need local expert review before field use.
+
+| Pilot | Resource | URL |
+|---|---|---|
+| Iowa / US Corn Belt | USDA Agricultural Research Service rotation research | [USDA ARS project](https://www.ars.usda.gov/research/project/?accnNo=421516) |
+| Iowa / US Corn Belt | Iowa State University Extension crop guidance | [Iowa State Extension](https://www.extension.iastate.edu/agdm/crops/html/a1-20.html) |
+| Andalusia / Mediterranean | IFAPA agricultural research | [IFAPA](https://www.juntadeandalucia.es/agriculturaypesca/ifapa/web) |
+| Andalusia / Mediterranean | Spanish Ministry of Agriculture farm accounts, reviewed but not used for an active economic score | [MAPA](https://www.mapa.gob.es/es/estadistica/temas/estadisticas-agrarias/economia/red-contable/) |
+| Maharashtra / semi-arid India | ICRISAT dryland crop research | [ICRISAT](https://www.icrisat.org/) |
+| Maharashtra / semi-arid India | Mahatma Phule Krishi Vidyapeeth regional guidance | [MPKV](https://mpkv.ac.in/) |
+
 ## Software used in the project
 
 - Python — [python.org](https://www.python.org/)

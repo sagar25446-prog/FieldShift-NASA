@@ -159,32 +159,26 @@ def generate_plain_language_explanation(plan: RotationPlan) -> str:
     """Generate a crisp, plain-language farmer explanation for why this rotation was recommended."""
     reasons: list[str] = []
 
-    # Water saving reason
+    # Describe the model output without an unsupported water-saving threshold.
     wb = plan.water_balance
     if wb is not None and getattr(wb, "total_net_irrigation_mm", None) is not None:
         nir = wb.total_net_irrigation_mm
-        if nir < 800:
-            reasons.append(f"saves substantial water (only ~{nir:.0f} mm estimated net irrigation)")
-        elif nir < 1200:
-            reasons.append(f"maintains moderate water demand (~{nir:.0f} mm net irrigation)")
+        reasons.append(f"has a modelled net irrigation deficit of about {nir:.0f} mm")
 
     # Legume nitrogen reason
-    has_legume = any(getattr(c, "legume", False) for c in getattr(plan, "crops", ()))
     legume_names = [name for name, c in zip(plan.crop_names, plan.crop_ids) if c in ("moong", "soybean", "chickpea")]
     if legume_names:
-        reasons.append(f"adds a biological nitrogen-fixing break ({', '.join(legume_names)})")
+        reasons.append(f"includes a legume ({', '.join(legume_names)}); any nitrogen contribution depends on local conditions")
 
     # Family diversity reason
     if plan.metrics.get("rotation_diversity") and plan.metrics["rotation_diversity"].score is not None:
         div_score = plan.metrics["rotation_diversity"].score
-        if div_score >= 0.8:
-            reasons.append("maximizes crop family diversification")
+        reasons.append(f"has a crop-family diversity score of {div_score:.2f}")
 
     # Thermal suitability
     ca = plan.climate_assessment
     if ca is not None and getattr(ca, "climate_suitability_score", None) is not None:
-        if ca.climate_suitability_score >= 0.85:
-            reasons.append("fits regional temperature windows with high thermal suitability")
+        reasons.append(f"has a temperature suitability score of {ca.climate_suitability_score:.2f}")
 
     names = " → ".join(plan.crop_names)
     if reasons:
