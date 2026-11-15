@@ -1,6 +1,7 @@
 """Tests for ranking sensitivity and transparent strategy explanations."""
 
 from pathlib import Path
+from types import SimpleNamespace
 
 from src.fieldshift.rotation_engine import FarmProfile, RotationEngine, SoilInformation
 from src.fieldshift.sensitivity import RankStabilityReport, evaluate_rank_stability, generate_plain_language_explanation
@@ -39,6 +40,20 @@ def test_plain_language_explanation():
     plan = ENGINE.generate(_profile()).plans[0]
     explanation = generate_plain_language_explanation(plan)
     assert "**Why recommended:**" in explanation
+
+
+def test_plain_language_explanation_does_not_claim_unmeasured_water_savings():
+    plan = SimpleNamespace(
+        water_balance=SimpleNamespace(total_net_irrigation_mm=594.0),
+        crop_names=("Bajra", "Moong"),
+        crop_ids=("bajra", "moong"),
+        metrics={"rotation_diversity": SimpleNamespace(score=1.0)},
+        climate_assessment=SimpleNamespace(climate_suitability_score=0.85),
+    )
+    explanation = generate_plain_language_explanation(plan)
+    assert "modelled net irrigation deficit of about 594 mm" in explanation
+    assert "saves" not in explanation.lower()
+    assert "nitrogen contribution depends on local conditions" in explanation
 
 
 def test_strategy_comparison_uses_plan_evidence_and_discloses_boundaries():

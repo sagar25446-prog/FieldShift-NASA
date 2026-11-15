@@ -168,7 +168,7 @@ def generate_plain_language_explanation(plan: RotationPlan) -> str:
     # Legume nitrogen reason
     legume_names = [name for name, c in zip(plan.crop_names, plan.crop_ids) if c in ("moong", "soybean", "chickpea")]
     if legume_names:
-        reasons.append(f"includes a legume ({', '.join(legume_names)}); any nitrogen contribution depends on local conditions")
+        reasons.append(f"includes a legume ({', '.join(legume_names)}), whose nitrogen contribution depends on local conditions")
 
     # Family diversity reason
     if plan.metrics.get("rotation_diversity") and plan.metrics["rotation_diversity"].score is not None:
@@ -182,5 +182,5 @@ def generate_plain_language_explanation(plan: RotationPlan) -> str:
 
     names = " → ".join(plan.crop_names)
     if reasons:
-        return f"**Why recommended:** {names} was selected because it {'; and '.join(reasons)}."
+        return f"**Why recommended:** {names} was selected because it {'; '.join(reasons)}."
     return f"**Why recommended:** {names} satisfies all documented agronomic compatibility checks."
